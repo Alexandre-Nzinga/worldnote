@@ -1,1 +1,2 @@
-# worldnote
+# WorldNote
+Building better worlds
