@@ -31,5 +31,24 @@
   },
   "organizeImports": {
     "enabled": false
-  }
+  },
+  "overrides": [
+    {
+      "include": [
+        "packages/pkg-ui/**/*.ts",
+        "packages/pkg-ui/**/*.tsx",
+        "packages/pkg-shared/**/*.ts",
+        "packages/pkg-shared/**/*.tsx",
+        "packages/canvas/**/*.ts",
+        "packages/canvas/**/*.tsx"
+      ],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "useImportExtensions": "error"
+          }
+        }
+      }
+    }
+  ]
 }

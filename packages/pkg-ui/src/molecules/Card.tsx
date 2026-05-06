@@ -1,6 +1,6 @@
 import clsx from "clsx";
 import type { ReactNode } from "react";
-import { WorldNoteLogo } from "../brand/logo";
+import { WorldNoteLogo } from "../brand/logo.js";
 
 export type CardProps = {
   title: string;

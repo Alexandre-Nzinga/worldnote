@@ -1,4 +1,4 @@
-import { WnButton, WorldCard, headingClass } from "@worldnote/ui";
+import { Button, Card, headingClass } from "@worldnote/ui";
 
 type Props = {
   onOpenVault: () => void;
@@ -11,17 +11,17 @@ export function Home({ onOpenVault }: Props) {
         <h1 className={headingClass.h1}>WorldNote</h1>
         <p className="mt-2 text-zinc-400">Building better worlds.</p>
       </div>
-      <WorldCard title="Launcher" subtitle="Librarian">
+      <Card title="Home" subtitle="Librarian">
         <p className="text-sm text-zinc-300">
           Select a world directory to create `.worldnote` config and `lore/`
           JSON storage.
         </p>
         <div className="mt-4">
-          <WnButton color="primary" onPress={onOpenVault}>
+          <Button color="primary" onPress={onOpenVault}>
             Open world folder (stub)
-          </WnButton>
+          </Button>
         </div>
-      </WorldCard>
+      </Card>
     </div>
   );
 }

@@ -13,3 +13,4 @@ Thumbs.db
 *.log
 pnpm-debug.log*
 _tauri*
+.cursor
