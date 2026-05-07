@@ -46,9 +46,9 @@ export default function App() {
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className={headingClass.h1}>WorldNote</h1>
-          <p className="text-zinc-400">Local-first worldbuilding (shell)</p>
+          <p className="text-wn-mono-400">Local-first worldbuilding (shell)</p>
         </div>
-        <Button color="primary" onPress={() => setStarted(false)}>
+        <Button variant="primary" onPress={() => setStarted(false)}>
           Back to launcher
         </Button>
       </header>
@@ -69,3 +69,4 @@ export default function App() {
     </div>
   );
 }
+

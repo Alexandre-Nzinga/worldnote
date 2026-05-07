@@ -1,5 +1,6 @@
 export * from "./atoms/Button.js";
 export * from "./brand/colors.js";
+export * from "./brand/palette.js";
 export * from "./brand/logo.js";
 export * from "./brand/typography.js";
 export * from "./molecules/Card.js";

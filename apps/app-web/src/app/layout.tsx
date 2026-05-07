@@ -21,9 +21,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${urbanist.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col bg-zinc-950 text-zinc-50">
+      <body className="min-h-full flex flex-col bg-wn-mono-950 text-wn-mono-50">
         <Providers>{children}</Providers>
       </body>
     </html>
   );
 }
+

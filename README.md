@@ -28,7 +28,7 @@ pnpm run build      # All packages + apps
 pnpm run dev        # Turbo dev (desktop + others as configured)
 ```
 
-### Desktop only
+### Desktop platform only
 
 ```bash
 pnpm run dev --filter=app-worldnote

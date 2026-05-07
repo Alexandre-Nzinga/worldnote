@@ -2,126 +2,130 @@
 
 /* Urbanist — load in app HTML or extend with @font-face; tokens assume font is available */
 :root {
+
+    /* WOLRDNOTE TYPOGRAPHY */
+
   --font-sans: "Urbanist", ui-sans-serif, system-ui, sans-serif;
+  --font-weight-wn-thin: 100;
+  --font-weight-wn-extralight: 200;
+  --font-weight-wn-light: 300;
+  --font-weight-wn-regular: 400;
+  --font-weight-wn-medium: 500;
+  --font-weight-wn-semibold: 600;
+  --font-weight-wn-bold: 700;
+  --font-weight-wn-extrabold: 800;
+  --font-weight-wn-black: 900;
+
+    /* WorldNote Typography scale —  Urbanist headings */
+    --text-wn-h1: clamp(2.027rem, calc(2.027rem + (3.815 - 2.027) * ((100vw - 20rem) / 70)), 3.815rem);
+    --text-wn-h2: clamp(1.802rem, calc(1.802rem + (3.052 - 1.802) * ((100vw - 20rem) / 70)), 3.052rem);
+    --text-wn-h3: clamp(1.602rem, calc(1.602rem + (2.441 - 1.602) * ((100vw - 20rem) / 70)), 2.441rem);
+    --text-wn-h4: clamp(1.424rem, calc(1.424rem + (1.953 - 1.424) * ((100vw - 20rem) / 70)), 1.953rem);
+    --text-wn-h5: clamp(1.266rem, calc(1.266rem + (1.563 - 1.266) * ((100vw - 20rem) / 70)), 1.563rem);
+    --text-wn-h6: clamp(1.125rem, calc(1.125rem + (1.25 - 1.125) * ((100vw - 20rem) / 70)), 1.25rem);
+  
+    /* WorldNote body type tokens */
+    --text-wn-body: 1rem;
+    --text-wn-small: 0.889rem;
+    --text-wn-xs: 0.79rem;
 
   /* Border radius */
   --radius-xl: 0.75rem;
   --radius-2xl: 1rem;
-  --radius-worldnote-card: 1.25rem;
+  --radius-wn-card: 1.25rem;
   --radius-3xl: 1.5rem;
   --radius-full: 9999px;
 
+  /* WOLRDNOTE COLORS */
+
   /* WORLDNOTE-MONO */
-  --color-zinc-50: oklch(98.5% 0 0);
-  --color-zinc-100: oklch(96.7% 0.001 286.375);
-  --color-zinc-200: oklch(92% 0.004 286.32);
-  --color-zinc-300: oklch(87.1% 0.006 286.286);
-  --color-zinc-400: oklch(70.5% 0.015 286.067);
-  --color-zinc-500: oklch(55.2% 0.016 285.938);
-  --color-zinc-600: oklch(44.2% 0.017 285.786);
-  --color-zinc-700: oklch(37% 0.013 285.805);
-  --color-zinc-800: oklch(27.4% 0.006 286.033);
-  --color-zinc-900: oklch(21% 0.006 285.885);
-  --color-zinc-950: oklch(14% 0.005 285.885);
+  --color-wn-mono-50: oklch(98.5% 0 0);
+  --color-wn-mono-100: oklch(96.7% 0.001 286.375);
+  --color-wn-mono-200: oklch(92% 0.004 286.32);
+  --color-wn-mono-300: oklch(87.1% 0.006 286.286);
+  --color-wn-mono-400: oklch(70.5% 0.015 286.067);
+  --color-wn-mono-500: oklch(55.2% 0.016 285.938);
+  --color-wn-mono-600: oklch(44.2% 0.017 285.786);
+  --color-wn-mono-700: oklch(37% 0.013 285.805);
+  --color-wn-mono-800: oklch(27.4% 0.006 286.033);
+  --color-wn-mono-900: oklch(21% 0.006 285.885);
+  --color-wn-mono-950: oklch(14% 0.005 285.885);
 
-  /* SECONDARY COLORS: WORLDNOTE-ROSE */
-  --color-rose-50: oklch(96.9% 0.015 12.422);
-  --color-rose-100: oklch(94.1% 0.03 12.58);
-  --color-rose-200: oklch(89.2% 0.058 10.001);
-  --color-rose-300: oklch(81% 0.117 11.638);
-  --color-rose-400: oklch(71.2% 0.194 13.428);
-  --color-rose-500: oklch(64.5% 0.246 16.439);
-  --color-rose-600: oklch(58.6% 0.253 17.585);
-  --color-rose-700: oklch(51.4% 0.222 16.935);
-  --color-rose-800: oklch(45.5% 0.188 13.697);
-  --color-rose-900: oklch(41% 0.159 10.272);
-  --color-rose-950: oklch(36.1% 0.131 10.317);
+  /* BASE COLORS: WORLDNOTE-ROSE */
+  --color-wn-rose-50: oklch(96.9% 0.015 12.422);
+  --color-wn-rose-100: oklch(94.1% 0.03 12.58);
+  --color-wn-rose-200: oklch(89.2% 0.058 10.001);
+  --color-wn-rose-300: oklch(81% 0.117 11.638);
+  --color-wn-rose-400: oklch(71.2% 0.194 13.428);
+  --color-wn-rose-500: oklch(64.5% 0.246 16.439);
+  --color-wn-rose-600: oklch(58.6% 0.253 17.585);
+  --color-wn-rose-700: oklch(51.4% 0.222 16.935);
+  --color-wn-rose-800: oklch(45.5% 0.188 13.697);
+  --color-wn-rose-900: oklch(41% 0.159 10.272);
+  --color-wn-rose-950: oklch(36.1% 0.131 10.317);
 
-  /* WORLDNOTE-INDIGO */
-  --color-indigo-50: oklch(96.2% 0.018 272.314);
-  --color-indigo-100: oklch(93% 0.034 272.788);
-  --color-indigo-200: oklch(87% 0.065 274.039);
-  --color-indigo-300: oklch(78.5% 0.115 274.713);
-  --color-indigo-400: oklch(67.3% 0.182 276.935);
-  --color-indigo-500: oklch(58.5% 0.233 277.117);
-  --color-indigo-600: oklch(51.1% 0.262 276.966);
-  --color-indigo-700: oklch(45.7% 0.24 277.023);
-  --color-indigo-800: oklch(39.8% 0.195 277.366);
-  --color-indigo-900: oklch(35.9% 0.144 278.697);
-  --color-indigo-950: oklch(25.7% 0.09 281.288);
+  /* BASE COLORS: WORLDNOTE-INDIGO */
+  --color-wn-indigo-50: oklch(96.2% 0.018 272.314);
+  --color-wn-indigo-100: oklch(93% 0.034 272.788);
+  --color-wn-indigo-200: oklch(87% 0.065 274.039);
+  --color-wn-indigo-300: oklch(78.5% 0.115 274.713);
+  --color-wn-indigo-400: oklch(67.3% 0.182 276.935);
+  --color-wn-indigo-500: oklch(58.5% 0.233 277.117);
+  --color-wn-indigo-600: oklch(51.1% 0.262 276.966);
+  --color-wn-indigo-700: oklch(45.7% 0.24 277.023);
+  --color-wn-indigo-800: oklch(39.8% 0.195 277.366);
+  --color-wn-indigo-900: oklch(35.9% 0.144 278.697);
+  --color-wn-indigo-950: oklch(25.7% 0.09 281.288);
 
-  /* WORLDNOTE-AZURE */
-  --color-blue-50: oklch(97% 0.014 254.604);
-  --color-blue-100: oklch(93.2% 0.032 255.585);
-  --color-blue-200: oklch(88.2% 0.059 254.128);
-  --color-blue-300: oklch(80.9% 0.105 251.813);
-  --color-blue-400: oklch(70.7% 0.165 254.624);
-  --color-blue-500: oklch(62.3% 0.214 259.815);
-  --color-blue-600: oklch(54.6% 0.245 262.881);
-  --color-blue-700: oklch(48.8% 0.243 264.376);
-  --color-blue-800: oklch(42.4% 0.199 265.638);
-  --color-blue-900: oklch(37.9% 0.146 265.522);
-  --color-blue-950: oklch(28.2% 0.091 267.935);
+  /* BASE COLORS: WORLDNOTE-AZURE */
+  --color-wn-azure-50: oklch(97% 0.014 254.604);
+  --color-wn-azure-100: oklch(93.2% 0.032 255.585);
+  --color-wn-azure-200: oklch(88.2% 0.059 254.128);
+  --color-wn-azure-300: oklch(80.9% 0.105 251.813);
+  --color-wn-azure-400: oklch(70.7% 0.165 254.624);
+  --color-wn-azure-500: oklch(62.3% 0.214 259.815);
+  --color-wn-azure-600: oklch(54.6% 0.245 262.881);
+  --color-wn-azure-700: oklch(48.8% 0.243 264.376);
+  --color-wn-azure-800: oklch(42.4% 0.199 265.638);
+  --color-wn-azure-900: oklch(37.9% 0.146 265.522);
+  --color-wn-azure-950: oklch(28.2% 0.091 267.935);
 
-  /* WORLDNOTE-LIME */
-  --color-lime-50: oklch(98.6% 0.031 120.757);
-  --color-lime-100: oklch(96.7% 0.067 122.328);
-  --color-lime-200: oklch(93.8% 0.127 124.321);
-  --color-lime-300: oklch(89.7% 0.196 126.665);
-  --color-lime-400: oklch(84.1% 0.238 128.85);
-  --color-lime-500: oklch(76.8% 0.233 130.85);
-  --color-lime-600: oklch(64.8% 0.2 131.684);
-  --color-lime-700: oklch(53.2% 0.157 131.589);
-  --color-lime-800: oklch(45.3% 0.124 130.933);
-  --color-lime-900: oklch(40.5% 0.101 131.063);
-  --color-lime-950: oklch(27.4% 0.072 132.109);
+  /* BASE COLORS: WORLDNOTE-LIME */
+  --color-wn-lime-50: oklch(98.6% 0.031 120.757);
+  --color-wn-lime-100: oklch(96.7% 0.067 122.328);
+  --color-wn-lime-200: oklch(93.8% 0.127 124.321);
+  --color-wn-lime-300: oklch(89.7% 0.196 126.665);
+  --color-wn-lime-400: oklch(84.1% 0.238 128.85);
+  --color-wn-lime-500: oklch(76.8% 0.233 130.85);
+  --color-wn-lime-600: oklch(64.8% 0.2 131.684);
+  --color-wn-lime-700: oklch(53.2% 0.157 131.589);
+  --color-wn-lime-800: oklch(45.3% 0.124 130.933);
+  --color-wn-lime-900: oklch(40.5% 0.101 131.063);
+  --color-wn-lime-950: oklch(27.4% 0.072 132.109);
 
-  /* WORLDNOTE-AMBER */
-  --color-amber-50: oklch(98.7% 0.022 95.277);
-  --color-amber-100: oklch(96.2% 0.059 95.617);
-  --color-amber-200: oklch(92.4% 0.12 95.746);
-  --color-amber-300: oklch(87.9% 0.169 91.605);
-  --color-amber-400: oklch(82.8% 0.189 84.429);
-  --color-amber-500: oklch(76.9% 0.188 70.08);
-  --color-amber-600: oklch(66.6% 0.179 58.318);
-  --color-amber-700: oklch(55.5% 0.163 48.998);
-  --color-amber-800: oklch(47.3% 0.137 46.201);
-  --color-amber-900: oklch(41.4% 0.112 45.904);
-  --color-amber-950: oklch(36.5% 0.092 45.762);
+  /* BASE COLORS:  WORLDNOTE-AMBER */
+  --color-wn-amber-50: oklch(98.7% 0.022 95.277);
+  --color-wn-amber-100: oklch(96.2% 0.059 95.617);
+  --color-wn-amber-200: oklch(92.4% 0.12 95.746);
+  --color-wn-amber-300: oklch(87.9% 0.169 91.605);
+  --color-wn-amber-400: oklch(82.8% 0.189 84.429);
+  --color-wn-amber-500: oklch(76.9% 0.188 70.08);
+  --color-wn-amber-600: oklch(66.6% 0.179 58.318);
+  --color-wn-amber-700: oklch(55.5% 0.163 48.998);
+  --color-wn-amber-800: oklch(47.3% 0.137 46.201);
+  --color-wn-amber-900: oklch(41.4% 0.112 45.904);
+  --color-wn-amber-950: oklch(36.5% 0.092 45.762);
 
   /* TERTIARY COLORS (SYSTEM): WORLDNOTE-RED */
-  --color-red-50: oklch(97.1% 0.013 17.38);
-  --color-red-100: oklch(93.6% 0.032 17.717);
-  --color-red-200: oklch(88.5% 0.062 18.334);
-  --color-red-300: oklch(80.8% 0.114 19.571);
-  --color-red-400: oklch(70.4% 0.191 22.216);
-  --color-red-500: oklch(63.7% 0.237 25.331);
-  --color-red-600: oklch(57.7% 0.245 27.325);
-  --color-red-700: oklch(50.5% 0.213 27.518);
-  --color-red-800: oklch(44.4% 0.177 26.899);
-  --color-red-900: oklch(39.6% 0.141 25.723);
-  --color-red-950: oklch(25.8% 0.092 26.042);
-
-  /* WORLDNOTE-GREEN */
-  --color-green-root: oklch(27.4% 0.072 132.109);
-  --color-green-50: oklch(98.2% 0.018 155.826);
-  --color-green-100: oklch(96.2% 0.044 156.743);
-  --color-green-200: oklch(92.5% 0.084 155.995);
-  --color-green-300: oklch(87.1% 0.15 154.449);
-  --color-green-400: oklch(79.2% 0.209 151.711);
-  --color-green-500: oklch(72.3% 0.219 149.579);
-  --color-green-600: oklch(62.7% 0.194 149.214);
-  --color-green-700: oklch(52.7% 0.154 150.069);
-  --color-green-800: oklch(44.8% 0.119 151.328);
-  --color-green-900: oklch(39.3% 0.095 152.535);
-  --color-green-950: oklch(32.6% 0.081 153.813);
-  --color-green-950: oklch(26.6% 0.065 152.934);
-
-  /* WorldNote Typography scale —  Urbanist headings */
-  --text-wn-h1: 3.815rem;
-  --text-wn-h2: 3.052rem;
-  --text-wn-h3: 2.441rem;
-  --text-wn-h4: 1.953rem;
-  --text-wn-h5: 1.563rem;
-  --text-wn-h6: 1.25rem;
+  --color-wn-red-50: oklch(97.1% 0.013 17.38);
+  --color-wn-red-100: oklch(93.6% 0.032 17.717);
+  --color-wn-red-200: oklch(88.5% 0.062 18.334);
+  --color-wn-red-300: oklch(80.8% 0.114 19.571);
+  --color-wn-red-400: oklch(70.4% 0.191 22.216);
+  --color-wn-red-500: oklch(63.7% 0.237 25.331);
+  --color-wn-red-600: oklch(57.7% 0.245 27.325);
+  --color-wn-red-700: oklch(50.5% 0.213 27.518);
+  --color-wn-red-800: oklch(44.4% 0.177 26.899);
+  --color-wn-red-900: oklch(39.6% 0.141 25.723);
+  --color-wn-red-950: oklch(25.8% 0.092 26.042);
 }

@@ -27,10 +27,11 @@ function BondEdgeInner({
       id={id}
       path={path}
       markerEnd={markerEnd}
-      style={{ stroke: "var(--color-zinc-500)", strokeWidth: 2 }}
+      style={{ stroke: "var(--color-wn-mono-500)", strokeWidth: 2 }}
     />
   );
 }
 
 export const BondEdge = memo(BondEdgeInner);
 BondEdge.displayName = "BondEdge";
+

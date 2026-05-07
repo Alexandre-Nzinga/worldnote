@@ -2,7 +2,7 @@ use crate::error::PersistenceError;
 use notify::{Event, RecommendedWatcher, RecursiveMode, Watcher};
 use std::path::Path;
 
-/// Watches lore directory for external edits (PRD § `notify`).
+/// Watches lore directory for external edits.
 pub struct LoreWatcher {
     _watcher: RecommendedWatcher,
 }

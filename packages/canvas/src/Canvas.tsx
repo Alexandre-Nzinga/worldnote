@@ -12,14 +12,17 @@ export type WorldNoteCanvasProps = Omit<ReactFlowProps, "children"> & {
 };
 
 export function WorldNoteCanvas({ children, ...props }: WorldNoteCanvasProps) {
+  const mono700 = "var(--color-wn-mono-700)";
+
   return (
-    <div className="h-full w-full min-h-[400px] rounded-[var(--radius-2xl)] border border-zinc-800 bg-zinc-950">
+    <div className="h-full w-full min-h-[400px] rounded-[var(--radius-2xl)] border border-wn-mono-800 bg-wn-mono-950">
       <ReactFlow {...props}>
-        <Background gap={16} color="#3f3f46" />
-        <MiniMap className="!bg-zinc-900" maskColor="rgba(24,24,27,0.6)" />
-        <Controls className="!bg-zinc-900 !border-zinc-800" />
+        <Background gap={16} color={mono700} />
+        <MiniMap className="!bg-wn-mono-900" maskColor="rgba(24,24,27,0.6)" />
+        <Controls className="!bg-wn-mono-900 !border-wn-mono-800" />
         {children}
       </ReactFlow>
     </div>
   );
 }
+
