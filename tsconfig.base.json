@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "@worldnote/shared": ["packages/pkg-shared/src/index.ts"],
+      "@worldnote/shared/*": ["packages/pkg-shared/src/*"],
+      "@worldnote/ui": ["packages/pkg-ui/src/index.ts"],
+      "@worldnote/ui/*": ["packages/pkg-ui/src/*"],
+      "@worldnote/canvas": ["packages/canvas/src/index.ts"],
+      "@worldnote/canvas/*": ["packages/canvas/src/*"]
+    }
+  }
+}

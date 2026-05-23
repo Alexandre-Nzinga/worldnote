@@ -1,0 +1,16 @@
+node_modules
+dist
+.next
+.turbo
+target
+storybook-static
+*.local
+.env
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db
+*.log
+pnpm-debug.log*
+_tauri*
+.cursor
