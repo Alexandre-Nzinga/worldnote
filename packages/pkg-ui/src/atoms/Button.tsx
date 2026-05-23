@@ -1,16 +1,23 @@
 import { Button as HeroUIButton } from "@heroui/react";
 import clsx from "clsx";
+import type { ReactNode } from "react";
 
 export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
 
 export type ButtonSize = "sm" | "md" | "lg";
 
 export type ButtonProps = {
+  /** Visual style mapped to WorldNote color tokens. */
   variant?: ButtonVariant;
+  /** Height, padding, and type scale. */
   size?: ButtonSize;
-  children: string;
+  /** Button label or icon content. */
+  children: ReactNode;
+  /** Disables interaction and lowers opacity. */
   isDisabled?: boolean;
+  /** Stretches the button to the width of its container. */
   fullWidth?: boolean;
+  /** Square icon-only layout; pair with `aria-label`. */
   isIconOnly?: boolean;
   onPress?: () => void;
   className?: string;

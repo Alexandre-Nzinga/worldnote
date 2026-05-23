@@ -17,7 +17,7 @@ const bodyScale = [
 ] as const;
 
 const meta = {
-  title: "Brand/Typography",
+  title: "00-Brand/Typography",
   parameters: {
     layout: "padded",
   },

@@ -2,8 +2,9 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { getBodyTextStyle, getHeadingStyle, headingClass, getWorldNoteLogoSrc, WorldNoteLogo } from "@worldnote/ui";
 
 const meta = {
-  title: "Brand/Logo",
+  title: "00-Brand/Logo",
   component: WorldNoteLogo,
+  tags: ["autodocs"],
   parameters: {
     layout: "centered",
   },

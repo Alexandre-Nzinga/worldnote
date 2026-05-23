@@ -17,7 +17,7 @@ const radiusScale: RadiusDef[] = [
 ];
 
 const meta = {
-  title: "Brand/Border Radius",
+  title: "00-Brand/Border Radius",
   parameters: {
     layout: "padded",
   },

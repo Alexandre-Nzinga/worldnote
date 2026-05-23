@@ -27,4 +27,19 @@ impl SqliteIndex {
         let _ = &self.conn;
         Ok(vec![])
     }
+
+    pub fn upsert(&self, id: &str, name: &str, tags: &[String]) -> Result<(), PersistenceError> {
+        let tags_csv = tags.join(",");
+        self.conn.execute(
+            "INSERT OR REPLACE INTO cards (id, name, tags) VALUES (?1, ?2, ?3)",
+            (id, name, tags_csv),
+        )?;
+        Ok(())
+    }
+
+    pub fn delete(&self, id: &str) -> Result<(), PersistenceError> {
+        self.conn
+            .execute("DELETE FROM cards WHERE id = ?1", (id,))?;
+        Ok(())
+    }
 }

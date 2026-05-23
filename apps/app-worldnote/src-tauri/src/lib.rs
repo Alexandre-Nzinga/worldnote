@@ -13,10 +13,13 @@ pub fn run() {
                 .unwrap()
         })
         .invoke_handler(tauri::generate_handler![
-            cmd::vault::open_world_folder,
-            cmd::vault::create_world_stub,
-            cmd::card::list_cards_stub,
-            cmd::card::save_card_stub,
+            cmd::vault::open_world,
+            cmd::vault::create_world,
+            cmd::card::list_cards,
+            cmd::card::upsert_card,
+            cmd::manifest::load_canvas_manifest,
+            cmd::manifest::update_canvas_manifest,
+            cmd::manifest::update_canvas_manifest_node,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

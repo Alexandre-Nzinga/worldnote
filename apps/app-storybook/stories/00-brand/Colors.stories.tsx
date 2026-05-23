@@ -5,7 +5,7 @@ import { getBodyTextStyle, getHeadingStyle, headingClass, worldnoteColorPalette 
 type StepHexMap = Record<string, string>;
 
 const meta = {
-  title: "Brand/Colors",
+  title: "00-Brand/Colors",
   parameters: {
     layout: "padded",
   },

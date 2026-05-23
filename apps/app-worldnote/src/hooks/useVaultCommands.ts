@@ -1,11 +1,13 @@
 import { invoke } from "@tauri-apps/api/core";
+import { useMemo } from "react";
 
 /** Route layer (TS) — thin wrappers over Tauri IPC. */
 export function useVaultCommands() {
-  return {
-    openWorldFolder: (path: string) =>
-      invoke<string>("open_world_folder", { path }),
-    createWorld: (root: string) =>
-      invoke<string>("create_world_stub", { root }),
-  };
+  return useMemo(
+    () => ({
+      openWorld: (root: string) => invoke<string>("open_world", { root }),
+      createWorld: (root: string) => invoke<string>("create_world", { root }),
+    }),
+    [],
+  );
 }

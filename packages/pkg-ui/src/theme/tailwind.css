@@ -38,18 +38,18 @@
 
   /* WOLRDNOTE COLORS */
 
-  /* WORLDNOTE-MONO */
+  /* WORLDNOTE-MONO — achromatic neutral (same L ramp as before; previously ~286° hue / low chroma ≈ slate-like) */
   --color-wn-mono-50: oklch(98.5% 0 0);
-  --color-wn-mono-100: oklch(96.7% 0.001 286.375);
-  --color-wn-mono-200: oklch(92% 0.004 286.32);
-  --color-wn-mono-300: oklch(87.1% 0.006 286.286);
-  --color-wn-mono-400: oklch(70.5% 0.015 286.067);
-  --color-wn-mono-500: oklch(55.2% 0.016 285.938);
-  --color-wn-mono-600: oklch(44.2% 0.017 285.786);
-  --color-wn-mono-700: oklch(37% 0.013 285.805);
-  --color-wn-mono-800: oklch(27.4% 0.006 286.033);
-  --color-wn-mono-900: oklch(21% 0.006 285.885);
-  --color-wn-mono-950: oklch(14% 0.005 285.885);
+  --color-wn-mono-100: oklch(96.7% 0 0);
+  --color-wn-mono-200: oklch(92% 0 0);
+  --color-wn-mono-300: oklch(87.1% 0 0);
+  --color-wn-mono-400: oklch(70.5% 0 0);
+  --color-wn-mono-500: oklch(55.2% 0 0);
+  --color-wn-mono-600: oklch(44.2% 0 0);
+  --color-wn-mono-700: oklch(37% 0 0);
+  --color-wn-mono-800: oklch(27.4% 0 0);
+  --color-wn-mono-900: oklch(21% 0 0);
+  --color-wn-mono-950: oklch(14% 0 0);
 
   /* BASE COLORS: WORLDNOTE-ROSE */
   --color-wn-rose-50: oklch(96.9% 0.015 12.422);

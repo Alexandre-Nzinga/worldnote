@@ -6,7 +6,15 @@ const preview: Preview = {
   parameters: {
     options: {
       storySort: {
-        order: ["Brand", "Atoms", "Molecules", "*"],
+        order: [
+          "00-Brand",
+          "01-Atoms",
+          "02-Molecules",
+          "03-Organisms",
+          "04-Layouts",
+          "05-Pages",
+          "*",
+        ],
       },
     },
   },
