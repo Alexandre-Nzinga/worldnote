@@ -1,6 +1,11 @@
 import { useMemo, useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react";
-import { getBodyTextStyle, getHeadingStyle, headingClass, worldnoteColorPalette } from "@worldnote/ui";
+import {
+  getBodyTextStyle,
+  getHeadingStyle,
+  headingClass,
+  worldnoteColorPalette,
+} from "@worldnote/ui";
 
 type StepHexMap = Record<string, string>;
 
@@ -102,8 +107,10 @@ function getReadableTextColor(hex: string) {
   const bgLuminance = getRelativeLuminance(hex);
   const darkText = "#111827";
   const lightText = "#F8FAFC";
-  const darkContrast = (Math.max(bgLuminance, 0) + 0.05) / (Math.min(bgLuminance, 0) + 0.05);
-  const lightContrast = (Math.max(bgLuminance, 1) + 0.05) / (Math.min(bgLuminance, 1) + 0.05);
+  const darkContrast =
+    (Math.max(bgLuminance, 0) + 0.05) / (Math.min(bgLuminance, 0) + 0.05);
+  const lightContrast =
+    (Math.max(bgLuminance, 1) + 0.05) / (Math.min(bgLuminance, 1) + 0.05);
   return darkContrast >= lightContrast ? darkText : lightText;
 }
 
@@ -152,9 +159,14 @@ export const PaletteReference: Story = {
           </h1>
           <p
             className="max-w-3xl leading-6"
-            style={{ ...getBodyTextStyle("body"), color: "var(--color-wn-mono-700)", fontWeight: 500 }}
+            style={{
+              ...getBodyTextStyle("body"),
+              color: "var(--color-wn-mono-700)",
+              fontWeight: 500,
+            }}
           >
-            Theme colors and complete scale ramps from 50 (lightest) to 950 (darkest).
+            Theme colors and complete scale ramps from 50 (lightest) to 950
+            (darkest).
           </p>
         </header>
 
@@ -178,20 +190,34 @@ export const PaletteReference: Story = {
                       borderColor: "var(--color-wn-mono-300)",
                     }}
                   >
-                    <p className="text-2xl font-semibold leading-tight" style={{ color: textColor }}>
+                    <p
+                      className="text-2xl font-semibold leading-tight"
+                      style={{ color: textColor }}
+                    >
                       {palette.label}
                     </p>
                     <button
                       type="button"
                       className="mt-2 underline decoration-transparent transition hover:decoration-current"
-                      style={{ ...getBodyTextStyle("body"), color: textColor, fontWeight: 500 }}
-                      onClick={() => void copyHex(hex, `${palette.name}-${palette.baseStep}`)}
+                      style={{
+                        ...getBodyTextStyle("body"),
+                        color: textColor,
+                        fontWeight: 500,
+                      }}
+                      onClick={() =>
+                        void copyHex(hex, `${palette.name}-${palette.baseStep}`)
+                      }
                       title="Copy hex color"
                     >
-                      {copiedKey === `${palette.name}-${palette.baseStep}` ? "Copied" : hex}
+                      {copiedKey === `${palette.name}-${palette.baseStep}`
+                        ? "Copied"
+                        : hex}
                     </button>
                   </div>
-                  <code className="text-wn-mono-500" style={getBodyTextStyle("xs")}>
+                  <code
+                    className="text-wn-mono-500"
+                    style={getBodyTextStyle("xs")}
+                  >
                     {cssVar}
                   </code>
                 </article>
@@ -204,8 +230,14 @@ export const PaletteReference: Story = {
           <h3 className={headingClass.h3} style={getHeadingStyle("h3")}>
             Scales
           </h3>
-          <p style={{ ...getBodyTextStyle("small"), color: "var(--color-wn-mono-600)" }}>
-            Full shade ranges from 50 (lightest) to 950 (darkest). The dot marks the base color.
+          <p
+            style={{
+              ...getBodyTextStyle("small"),
+              color: "var(--color-wn-mono-600)",
+            }}
+          >
+            Full shade ranges from 50 (lightest) to 950 (darkest). The dot marks
+            the base color.
           </p>
 
           <div className="space-y-6">
@@ -215,10 +247,18 @@ export const PaletteReference: Story = {
                 .join(", ");
 
               return (
-                <div key={palette.name} className="grid grid-cols-[200px_1fr] gap-5">
+                <div
+                  key={palette.name}
+                  className="grid grid-cols-[200px_1fr] gap-5"
+                >
                   <div className="space-y-2 pt-1">
-                    <p className="text-2xl font-semibold text-wn-mono-900">{palette.label}</p>
-                    <code className="text-wn-mono-500" style={getBodyTextStyle("small")}>
+                    <p className="text-2xl font-semibold text-wn-mono-900">
+                      {palette.label}
+                    </p>
+                    <code
+                      className="text-wn-mono-500"
+                      style={getBodyTextStyle("small")}
+                    >
                       {palette.cssRoot}-[step]
                     </code>
                     <div
@@ -236,7 +276,8 @@ export const PaletteReference: Story = {
                       const hex = hexMap[cssVar] ?? "#000000";
                       const isBase = step === palette.baseStep;
                       const textColor = getReadableTextColor(hex);
-                      const markerColor = textColor === "#111827" ? "#111827" : "#E5E7EB";
+                      const markerColor =
+                        textColor === "#111827" ? "#111827" : "#E5E7EB";
 
                       return (
                         <article
@@ -253,17 +294,28 @@ export const PaletteReference: Story = {
                               style={{ backgroundColor: markerColor }}
                             />
                           )}
-                          <p className="text-lg font-semibold" style={{ color: textColor }}>
+                          <p
+                            className="text-lg font-semibold"
+                            style={{ color: textColor }}
+                          >
                             {step}
                           </p>
                           <button
                             type="button"
                             className="mt-1 text-left underline decoration-transparent transition hover:decoration-current"
-                            style={{ ...getBodyTextStyle("xs"), color: textColor, fontWeight: 500 }}
-                            onClick={() => void copyHex(hex, `${palette.name}-${step}`)}
+                            style={{
+                              ...getBodyTextStyle("xs"),
+                              color: textColor,
+                              fontWeight: 500,
+                            }}
+                            onClick={() =>
+                              void copyHex(hex, `${palette.name}-${step}`)
+                            }
                             title="Copy hex color"
                           >
-                            {copiedKey === `${palette.name}-${step}` ? "Copied" : hex}
+                            {copiedKey === `${palette.name}-${step}`
+                              ? "Copied"
+                              : hex}
                           </button>
                         </article>
                       );
@@ -278,4 +330,3 @@ export const PaletteReference: Story = {
     );
   },
 };
-

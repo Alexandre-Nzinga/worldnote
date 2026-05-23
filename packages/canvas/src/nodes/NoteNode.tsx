@@ -15,4 +15,3 @@ function NoteNodeInner({ data }: NodeProps<NoteFlowNode>) {
 
 export const NoteNode = memo(NoteNodeInner);
 NoteNode.displayName = "NoteNode";
-

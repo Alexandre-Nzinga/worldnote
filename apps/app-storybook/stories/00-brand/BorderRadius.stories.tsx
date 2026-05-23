@@ -11,7 +11,12 @@ type RadiusDef = {
 const radiusScale: RadiusDef[] = [
   { label: "rounded-xl", varName: "--radius-xl", rem: "0.75rem", px: 12 },
   { label: "rounded-2xl", varName: "--radius-2xl", rem: "1rem", px: 16 },
-  { label: "rounded-wn-card", varName: "--radius-wn-card", rem: "1.25rem", px: 20 },
+  {
+    label: "rounded-wn-card",
+    varName: "--radius-wn-card",
+    rem: "1.25rem",
+    px: 20,
+  },
   { label: "rounded-3xl", varName: "--radius-3xl", rem: "1.5rem", px: 24 },
   { label: "rounded-full", varName: "--radius-full", rem: "9999px", px: 9999 },
 ];
@@ -35,17 +40,24 @@ export const BorderRadius: Story = {
           Border Radius
         </h1>
         <p className="max-w-3xl" style={getBodyTextStyle("body")}>
-          We opt for rounded corners across all UI elements. The exact radius depends on the size
-          of the element.
+          We opt for rounded corners across all UI elements. The exact radius
+          depends on the size of the element.
         </p>
       </div>
 
       <div className="space-y-6">
         {radiusScale.map((radius) => (
-          <div key={radius.label} className="grid grid-cols-[220px_1fr] items-center gap-5">
+          <div
+            key={radius.label}
+            className="grid grid-cols-[220px_1fr] items-center gap-5"
+          >
             <div className="space-y-1">
-              <p style={{ ...getBodyTextStyle("small"), fontWeight: 600 }}>{radius.label}</p>
-              <code style={getBodyTextStyle("xs")}>{`${radius.varName}: ${radius.rem} (${radius.px}px)`}</code>
+              <p style={{ ...getBodyTextStyle("small"), fontWeight: 600 }}>
+                {radius.label}
+              </p>
+              <code
+                style={getBodyTextStyle("xs")}
+              >{`${radius.varName}: ${radius.rem} (${radius.px}px)`}</code>
             </div>
             <div
               className="relative flex w-full items-center justify-center overflow-hidden"
@@ -87,7 +99,13 @@ export const BorderRadius: Story = {
                   backgroundColor: "var(--color-wn-indigo-500)",
                 }}
               />
-              <span style={{ ...getBodyTextStyle("body"), color: "var(--color-wn-indigo-600)", fontWeight: 600 }}>
+              <span
+                style={{
+                  ...getBodyTextStyle("body"),
+                  color: "var(--color-wn-indigo-600)",
+                  fontWeight: 600,
+                }}
+              >
                 {radius.px === 9999 ? "∞" : radius.px}
               </span>
             </div>

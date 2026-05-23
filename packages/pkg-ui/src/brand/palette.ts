@@ -1,5 +1,22 @@
-export type PaletteStep = 50 | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900 | 950;
-export type PaletteName = "mono" | "rose" | "indigo" | "azure" | "lime" | "amber";
+export type PaletteStep =
+  | 50
+  | 100
+  | 200
+  | 300
+  | 400
+  | 500
+  | 600
+  | 700
+  | 800
+  | 900
+  | 950;
+export type PaletteName =
+  | "mono"
+  | "rose"
+  | "indigo"
+  | "azure"
+  | "lime"
+  | "amber";
 
 export type PaletteDefinition = {
   name: PaletteName;
@@ -57,5 +74,3 @@ export const worldnoteColorPalette: readonly PaletteDefinition[] = [
     steps: paletteSteps,
   },
 ] as const;
-
-

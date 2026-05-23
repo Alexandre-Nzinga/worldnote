@@ -47,4 +47,3 @@ export function Card({
 const headingMeta = {
   title: "text-[length:var(--text-wn-h5)] font-semibold",
 };
-

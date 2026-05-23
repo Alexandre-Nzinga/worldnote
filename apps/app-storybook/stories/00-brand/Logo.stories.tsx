@@ -1,5 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { getBodyTextStyle, getHeadingStyle, headingClass, getWorldNoteLogoSrc, WorldNoteLogo } from "@worldnote/ui";
+import {
+  getBodyTextStyle,
+  getHeadingStyle,
+  headingClass,
+  getWorldNoteLogoSrc,
+  WorldNoteLogo,
+} from "@worldnote/ui";
 
 const meta = {
   title: "00-Brand/Logo",
@@ -53,7 +59,14 @@ export const OfficialVariants: Story = {
               backgroundColor: "var(--color-wn-mono-50)",
             }}
           >
-            <p style={{ ...getBodyTextStyle("xs"), color: "var(--color-wn-mono-700)" }}>Icon Black</p>
+            <p
+              style={{
+                ...getBodyTextStyle("xs"),
+                color: "var(--color-wn-mono-700)",
+              }}
+            >
+              Icon Black
+            </p>
             <WorldNoteLogo
               variant="icon"
               tone="black"
@@ -64,7 +77,10 @@ export const OfficialVariants: Story = {
               href={getWorldNoteLogoSrc("icon", "black", "png")}
               download="worldnote-logo-icon-black.png"
               className="inline-block underline"
-              style={{ ...getBodyTextStyle("xs"), color: "var(--color-wn-mono-700)" }}
+              style={{
+                ...getBodyTextStyle("xs"),
+                color: "var(--color-wn-mono-700)",
+              }}
             >
               Download
             </a>
@@ -99,7 +115,14 @@ export const OfficialVariants: Story = {
               backgroundColor: "var(--color-wn-mono-50)",
             }}
           >
-            <p style={{ ...getBodyTextStyle("xs"), color: "var(--color-wn-mono-700)" }}>Wordmark Black</p>
+            <p
+              style={{
+                ...getBodyTextStyle("xs"),
+                color: "var(--color-wn-mono-700)",
+              }}
+            >
+              Wordmark Black
+            </p>
             <WorldNoteLogo
               variant="wordmark"
               tone="black"
@@ -110,7 +133,10 @@ export const OfficialVariants: Story = {
               href={getWorldNoteLogoSrc("wordmark", "black", "png")}
               download="worldnote-logo-wordmark-black.png"
               className="inline-block underline"
-              style={{ ...getBodyTextStyle("xs"), color: "var(--color-wn-mono-700)" }}
+              style={{
+                ...getBodyTextStyle("xs"),
+                color: "var(--color-wn-mono-700)",
+              }}
             >
               Download
             </a>
@@ -153,7 +179,14 @@ export const OfficialVariants: Story = {
               backgroundColor: "var(--color-wn-mono-50)",
             }}
           >
-            <p style={{ ...getBodyTextStyle("xs"), color: "var(--color-wn-mono-700)" }}>Icon Black</p>
+            <p
+              style={{
+                ...getBodyTextStyle("xs"),
+                color: "var(--color-wn-mono-700)",
+              }}
+            >
+              Icon Black
+            </p>
             <WorldNoteLogo
               variant="icon"
               tone="black"
@@ -164,7 +197,10 @@ export const OfficialVariants: Story = {
               href={getWorldNoteLogoSrc("icon", "black", "svg")}
               download="worldnote-logo-icon-black.svg"
               className="inline-block underline"
-              style={{ ...getBodyTextStyle("xs"), color: "var(--color-wn-mono-700)" }}
+              style={{
+                ...getBodyTextStyle("xs"),
+                color: "var(--color-wn-mono-700)",
+              }}
             >
               Download
             </a>
@@ -199,7 +235,14 @@ export const OfficialVariants: Story = {
               backgroundColor: "var(--color-wn-mono-50)",
             }}
           >
-            <p style={{ ...getBodyTextStyle("xs"), color: "var(--color-wn-mono-700)" }}>Wordmark Black</p>
+            <p
+              style={{
+                ...getBodyTextStyle("xs"),
+                color: "var(--color-wn-mono-700)",
+              }}
+            >
+              Wordmark Black
+            </p>
             <WorldNoteLogo
               variant="wordmark"
               tone="black"
@@ -210,7 +253,10 @@ export const OfficialVariants: Story = {
               href={getWorldNoteLogoSrc("wordmark", "black", "svg")}
               download="worldnote-logo-wordmark-black.svg"
               className="inline-block underline"
-              style={{ ...getBodyTextStyle("xs"), color: "var(--color-wn-mono-700)" }}
+              style={{
+                ...getBodyTextStyle("xs"),
+                color: "var(--color-wn-mono-700)",
+              }}
             >
               Download
             </a>
@@ -220,4 +266,3 @@ export const OfficialVariants: Story = {
     </div>
   ),
 };
-

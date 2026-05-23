@@ -147,7 +147,9 @@ export const ColorTokens: Story = {
       </div>
       <div className="flex flex-wrap items-center gap-4">
         <Button variant="secondary">Secondary</Button>
-        <span style={getBodyTextStyle("xs")}>mono-950 surface, mono-100 text</span>
+        <span style={getBodyTextStyle("xs")}>
+          mono-950 surface, mono-100 text
+        </span>
       </div>
       <div className="flex flex-wrap items-center gap-4">
         <Button variant="ghost">Ghost</Button>
@@ -155,7 +157,9 @@ export const ColorTokens: Story = {
       </div>
       <div className="flex flex-wrap items-center gap-4">
         <Button variant="danger">Danger</Button>
-        <span style={getBodyTextStyle("xs")}>wn-red-500 / wn-red-600 hover</span>
+        <span style={getBodyTextStyle("xs")}>
+          wn-red-500 / wn-red-600 hover
+        </span>
       </div>
     </div>
   ),

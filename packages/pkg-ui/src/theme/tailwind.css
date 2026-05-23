@@ -2,8 +2,7 @@
 
 /* Urbanist — load in app HTML or extend with @font-face; tokens assume font is available */
 :root {
-
-    /* WOLRDNOTE TYPOGRAPHY */
+  /* WOLRDNOTE TYPOGRAPHY */
 
   --font-sans: "Urbanist", ui-sans-serif, system-ui, sans-serif;
   --font-weight-wn-thin: 100;
@@ -16,18 +15,42 @@
   --font-weight-wn-extrabold: 800;
   --font-weight-wn-black: 900;
 
-    /* WorldNote Typography scale —  Urbanist headings */
-    --text-wn-h1: clamp(2.027rem, calc(2.027rem + (3.815 - 2.027) * ((100vw - 20rem) / 70)), 3.815rem);
-    --text-wn-h2: clamp(1.802rem, calc(1.802rem + (3.052 - 1.802) * ((100vw - 20rem) / 70)), 3.052rem);
-    --text-wn-h3: clamp(1.602rem, calc(1.602rem + (2.441 - 1.602) * ((100vw - 20rem) / 70)), 2.441rem);
-    --text-wn-h4: clamp(1.424rem, calc(1.424rem + (1.953 - 1.424) * ((100vw - 20rem) / 70)), 1.953rem);
-    --text-wn-h5: clamp(1.266rem, calc(1.266rem + (1.563 - 1.266) * ((100vw - 20rem) / 70)), 1.563rem);
-    --text-wn-h6: clamp(1.125rem, calc(1.125rem + (1.25 - 1.125) * ((100vw - 20rem) / 70)), 1.25rem);
-  
-    /* WorldNote body type tokens */
-    --text-wn-body: 1rem;
-    --text-wn-small: 0.889rem;
-    --text-wn-xs: 0.79rem;
+  /* WorldNote Typography scale —  Urbanist headings */
+  --text-wn-h1: clamp(
+    2.027rem,
+    calc(2.027rem + (3.815 - 2.027) * ((100vw - 20rem) / 70)),
+    3.815rem
+  );
+  --text-wn-h2: clamp(
+    1.802rem,
+    calc(1.802rem + (3.052 - 1.802) * ((100vw - 20rem) / 70)),
+    3.052rem
+  );
+  --text-wn-h3: clamp(
+    1.602rem,
+    calc(1.602rem + (2.441 - 1.602) * ((100vw - 20rem) / 70)),
+    2.441rem
+  );
+  --text-wn-h4: clamp(
+    1.424rem,
+    calc(1.424rem + (1.953 - 1.424) * ((100vw - 20rem) / 70)),
+    1.953rem
+  );
+  --text-wn-h5: clamp(
+    1.266rem,
+    calc(1.266rem + (1.563 - 1.266) * ((100vw - 20rem) / 70)),
+    1.563rem
+  );
+  --text-wn-h6: clamp(
+    1.125rem,
+    calc(1.125rem + (1.25 - 1.125) * ((100vw - 20rem) / 70)),
+    1.25rem
+  );
+
+  /* WorldNote body type tokens */
+  --text-wn-body: 1rem;
+  --text-wn-small: 0.889rem;
+  --text-wn-xs: 0.79rem;
 
   /* Border radius */
   --radius-xl: 0.75rem;

@@ -22,4 +22,3 @@ export const groupNodeDefaults = {
   sourcePosition: Position.Bottom,
   targetPosition: Position.Top,
 } as const;
-

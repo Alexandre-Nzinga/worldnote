@@ -1,13 +1,49 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { bodyTextTokens, getBodyTextStyle, getHeadingStyle, headingClass, headingTokens } from "@worldnote/ui";
+import {
+  bodyTextTokens,
+  getBodyTextStyle,
+  getHeadingStyle,
+  headingClass,
+  headingTokens,
+} from "@worldnote/ui";
 
 const headingScale = [
-  { label: "Heading 1", tag: "h1", token: headingTokens.h1, className: headingClass.h1 },
-  { label: "Heading 2", tag: "h2", token: headingTokens.h2, className: headingClass.h2 },
-  { label: "Heading 3", tag: "h3", token: headingTokens.h3, className: headingClass.h3 },
-  { label: "Heading 4", tag: "h4", token: headingTokens.h4, className: headingClass.h4 },
-  { label: "Heading 5", tag: "h5", token: headingTokens.h5, className: headingClass.h5 },
-  { label: "Heading 6", tag: "h6", token: headingTokens.h6, className: headingClass.h6 },
+  {
+    label: "Heading 1",
+    tag: "h1",
+    token: headingTokens.h1,
+    className: headingClass.h1,
+  },
+  {
+    label: "Heading 2",
+    tag: "h2",
+    token: headingTokens.h2,
+    className: headingClass.h2,
+  },
+  {
+    label: "Heading 3",
+    tag: "h3",
+    token: headingTokens.h3,
+    className: headingClass.h3,
+  },
+  {
+    label: "Heading 4",
+    tag: "h4",
+    token: headingTokens.h4,
+    className: headingClass.h4,
+  },
+  {
+    label: "Heading 5",
+    tag: "h5",
+    token: headingTokens.h5,
+    className: headingClass.h5,
+  },
+  {
+    label: "Heading 6",
+    tag: "h6",
+    token: headingTokens.h6,
+    className: headingClass.h6,
+  },
 ] as const;
 
 const bodyScale = [
@@ -34,9 +70,12 @@ export const Typography: Story = {
         <h1 className={headingClass.h1} style={getHeadingStyle("h1")}>
           Typography
         </h1>
-        <p className="max-w-2xl leading-6" style={{ ...getBodyTextStyle("body"), fontWeight: 500 }}>
-          Urbanist is our default typeface across products. This page shows
-          the heading scale plus practical body text styles for UI copy.
+        <p
+          className="max-w-2xl leading-6"
+          style={{ ...getBodyTextStyle("body"), fontWeight: 500 }}
+        >
+          Urbanist is our default typeface across products. This page shows the
+          heading scale plus practical body text styles for UI copy.
         </p>
       </div>
 
@@ -45,7 +84,8 @@ export const Typography: Story = {
           Headings
         </h3>
         <p className="max-w-3xl leading-6" style={getBodyTextStyle("body")}>
-          Six heading levels are defined via custom CSS variables and semantic classes.
+          Six heading levels are defined via custom CSS variables and semantic
+          classes.
         </p>
         <div className="overflow-hidden rounded-2xl border border-wn-mono-200">
           {headingScale.map(({ label, tag, token, className }) => {
@@ -57,19 +97,37 @@ export const Typography: Story = {
                 className="grid grid-cols-[130px_1fr] gap-4 border-b border-wn-mono-800/80 px-4 py-4 last:border-b-0"
               >
                 <div className="space-y-1 pt-1">
-                  <p style={{ ...getBodyTextStyle("small"), color: "var(--color-wn-mono-200)", fontWeight: 600 }}>
+                  <p
+                    style={{
+                      ...getBodyTextStyle("small"),
+                      color: "var(--color-wn-mono-200)",
+                      fontWeight: 600,
+                    }}
+                  >
                     {label}
                   </p>
-                  <code className="block text-wn-mono-500" style={getBodyTextStyle("xs")}>
+                  <code
+                    className="block text-wn-mono-500"
+                    style={getBodyTextStyle("xs")}
+                  >
                     size: {token.size}
                   </code>
-                  <code className="block text-wn-mono-500" style={getBodyTextStyle("xs")}>
+                  <code
+                    className="block text-wn-mono-500"
+                    style={getBodyTextStyle("xs")}
+                  >
                     spacingRem: {token.spacingRem}
                   </code>
-                  <code className="block text-wn-mono-500" style={getBodyTextStyle("xs")}>
+                  <code
+                    className="block text-wn-mono-500"
+                    style={getBodyTextStyle("xs")}
+                  >
                     color: {token.color}
                   </code>
-                  <code className="block text-wn-mono-600" style={getBodyTextStyle("xs")}>
+                  <code
+                    className="block text-wn-mono-600"
+                    style={getBodyTextStyle("xs")}
+                  >
                     {className}
                   </code>
                 </div>
@@ -121,7 +179,13 @@ export const Typography: Story = {
               key={level}
               className="grid grid-cols-[220px_160px_160px_1fr] gap-4 border-b border-wn-mono-800/80 px-4 py-4 last:border-b-0"
             >
-              <p style={{ ...getBodyTextStyle("small"), color: "var(--color-wn-mono-200)", fontWeight: 600 }}>
+              <p
+                style={{
+                  ...getBodyTextStyle("small"),
+                  color: "var(--color-wn-mono-200)",
+                  fontWeight: 600,
+                }}
+              >
                 {token.label}
               </p>
               <code className="text-wn-mono-500" style={getBodyTextStyle("xs")}>
@@ -135,13 +199,15 @@ export const Typography: Story = {
               </p>
             </div>
           ))}
-          <div className="px-4 py-3 text-wn-mono-400" style={getBodyTextStyle("xs")}>
-            Body definitions are tokenized in <code>@worldnote/ui</code> and rendered here from
-            those source tokens.
+          <div
+            className="px-4 py-3 text-wn-mono-400"
+            style={getBodyTextStyle("xs")}
+          >
+            Body definitions are tokenized in <code>@worldnote/ui</code> and
+            rendered here from those source tokens.
           </div>
         </div>
       </section>
     </div>
   ),
 };
-

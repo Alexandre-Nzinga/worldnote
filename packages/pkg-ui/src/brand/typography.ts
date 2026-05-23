@@ -92,17 +92,18 @@ export const headingClass: Record<HeadingLevel, string> = {
 /** Runtime style helper from heading tokens. */
 export function getHeadingStyle(level: HeadingLevel) {
   const token = headingTokens[level];
-  const fontWeightTokenMap: Record<HeadingToken["fontWeight"], `--${string}`> = {
-    thin: "--font-weight-wn-thin",
-    extralight: "--font-weight-wn-extralight",
-    light: "--font-weight-wn-light",
-    regular: "--font-weight-wn-regular",
-    medium: "--font-weight-wn-medium",
-    semibold: "--font-weight-wn-semibold",
-    bold: "--font-weight-wn-bold",
-    extrabold: "--font-weight-wn-extrabold",
-    black: "--font-weight-wn-black",
-  };
+  const fontWeightTokenMap: Record<HeadingToken["fontWeight"], `--${string}`> =
+    {
+      thin: "--font-weight-wn-thin",
+      extralight: "--font-weight-wn-extralight",
+      light: "--font-weight-wn-light",
+      regular: "--font-weight-wn-regular",
+      medium: "--font-weight-wn-medium",
+      semibold: "--font-weight-wn-semibold",
+      bold: "--font-weight-wn-bold",
+      extrabold: "--font-weight-wn-extrabold",
+      black: "--font-weight-wn-black",
+    };
 
   return {
     fontSize: `var(${token.size})`,
@@ -138,17 +139,18 @@ export const bodyTextTokens: Record<BodyTextLevel, BodyTextToken> = {
 
 export function getBodyTextStyle(level: BodyTextLevel) {
   const token = bodyTextTokens[level];
-  const fontWeightTokenMap: Record<BodyTextToken["fontWeight"], `--${string}`> = {
-    thin: "--font-weight-wn-thin",
-    extralight: "--font-weight-wn-extralight",
-    light: "--font-weight-wn-light",
-    regular: "--font-weight-wn-regular",
-    medium: "--font-weight-wn-medium",
-    semibold: "--font-weight-wn-semibold",
-    bold: "--font-weight-wn-bold",
-    extrabold: "--font-weight-wn-extrabold",
-    black: "--font-weight-wn-black",
-  };
+  const fontWeightTokenMap: Record<BodyTextToken["fontWeight"], `--${string}`> =
+    {
+      thin: "--font-weight-wn-thin",
+      extralight: "--font-weight-wn-extralight",
+      light: "--font-weight-wn-light",
+      regular: "--font-weight-wn-regular",
+      medium: "--font-weight-wn-medium",
+      semibold: "--font-weight-wn-semibold",
+      bold: "--font-weight-wn-bold",
+      extrabold: "--font-weight-wn-extrabold",
+      black: "--font-weight-wn-black",
+    };
 
   return {
     fontSize: `var(${token.size})`,
@@ -156,5 +158,3 @@ export function getBodyTextStyle(level: BodyTextLevel) {
     fontWeight: `var(${fontWeightTokenMap[token.fontWeight]})`,
   };
 }
-
-
