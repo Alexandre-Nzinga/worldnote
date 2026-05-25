@@ -1,49 +1,51 @@
 import clsx from "clsx";
 import type { ReactNode } from "react";
-import { WorldNoteLogo } from "../brand/logo.js";
 
 export type CardProps = {
-  title: string;
+  /** Header title */
+  title?: string;
+  /** Optional supporting line in the header */
   subtitle?: string;
-  /** Front face content */
+  /** Body content below the header divider */
   children?: ReactNode;
   className?: string;
-  flipped?: boolean;
 };
 
-/**
- * Skeuomorphic card shell.
- */
-export function Card({
-  title,
-  subtitle,
-  children,
-  className,
-  flipped = false,
-}: CardProps) {
+/** Card with an optional bordered header section separated from the body. */
+export function Card({ title, subtitle, children, className }: CardProps) {
+  const hasHeader = Boolean(title);
+  const hasBody = children != null && children !== false;
+
   return (
-    <div className={clsx("relative h-48 w-72 [perspective:1000px]", className)}>
-      <div
-        className={clsx(
-          "absolute inset-0 transition-transform duration-500 [transform-style:preserve-3d]",
-          flipped && "[transform:rotateY(180deg)]",
-        )}
-      >
-        <div className="absolute inset-0 flex flex-col gap-2 overflow-hidden rounded-[var(--radius-wn-card)] border-8 border-wn-mono-800 bg-gradient-to-br from-wn-mono-800 to-wn-mono-950 p-4 text-wn-mono-50 [backface-visibility:hidden]">
-          <div className={headingMeta.title}>{title}</div>
+    <article
+      className={clsx(
+        "overflow-hidden rounded-wn-card border border-wn-mono-200 bg-wn-mono-50 text-wn-mono-950",
+        className,
+      )}
+    >
+      {hasHeader ? (
+        <header
+          className={clsx(
+            "px-4 py-3",
+            hasBody && "border-b border-wn-mono-200",
+          )}
+        >
+          <h3 className="text-base font-semibold leading-snug text-wn-mono-950">
+            {title}
+          </h3>
           {subtitle ? (
-            <div className="text-sm text-wn-mono-400">{subtitle}</div>
+            <p className="mt-1 text-sm leading-snug text-wn-mono-500">
+              {subtitle}
+            </p>
           ) : null}
-          <div className="flex-1 text-sm text-wn-mono-300">{children}</div>
+        </header>
+      ) : null}
+
+      {hasBody ? (
+        <div className="px-4 py-3 text-sm leading-relaxed text-wn-mono-900">
+          {children}
         </div>
-        <div className="absolute inset-0 flex items-center justify-center rounded-[var(--radius-wn-card)] border-8 border-wn-mono-700 bg-wn-mono-900 [transform:rotateY(180deg)] [backface-visibility:hidden]">
-          <WorldNoteLogo className="scale-125" />
-        </div>
-      </div>
-    </div>
+      ) : null}
+    </article>
   );
 }
-
-const headingMeta = {
-  title: "text-[length:var(--text-wn-h5)] font-semibold",
-};

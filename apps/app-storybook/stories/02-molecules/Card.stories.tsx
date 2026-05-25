@@ -11,50 +11,59 @@ const meta = {
   argTypes: {
     title: {
       control: "text",
-      description: "Front-face heading",
+      description: "Header title",
     },
     subtitle: {
       control: "text",
-      description: "Optional supporting line under the title",
+      description: "Optional supporting line in the header",
     },
-    flipped: {
-      control: "boolean",
-      description: "Shows the logo on the back face",
+    children: {
+      control: "text",
+      description: "Body content below the header divider",
+    },
+    className: {
+      control: "text",
+      description: "Additional classes applied to the card root",
     },
   },
   args: {
-    title: "Aldric Vale",
-    subtitle: "NPC · Ranger",
-    children: "Exiled scout guarding the northern pass.",
-    flipped: false,
+    children: "Card body content goes here.",
   },
+  decorators: [
+    (Story) => (
+      <div className="w-[420px]">
+        <Story />
+      </div>
+    ),
+  ],
 } satisfies Meta<typeof Card>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Playground: Story = {};
+export const Default: Story = {};
 
-export const Default: Story = {
+export const WithHeading: Story = {
   args: {
-    title: "Aldric Vale",
-    subtitle: "NPC · Ranger",
-    children: "Exiled scout guarding the northern pass.",
+    title: "Card title",
+    children:
+      "Card body content goes here. This demonstrates a card with a heading section separated by a border.",
   },
 };
 
-export const TitleOnly: Story = {
-  args: {
-    title: "Unnamed location",
-    subtitle: undefined,
-    children: undefined,
-  },
-};
 
-export const Flipped: Story = {
+export const ConstrainedWidth: Story = {
   args: {
-    ...Default.args,
-    flipped: true,
+    title: "Card title",
+    children: "This card has a custom className to limit its max width.",
+    className: "max-w-xs",
   },
+  decorators: [
+    (Story) => (
+      <div className="w-full max-w-2xl">
+        <Story />
+      </div>
+    ),
+  ],
 };

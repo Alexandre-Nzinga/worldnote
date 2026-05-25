@@ -1,10 +1,15 @@
 @import "tailwindcss";
 
-/* Urbanist — load in app HTML or extend with @font-face; tokens assume font is available */
-:root {
-  /* WOLRDNOTE TYPOGRAPHY */
+@plugin "./hero.ts";
+@source "../../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}";
+@custom-variant dark (&:is(.dark *));
 
-  --font-sans: "Urbanist", ui-sans-serif, system-ui, sans-serif;
+/*
+ * Typography lives in :root (used via inline styles / getHeadingStyle).
+ * Colors and radii live once in @theme inline — Tailwind generates utilities
+ * (bg-wn-mono-950, rounded-wn-card) and exposes the same CSS variables.
+ */
+:root {
   --font-weight-wn-thin: 100;
   --font-weight-wn-extralight: 200;
   --font-weight-wn-light: 300;
@@ -15,7 +20,6 @@
   --font-weight-wn-extrabold: 800;
   --font-weight-wn-black: 900;
 
-  /* WorldNote Typography scale —  Urbanist headings */
   --text-wn-h1: clamp(
     2.027rem,
     calc(2.027rem + (3.815 - 2.027) * ((100vw - 20rem) / 70)),
@@ -47,21 +51,21 @@
     1.25rem
   );
 
-  /* WorldNote body type tokens */
   --text-wn-body: 1rem;
   --text-wn-small: 0.889rem;
   --text-wn-xs: 0.79rem;
+}
 
-  /* Border radius */
+@theme inline {
+  --font-sans: "Urbanist", ui-sans-serif, system-ui, sans-serif;
+
   --radius-xl: 0.75rem;
   --radius-2xl: 1rem;
   --radius-wn-card: 1.25rem;
   --radius-3xl: 1.5rem;
   --radius-full: 9999px;
 
-  /* WOLRDNOTE COLORS */
-
-  /* WORLDNOTE-MONO — achromatic neutral (same L ramp as before; previously ~286° hue / low chroma ≈ slate-like) */
+  /* WORLDNOTE-MONO */
   --color-wn-mono-50: oklch(98.5% 0 0);
   --color-wn-mono-100: oklch(96.7% 0 0);
   --color-wn-mono-200: oklch(92% 0 0);
@@ -74,7 +78,7 @@
   --color-wn-mono-900: oklch(21% 0 0);
   --color-wn-mono-950: oklch(14% 0 0);
 
-  /* BASE COLORS: WORLDNOTE-ROSE */
+  /* WORLDNOTE-ROSE */
   --color-wn-rose-50: oklch(96.9% 0.015 12.422);
   --color-wn-rose-100: oklch(94.1% 0.03 12.58);
   --color-wn-rose-200: oklch(89.2% 0.058 10.001);
@@ -87,7 +91,7 @@
   --color-wn-rose-900: oklch(41% 0.159 10.272);
   --color-wn-rose-950: oklch(36.1% 0.131 10.317);
 
-  /* BASE COLORS: WORLDNOTE-INDIGO */
+  /* WORLDNOTE-INDIGO */
   --color-wn-indigo-50: oklch(96.2% 0.018 272.314);
   --color-wn-indigo-100: oklch(93% 0.034 272.788);
   --color-wn-indigo-200: oklch(87% 0.065 274.039);
@@ -100,7 +104,7 @@
   --color-wn-indigo-900: oklch(35.9% 0.144 278.697);
   --color-wn-indigo-950: oklch(25.7% 0.09 281.288);
 
-  /* BASE COLORS: WORLDNOTE-AZURE */
+  /* WORLDNOTE-AZURE */
   --color-wn-azure-50: oklch(97% 0.014 254.604);
   --color-wn-azure-100: oklch(93.2% 0.032 255.585);
   --color-wn-azure-200: oklch(88.2% 0.059 254.128);
@@ -113,7 +117,7 @@
   --color-wn-azure-900: oklch(37.9% 0.146 265.522);
   --color-wn-azure-950: oklch(28.2% 0.091 267.935);
 
-  /* BASE COLORS: WORLDNOTE-LIME */
+  /* WORLDNOTE-LIME */
   --color-wn-lime-50: oklch(98.6% 0.031 120.757);
   --color-wn-lime-100: oklch(96.7% 0.067 122.328);
   --color-wn-lime-200: oklch(93.8% 0.127 124.321);
@@ -126,7 +130,7 @@
   --color-wn-lime-900: oklch(40.5% 0.101 131.063);
   --color-wn-lime-950: oklch(27.4% 0.072 132.109);
 
-  /* BASE COLORS:  WORLDNOTE-AMBER */
+  /* WORLDNOTE-AMBER */
   --color-wn-amber-50: oklch(98.7% 0.022 95.277);
   --color-wn-amber-100: oklch(96.2% 0.059 95.617);
   --color-wn-amber-200: oklch(92.4% 0.12 95.746);
@@ -139,7 +143,7 @@
   --color-wn-amber-900: oklch(41.4% 0.112 45.904);
   --color-wn-amber-950: oklch(36.5% 0.092 45.762);
 
-  /* TERTIARY COLORS (SYSTEM): WORLDNOTE-RED */
+  /* WORLDNOTE-RED (system) */
   --color-wn-red-50: oklch(97.1% 0.013 17.38);
   --color-wn-red-100: oklch(93.6% 0.032 17.717);
   --color-wn-red-200: oklch(88.5% 0.062 18.334);

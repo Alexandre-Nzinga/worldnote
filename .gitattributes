@@ -1,0 +1,6 @@
+# Keep LF in the working tree on all platforms (CI + Biome expect LF).
+* text=auto eol=lf
+
+# Binary assets — do not normalize line endings.
+*.{png,gif,jpg,jpeg,ico,svg,webp,woff,woff2,ttf,eot} -text
+*.{jar,zip,gz,bin,exe,dll,so,dylib} -text

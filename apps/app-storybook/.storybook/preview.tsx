@@ -21,7 +21,7 @@ const preview: Preview = {
   decorators: [
     (Story) => (
       <WorldNoteUIProvider>
-        <main className="dark min-h-screen bg-background p-4 font-sans text-foreground">
+        <main className="min-h-screen bg-wn-mono-100 p-6 font-sans text-wn-mono-950">
           <Story />
         </main>
       </WorldNoteUIProvider>

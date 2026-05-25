@@ -1,25 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { getBodyTextStyle, getHeadingStyle, headingClass } from "@worldnote/ui";
-
-type RadiusDef = {
-  label: string;
-  varName: `--${string}`;
-  rem: string;
-  px: number;
-};
-
-const radiusScale: RadiusDef[] = [
-  { label: "rounded-xl", varName: "--radius-xl", rem: "0.75rem", px: 12 },
-  { label: "rounded-2xl", varName: "--radius-2xl", rem: "1rem", px: 16 },
-  {
-    label: "rounded-wn-card",
-    varName: "--radius-wn-card",
-    rem: "1.25rem",
-    px: 20,
-  },
-  { label: "rounded-3xl", varName: "--radius-3xl", rem: "1.5rem", px: 24 },
-  { label: "rounded-full", varName: "--radius-full", rem: "9999px", px: 9999 },
-];
+import { getBodyTextStyle, getHeadingStyle, headingClass, radiusScale } from "@worldnote/ui";
 
 const meta = {
   title: "00-Brand/Border Radius",
@@ -57,13 +37,13 @@ export const BorderRadius: Story = {
               </p>
               <code
                 style={getBodyTextStyle("xs")}
-              >{`${radius.varName}: ${radius.rem} (${radius.px}px)`}</code>
+              >{`${radius.token}: ${radius.rem} (${radius.px}px)`}</code>
             </div>
             <div
               className="relative flex w-full items-center justify-center overflow-hidden"
               style={{
                 height: "6.5rem",
-                borderRadius: `var(${radius.varName})`,
+                borderRadius: radius.token,
                 backgroundColor: "var(--color-wn-indigo-100)",
               }}
             >

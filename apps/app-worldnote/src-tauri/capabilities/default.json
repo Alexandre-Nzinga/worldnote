@@ -3,5 +3,12 @@
   "identifier": "default",
   "description": "WorldNote desktop — core, filesystem, dialogs",
   "windows": ["main"],
-  "permissions": ["core:default", "fs:default", "dialog:default"]
+  "permissions": [
+    "core:default",
+    "core:window:default",
+    "fs:default",
+    "dialog:default",
+    "dialog:allow-open",
+    "opener:default"
+  ]
 }

@@ -1,70 +1,113 @@
 import { Button as HeroUIButton } from "@heroui/react";
 import clsx from "clsx";
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 
-export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
+export type ButtonVariant =
+  | "primary"
+  | "secondary"
+  | "tertiary"
+  | "outline"
+  | "ghost"
+  | "white"
+  | "link"
+  | "danger";
 
-export type ButtonSize = "sm" | "md" | "lg";
+export type ButtonSize = "sm" | "base";
 
-export type ButtonProps = {
-  /** Visual style mapped to WorldNote color tokens. */
+export type ButtonProps = Omit<
+  ComponentProps<typeof HeroUIButton>,
+  "variant" | "color" | "size" | "radius" | "children"
+> & {
   variant?: ButtonVariant;
-  /** Height, padding, and type scale. */
   size?: ButtonSize;
-  /** Button label or icon content. */
-  children: ReactNode;
-  /** Disables interaction and lowers opacity. */
-  isDisabled?: boolean;
-  /** Stretches the button to the width of its container. */
-  fullWidth?: boolean;
-  /** Square icon-only layout; pair with `aria-label`. */
-  isIconOnly?: boolean;
-  onPress?: () => void;
-  className?: string;
-  /** Required for meaningful `isIconOnly` buttons (screen readers). */
-  "aria-label"?: string;
+  children?: ReactNode;
 };
 
-const variantClass: Record<ButtonVariant, string> = {
-  primary:
-    "border border-wn-mono-800 bg-gradient-to-b from-wn-indigo-950 to-wn-mono-950 text-wn-mono-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_10px_24px_rgba(2,6,23,0.45)] hover:brightness-110 data-[hover=true]:brightness-110",
-  secondary:
-    "border border-wn-mono-700 bg-wn-mono-950 text-wn-mono-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] hover:bg-wn-mono-900 data-[hover=true]:bg-wn-mono-900",
-  ghost:
-    "border border-wn-mono-700 bg-transparent text-wn-mono-300 hover:bg-wn-mono-300/10 data-[hover=true]:bg-wn-mono-300/10",
-  danger:
-    "bg-wn-red-500 text-wn-mono-50 hover:bg-wn-red-600 data-[hover=true]:bg-wn-red-600",
+type VariantConfig = {
+  heroVariant: ComponentProps<typeof HeroUIButton>["variant"];
+  heroColor?: ComponentProps<typeof HeroUIButton>["color"];
+  className: string;
+};
+
+/** WorldNote button variants — all colors/radii from design tokens (tailwind.css). */
+const variantConfig: Record<ButtonVariant, VariantConfig> = {
+  primary: {
+    heroVariant: "solid",
+    heroColor: "primary",
+    className:
+      "border-0 bg-wn-azure-500 font-semibold text-wn-mono-50 shadow-none hover:bg-wn-azure-600 data-[hover=true]:bg-wn-azure-600",
+  },
+  white: {
+    heroVariant: "solid",
+    className:
+      "border-0 bg-wn-mono-50 font-semibold text-wn-mono-950 shadow-none hover:bg-wn-mono-100 data-[hover=true]:bg-wn-mono-100",
+  },
+  secondary: {
+    heroVariant: "bordered",
+    className:
+      "border-wn-mono-700 bg-wn-mono-950 font-semibold text-wn-mono-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] hover:bg-wn-mono-900 data-[hover=true]:bg-wn-mono-900",
+  },
+  tertiary: {
+    heroVariant: "bordered",
+    className:
+      "border-wn-mono-700 bg-wn-mono-900 font-semibold text-wn-mono-200 hover:bg-wn-mono-800 data-[hover=true]:bg-wn-mono-800",
+  },
+  outline: {
+    heroVariant: "bordered",
+    className:
+      "border-wn-mono-200 bg-wn-mono-50 font-medium text-wn-mono-700 hover:bg-wn-mono-100 data-[hover=true]:bg-wn-mono-100",
+  },
+  ghost: {
+    heroVariant: "ghost",
+    className:
+      "border border-wn-mono-700 bg-transparent font-medium text-wn-mono-300 hover:bg-wn-mono-300/10 data-[hover=true]:bg-wn-mono-300/10",
+  },
+  link: {
+    heroVariant: "light",
+    className:
+      "h-auto min-h-0 min-w-0 border-0 bg-transparent px-0 font-medium text-wn-mono-300 underline-offset-4 shadow-none hover:text-wn-mono-50 hover:underline data-[hover=true]:text-wn-mono-50 data-[hover=true]:underline",
+  },
+  danger: {
+    heroVariant: "solid",
+    heroColor: "danger",
+    className:
+      "border-0 bg-wn-red-500 font-semibold text-wn-mono-50 hover:bg-wn-red-600 data-[hover=true]:bg-wn-red-600",
+  },
 };
 
 const sizeClass: Record<ButtonSize, string> = {
-  sm: "h-9 min-h-9 rounded-full px-4 text-sm font-medium",
-  md: "h-11 min-h-11 rounded-full px-6 text-base font-semibold",
-  lg: "h-12 min-h-12 rounded-full px-7 text-lg font-semibold tracking-tight",
+  sm: "h-9 min-h-9 rounded-full px-6 text-sm",
+  base: "h-10 min-h-10 rounded-full px-8 text-base leading-normal",
 };
 
-/** HeroUI button with WorldNote variants (mono / red scales). */
+const heroUiSize: Record<ButtonSize, "sm" | "md"> = {
+  sm: "sm",
+  base: "md",
+};
+
+/** HeroUI button styled with WorldNote design tokens. */
 export function Button({
   variant = "primary",
-  size = "md",
+  size = "base",
   children,
-  isDisabled,
-  fullWidth,
-  isIconOnly,
   className,
-  onPress,
-  "aria-label": ariaLabel,
+  ...props
 }: ButtonProps) {
+  const config = variantConfig[variant];
+  const isLink = variant === "link";
+
   return (
     <HeroUIButton
-      size={size}
+      {...props}
+      variant={config.heroVariant}
+      color={config.heroColor}
+      size={heroUiSize[size]}
       radius="full"
-      isDisabled={isDisabled}
-      fullWidth={fullWidth}
-      isIconOnly={isIconOnly}
-      variant="solid"
-      className={clsx(sizeClass[size], variantClass[variant], className)}
-      onPress={onPress}
-      aria-label={ariaLabel}
+      className={clsx(
+        !isLink && sizeClass[size],
+        config.className,
+        className,
+      )}
     >
       {children}
     </HeroUIButton>

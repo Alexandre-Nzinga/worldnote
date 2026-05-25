@@ -1,1 +1,25 @@
 @import "@worldnote/ui/theme/tailwind.css";
+@import "remixicon/fonts/remixicon.css";
+@source "../../../../packages/canvas/src/**/*.{ts,tsx}";
+
+html,
+body,
+#root {
+  min-height: 100%;
+  background-color: var(--color-wn-mono-950);
+  color: var(--color-wn-mono-50);
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Trackpad pinch and scroll zoom need pointer events on the pane. */
+.react-flow__pane {
+  touch-action: none;
+}
+
+/* Let custom card nodes control their own shape (rounded corners, borders). */
+.react-flow__node {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+}

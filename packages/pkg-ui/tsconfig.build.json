@@ -11,5 +11,5 @@
     "moduleResolution": "NodeNext"
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "exclude": ["**/*.stories.tsx", "node_modules", "dist"]
+  "exclude": ["**/*.stories.tsx", "src/theme/hero.ts", "node_modules", "dist"]
 }

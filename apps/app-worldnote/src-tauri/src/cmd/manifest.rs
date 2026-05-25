@@ -77,3 +77,14 @@ pub fn update_canvas_manifest_node(
 
     write_manifest(&vault, &manifest)
 }
+
+pub(crate) fn remove_node_from_manifest(vault: &str, card_id: &str) -> Result<(), String> {
+    let mut manifest = load_or_default(vault)?;
+    manifest.nodes.retain(|node| node.card_id != card_id);
+    write_manifest(vault, &manifest)
+}
+
+#[tauri::command]
+pub fn remove_canvas_manifest_node(vault: String, card_id: String) -> Result<(), String> {
+    remove_node_from_manifest(&vault, &card_id)
+}

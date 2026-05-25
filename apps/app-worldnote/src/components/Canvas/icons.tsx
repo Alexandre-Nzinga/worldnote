@@ -73,9 +73,110 @@ export function LinkIcon({ className }: IconProps) {
       aria-hidden
     >
       <title>Link icon</title>
-      <path d="M14.5 9.5 17 7a3.2 3.2 0 1 1 4.5 4.5L19 14" />
-      <path d="m9.5 14.5-2.5 2.5A3.2 3.2 0 0 1 2.5 12.5L5 10" />
-      <path d="m8 16 8-8" />
+      <path d="M8.5 13.5 6 16a3.2 3.2 0 1 0 4.5 4.5l2.5-2.5" />
+      <path d="M15.5 10.5 18 8a3.2 3.2 0 1 0-4.5-4.5L11 6" />
+    </svg>
+  );
+}
+
+export function SelectIcon({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <title>Select icon</title>
+      <path d="M5 4.5 11.5 18l2.2-4.8L18.5 15 5 4.5Z" />
+    </svg>
+  );
+}
+
+export function DragIcon({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <title>Drag icon</title>
+      <path d="M9 11V6.5a2.5 2.5 0 1 1 5 0V11" />
+      <path d="M11.5 11h1a4 4 0 0 1 4 4v1.5" />
+      <path d="M12 11v8.5" />
+    </svg>
+  );
+}
+
+export function TextIcon({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <title>Text icon</title>
+      <path d="M7 5.5h10" />
+      <path d="M12 5.5V18.5" />
+      <path d="M9 18.5h6" />
+    </svg>
+  );
+}
+
+export function ActionsIcon({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <title>Actions icon</title>
+      <circle cx="7.5" cy="7.5" r="1.3" fill="currentColor" stroke="none" />
+      <circle cx="16.5" cy="7.5" r="1.3" fill="currentColor" stroke="none" />
+      <circle cx="7.5" cy="16.5" r="1.3" fill="currentColor" stroke="none" />
+      <circle cx="16.5" cy="16.5" r="1.3" fill="currentColor" stroke="none" />
+      <path d="M12 10.5v3" />
+      <path d="M10.5 12h3" />
+    </svg>
+  );
+}
+
+export function VaultIcon({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <title>Vault icon</title>
+      <rect x="5" y="4.5" width="14" height="6.5" rx="1.5" />
+      <path d="M8 7.5h8" />
+      <rect x="5" y="13" width="14" height="6.5" rx="1.5" />
+      <path d="M8 16h8" />
     </svg>
   );
 }

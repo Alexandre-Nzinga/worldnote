@@ -1,3 +1,3 @@
 export * from "./Canvas.js";
-export * from "./CanvasHeader.js";
-export * from "./Sidebar.js";
+export * from "./CanvasToolbar.js";
+export type { CanvasTool, CreateOption } from "./CanvasToolbar.js";

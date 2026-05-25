@@ -6,7 +6,8 @@ export function useVaultCommands() {
   return useMemo(
     () => ({
       openWorld: (root: string) => invoke<string>("open_world", { root }),
-      createWorld: (root: string) => invoke<string>("create_world", { root }),
+      createWorld: (args: { root: string; name: string; description: string }) =>
+        invoke<string>("create_world", args),
     }),
     [],
   );
