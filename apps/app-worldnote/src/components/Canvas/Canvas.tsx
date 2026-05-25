@@ -16,7 +16,12 @@ import {
   type OnNodesChange,
   type OnSelectionChangeParams,
 } from "@xyflow/react";
-import type { Link, WorldCard } from "@worldnote/shared";
+import {
+  CARD_TYPE_LABELS,
+  NEW_CARD_DEFAULT_NAMES,
+  type Link,
+  type WorldCard,
+} from "@worldnote/shared";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { DragEvent } from "react";
 import { useCardCommands } from "../../hooks/useCardCommands.js";
@@ -25,6 +30,7 @@ import { useVault } from "../../hooks/useVault.js";
 import { worldCardToNodeData } from "../../services/canvas/cardNodeData.js";
 import { createCardPositionUpdater } from "../../services/canvas/updateCardPosition.js";
 import { createWorldCard } from "../../services/crudWorldCard/createWorldCard.js";
+import type { NewCardType } from "../../services/crudWorldCard/cardTemplates.js";
 import { deleteWorldCard } from "../../services/crudWorldCard/deleteWorldCard.js";
 import { updateWorldCard } from "../../services/crudWorldCard/updateWorldCard.js";
 import { createLink } from "../../services/links/createLink.js";
@@ -232,14 +238,19 @@ export function Canvas({ onBack }: CanvasProps) {
     visibleSocketsSettings,
   ]);
 
+  const linksList = useMemo(
+    () => Object.values(linksById),
+    [linksById],
+  );
+
   const isValidConnection = useCallback(
     (connection: Connection | Edge) => {
       if (!connection.source || !connection.target) {
         return false;
       }
-      return isValidEasyConnection(connection, cardsById);
+      return isValidEasyConnection(connection, cardsById, linksList);
     },
-    [cardsById],
+    [cardsById, linksList],
   );
 
   const onConnect = useCallback(
@@ -248,7 +259,7 @@ export function Canvas({ onBack }: CanvasProps) {
         return;
       }
 
-      const normalized = normalizeConnection(connection, cardsById);
+      const normalized = normalizeConnection(connection, cardsById, linksList);
       if (!normalized?.targetHandle) {
         return;
       }
@@ -295,11 +306,11 @@ export function Canvas({ onBack }: CanvasProps) {
           setEdges((prev) => prev.filter((edge) => edge.id !== tempId));
         });
     },
-    [cardsById, setEdges, vaultPath],
+    [cardsById, linksList, setEdges, vaultPath],
   );
 
   const addCard = useCallback(
-    (cardType: "character" | "location", position?: { x: number; y: number }) => {
+    (cardType: NewCardType, position?: { x: number; y: number }) => {
       if (!vaultPath) {
         console.warn("Cannot create card: no vault selected");
         return Promise.resolve();
@@ -310,8 +321,8 @@ export function Canvas({ onBack }: CanvasProps) {
         y: 90 + nodes.length * 20,
       };
       const tempId = crypto.randomUUID();
-      const fallbackTitle =
-        cardType === "character" ? "New Character" : "New Location";
+      const fallbackTitle = NEW_CARD_DEFAULT_NAMES[cardType];
+      const typeLabel = CARD_TYPE_LABELS[cardType];
 
       setNodes((prev) => [
         ...prev,
@@ -321,8 +332,9 @@ export function Canvas({ onBack }: CanvasProps) {
           position: nextPosition,
           data: {
             title: fallbackTitle,
-            subtitle: cardType === "character" ? "Character" : "Location",
+            subtitle: typeLabel,
             cardType,
+            enterAnimation: true,
           },
         },
       ]);
@@ -439,8 +451,19 @@ export function Canvas({ onBack }: CanvasProps) {
 
       const droppedType = event.dataTransfer.getData(
         "application/worldnote-card-type",
-      ) as "character" | "location";
-      if (droppedType !== "character" && droppedType !== "location") {
+      ) as NewCardType;
+      const validTypes: NewCardType[] = [
+        "character",
+        "location",
+        "item",
+        "vehicle",
+        "flora",
+        "fauna",
+        "building",
+        "structure",
+        "species",
+      ];
+      if (!validTypes.includes(droppedType)) {
         return;
       }
 
@@ -523,31 +546,33 @@ export function Canvas({ onBack }: CanvasProps) {
         </div>
       </ReactFlowProvider>
 
-      {selectedCard && vaultPath && !selectedLink ? (
-        <CardEditorPanel
-          card={selectedCard}
-          vaultPath={vaultPath}
-          links={Object.values(linksById)}
-          cardsById={cardsById}
-          onClose={() => setSelectedCardId(null)}
-          onSave={handleSaveCard}
-          onDelete={handleDeleteCard}
-        />
-      ) : null}
+      <CardEditorPanel
+        isOpen={Boolean(selectedCard && vaultPath && !selectedLink)}
+        card={selectedCard ?? undefined}
+        vaultPath={vaultPath ?? ""}
+        links={Object.values(linksById)}
+        cardsById={cardsById}
+        onClose={() => setSelectedCardId(null)}
+        onSave={handleSaveCard}
+        onDelete={handleDeleteCard}
+      />
 
-      {selectedLink && vaultPath && !selectedCard ? (
-        <LinkEditorPanel
-          link={selectedLink}
-          sourceCardName={
-            cardsById[selectedLink.source_card]?.name ?? "Unknown card"
-          }
-          targetCardName={
-            cardsById[selectedLink.target_card]?.name ?? "Unknown card"
-          }
-          onClose={() => setSelectedLinkId(null)}
-          onDelete={handleDeleteLink}
-        />
-      ) : null}
+      <LinkEditorPanel
+        isOpen={Boolean(selectedLink && vaultPath && !selectedCard)}
+        link={selectedLink ?? undefined}
+        sourceCardName={
+          selectedLink
+            ? (cardsById[selectedLink.source_card]?.name ?? "Unknown card")
+            : ""
+        }
+        targetCardName={
+          selectedLink
+            ? (cardsById[selectedLink.target_card]?.name ?? "Unknown card")
+            : ""
+        }
+        onClose={() => setSelectedLinkId(null)}
+        onDelete={handleDeleteLink}
+      />
 
       <CanvasToolbar
         vaultLabel={vaultLabel}

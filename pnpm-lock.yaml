@@ -191,6 +191,9 @@ importers:
       '@xyflow/react':
         specifier: ^12.3.6
         version: 12.10.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      framer-motion:
+        specifier: ^11.18.2
+        version: 11.18.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       three:
         specifier: ^0.172.0
         version: 0.172.0

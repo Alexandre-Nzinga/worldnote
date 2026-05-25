@@ -9,16 +9,48 @@ export type SocketDescriptor = {
 
 export const SOCKET_REGISTRY = {
   character: {
-    birthplace: { accepts: ["location"], cardinality: "single" },
-    deathplace: { accepts: ["location"], cardinality: "single" },
-    current_location: { accepts: ["location"], cardinality: "single" },
+    birthplace: { accepts: ["location", "building", "structure"], cardinality: "single" },
+    deathplace: { accepts: ["location", "building", "structure"], cardinality: "single" },
+    current_location: { accepts: ["location", "building", "structure"], cardinality: "single" },
     mother: { accepts: ["character"], cardinality: "single" },
     father: { accepts: ["character"], cardinality: "single" },
     spouse: { accepts: ["character"], cardinality: "single" },
     issue: { accepts: ["character"], cardinality: "many" },
   },
   location: {
-    parent_location: { accepts: ["location"], cardinality: "single" },
+    parent_location: { accepts: ["location", "building", "structure"], cardinality: "single" },
+  },
+  item: {
+    origin_place: {
+      accepts: ["location", "building", "structure"],
+      cardinality: "single",
+    },
+    creator_id: { accepts: ["character"], cardinality: "single" },
+  },
+  vehicle: {
+    // TODO: add organization, polity when those card types exist
+    manufacturer_id: { accepts: ["character"], cardinality: "single" },
+    current_hangar_id: {
+      accepts: ["building", "structure"],
+      cardinality: "single",
+    },
+  },
+  fauna: {
+    species: { accepts: ["species"], cardinality: "single" },
+    native_habitat_id: { accepts: ["location"], cardinality: "single" },
+  },
+  flora: {
+    native_habitat_id: { accepts: ["location"], cardinality: "single" },
+  },
+  building: {
+    // TODO: architectural_style → culture bond when culture card type exists
+    parent_structure_id: { accepts: ["structure"], cardinality: "single" },
+  },
+  structure: {
+    parent_location_id: { accepts: ["location"], cardinality: "single" },
+  },
+  species: {
+    homeworld: { accepts: ["location"], cardinality: "single" },
   },
 } as const satisfies Record<string, Record<string, SocketDescriptor>>;
 

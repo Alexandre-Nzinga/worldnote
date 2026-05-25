@@ -1,4 +1,9 @@
-import { WorldNoteLogo } from "@worldnote/ui";
+import {
+  type StepDirection,
+  stepTransition,
+  stepTransitionVariants,
+  WorldNoteLogo,
+} from "@worldnote/ui";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useRef, useState } from "react";
 import { useSettings } from "../../hooks/useSettings.js";
@@ -6,11 +11,6 @@ import {
   ensureWorldnoteRoot,
   type AppSettings,
 } from "../../services/settings/settings.js";
-import {
-  type StepDirection,
-  stepTransition,
-  stepTransitionVariants,
-} from "./onboardingMotion.js";
 import { StorageStep } from "./StorageStep.js";
 import { UsernameStep } from "./UsernameStep.js";
 import { WelcomeStep } from "./WelcomeStep.js";

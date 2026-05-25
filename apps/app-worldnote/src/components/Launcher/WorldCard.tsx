@@ -1,4 +1,4 @@
-import { WorldNoteLogo } from "@worldnote/ui";
+import { MotionPressable, WorldNoteLogo } from "@worldnote/ui";
 import type { WorldSummary } from "../../services/worlds/listWorlds.js";
 import { formatRelativeTime, worldCoverStyle } from "./worldCover.js";
 
@@ -10,9 +10,9 @@ type WorldCardProps = {
 
 export function WorldCard({ world, disabled, onOpen }: WorldCardProps) {
   return (
-    <button
-      type="button"
+    <MotionPressable
       disabled={disabled}
+      enableHover
       onClick={() => onOpen(world)}
       className="flex w-full flex-col overflow-hidden rounded-wn-card border border-wn-mono-800 bg-wn-mono-900 text-left transition-opacity hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50"
       style={{ borderRadius: "var(--radius-wn-card)" }}
@@ -42,6 +42,6 @@ export function WorldCard({ world, disabled, onOpen }: WorldCardProps) {
           {formatRelativeTime(world.lastOpened)}
         </span>
       </div>
-    </button>
+    </MotionPressable>
   );
 }

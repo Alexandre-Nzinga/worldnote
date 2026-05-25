@@ -1,15 +1,15 @@
 import { Input, Textarea } from "@heroui/react";
-import { Button } from "@worldnote/ui";
+import { AnimatedPanel, Button } from "@worldnote/ui";
 import {
+  CARD_TYPE_LABELS,
+  DEFAULT_CARD_IMAGE_POSITION,
   normalizeCardImageDisplay,
   type CardImagePosition,
   listSocketsForCardType,
-  type CharacterCard,
   type Link,
-  type LocationCard,
   type WorldCard,
 } from "@worldnote/shared";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   darkFieldInputClassNames,
   modalFieldLabelClassName,
@@ -23,11 +23,22 @@ import {
 } from "../../services/links/socketLinks.js";
 import { formatSocketId } from "../../services/settings/visibleSocketSettings.js";
 import { CardImageEditorPreview } from "./CardImageEditorPreview.js";
+import { CardTypeFields } from "./CardTypeFields.js";
+import {
+  buildWorldCard,
+  defaultTypeFields,
+  typeFieldsFromCard,
+  type TypeSpecificEditorState,
+} from "./cardEditorTypes.js";
 
 type PropertyRow = { key: string; value: string };
 
+const panelClassName =
+  "pointer-events-auto absolute right-4 top-4 z-30 flex max-h-[calc(100vh-7rem)] w-[min(100%,22rem)] flex-col overflow-hidden rounded-2xl border border-wn-mono-800 bg-wn-mono-900 shadow-2xl";
+
 type CardEditorPanelProps = {
-  card: WorldCard;
+  isOpen: boolean;
+  card: WorldCard | undefined;
   vaultPath: string;
   links: Link[];
   cardsById: Record<string, WorldCard>;
@@ -69,6 +80,7 @@ function rowsToProperties(rows: PropertyRow[]): Record<string, string> {
 }
 
 export function CardEditorPanel({
+  isOpen,
   card,
   vaultPath,
   links,
@@ -77,32 +89,43 @@ export function CardEditorPanel({
   onSave,
   onDelete,
 }: CardEditorPanelProps) {
-  const [name, setName] = useState(card.name);
-  const [description, setDescription] = useState(card.description ?? "");
-  const [tags, setTags] = useState(tagsToString(card.tags));
-  const [birthdate, setBirthdate] = useState(
-    card.card_type === "character" ? (card.birthdate ?? "") : "",
+  const lastCardRef = useRef<WorldCard | undefined>(undefined);
+  if (card) {
+    lastCardRef.current = card;
+  }
+  const activeCard = card ?? lastCardRef.current;
+
+  const [name, setName] = useState(activeCard?.name ?? "");
+  const [description, setDescription] = useState(activeCard?.description ?? "");
+  const [tags, setTags] = useState(
+    activeCard ? tagsToString(activeCard.tags) : "",
   );
-  const [coordinates, setCoordinates] = useState(
-    card.card_type === "location" ? (card.coordinates ?? "") : "",
+  const [typeFields, setTypeFields] = useState<TypeSpecificEditorState>(() =>
+    activeCard
+      ? typeFieldsFromCard(activeCard)
+      : defaultTypeFields("character"),
   );
-  const [imagePath, setImagePath] = useState(card.image_path ?? "");
+  const [imagePath, setImagePath] = useState(activeCard?.image_path ?? "");
   const [imagePosition, setImagePosition] = useState<CardImagePosition>(() =>
-    normalizeCardImageDisplay(undefined, card.image_position).position,
+    activeCard
+      ? normalizeCardImageDisplay(undefined, activeCard.image_position).position
+      : DEFAULT_CARD_IMAGE_POSITION,
   );
   const [propertyRows, setPropertyRows] = useState<PropertyRow[]>(() =>
-    propertiesToRows(card.custom_properties),
+    activeCard ? propertiesToRows(activeCard.custom_properties) : [],
   );
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!card) {
+      return;
+    }
     setName(card.name);
     setDescription(card.description ?? "");
     setTags(tagsToString(card.tags));
-    setBirthdate(card.card_type === "character" ? (card.birthdate ?? "") : "");
-    setCoordinates(card.card_type === "location" ? (card.coordinates ?? "") : "");
+    setTypeFields(typeFieldsFromCard(card));
     setImagePath(card.image_path ?? "");
     setImagePosition(
       normalizeCardImageDisplay(undefined, card.image_position).position,
@@ -111,51 +134,40 @@ export function CardEditorPanel({
     setError(null);
   }, [card]);
 
-  const socketEntries = listSocketsForCardType(card.card_type);
-  const socketLinkLabels = getSocketLinkLabels(
-    card.id,
-    links,
-    (cardId) => cardsById[cardId]?.name,
-  );
+  const socketEntries = activeCard
+    ? listSocketsForCardType(activeCard.card_type)
+    : [];
+  const socketLinkLabels = activeCard
+    ? getSocketLinkLabels(activeCard.id, links, (cardId) => cardsById[cardId]?.name)
+    : {};
 
   const imagePreview = cardImageSrc(vaultPath, imagePath);
 
   const buildCard = useCallback((): WorldCard => {
+    if (!activeCard) {
+      throw new Error("No card to save");
+    }
     const base = {
-      id: card.id,
+      id: activeCard.id,
       name: name.trim(),
-      parent_id: card.parent_id,
-      position: card.position,
+      parent_id: activeCard.parent_id,
+      position: activeCard.position,
       tags: stringToTags(tags),
       description: description.trim() || undefined,
       image_path: imagePath.trim() || undefined,
       image_position: imagePath.trim() ? imagePosition : undefined,
       custom_properties: rowsToProperties(propertyRows),
     };
-
-    if (card.card_type === "character") {
-      return {
-        ...base,
-        card_type: "character",
-        birthdate: birthdate.trim() || undefined,
-      } satisfies CharacterCard;
-    }
-
-    return {
-      ...base,
-      card_type: "location",
-      coordinates: coordinates.trim() || undefined,
-    } satisfies LocationCard;
+    return buildWorldCard(activeCard, base, typeFields);
   }, [
-    birthdate,
-    card,
-    coordinates,
+    activeCard,
     description,
     imagePath,
     imagePosition,
     name,
     propertyRows,
     tags,
+    typeFields,
   ]);
 
   const handleSave = useCallback(async () => {
@@ -178,25 +190,31 @@ export function CardEditorPanel({
   }, [buildCard, name, onClose, onSave]);
 
   const handlePickImage = useCallback(async () => {
+    if (!activeCard) {
+      return;
+    }
     setError(null);
     try {
       const sourcePath = await pickCardImageFile();
       if (!sourcePath) {
         return;
       }
-      const relativePath = await saveCardImage(vaultPath, card.id, sourcePath);
+      const relativePath = await saveCardImage(vaultPath, activeCard.id, sourcePath);
       setImagePath(relativePath);
     } catch (imageError) {
       setError(
         imageError instanceof Error ? imageError.message : String(imageError),
       );
     }
-  }, [card.id, vaultPath]);
+  }, [activeCard, vaultPath]);
 
   const handleDelete = useCallback(async () => {
+    if (!activeCard) {
+      return;
+    }
     if (
       !window.confirm(
-        `Delete "${card.name}"? This removes the card from your world.`,
+        `Delete "${activeCard.name}"? This removes the card from your world.`,
       )
     ) {
       return;
@@ -204,7 +222,7 @@ export function CardEditorPanel({
     setIsDeleting(true);
     setError(null);
     try {
-      await onDelete(card.id);
+      await onDelete(activeCard.id);
       onClose();
     } catch (deleteError) {
       setError(
@@ -213,13 +231,19 @@ export function CardEditorPanel({
     } finally {
       setIsDeleting(false);
     }
-  }, [card.id, card.name, onClose, onDelete]);
+  }, [activeCard, onClose, onDelete]);
 
   const isBusy = isSaving || isDeleting;
-  const typeLabel = card.card_type === "character" ? "Character" : "Location";
+  const typeLabel = activeCard
+    ? CARD_TYPE_LABELS[activeCard.card_type]
+    : "";
+
+  if (!activeCard) {
+    return null;
+  }
 
   return (
-    <aside className="pointer-events-auto absolute right-4 top-4 z-30 flex max-h-[calc(100vh-7rem)] w-[min(100%,22rem)] flex-col overflow-hidden rounded-2xl border border-wn-mono-800 bg-wn-mono-900 shadow-2xl">
+    <AnimatedPanel isOpen={isOpen} className={panelClassName}>
       <header className="flex items-start justify-between gap-3 border-b border-wn-mono-800 px-4 py-3">
         <div>
           <p className="text-xs font-medium uppercase tracking-wide text-wn-mono-500">
@@ -346,36 +370,12 @@ export function CardEditorPanel({
             />
           </div>
 
-          {card.card_type === "character" ? (
-            <div className="flex flex-col gap-1">
-              <label htmlFor="card-birthdate" className={modalFieldLabelClassName}>
-                Birthdate
-              </label>
-              <Input
-                id="card-birthdate"
-                placeholder="Year 402"
-                value={birthdate}
-                onValueChange={setBirthdate}
-                classNames={darkFieldInputClassNames}
-              />
-            </div>
-          ) : (
-            <div className="flex flex-col gap-1">
-              <label
-                htmlFor="card-coordinates"
-                className={modalFieldLabelClassName}
-              >
-                Coordinates
-              </label>
-              <Input
-                id="card-coordinates"
-                placeholder="12.4, -3.1"
-                value={coordinates}
-                onValueChange={setCoordinates}
-                classNames={darkFieldInputClassNames}
-              />
-            </div>
-          )}
+          <CardTypeFields
+            cardType={activeCard.card_type}
+            fields={typeFields}
+            onChange={setTypeFields}
+            disabled={isBusy}
+          />
 
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
@@ -477,6 +477,6 @@ export function CardEditorPanel({
           {isDeleting ? "Deleting…" : "Delete card"}
         </Button>
       </footer>
-    </aside>
+    </AnimatedPanel>
   );
 }

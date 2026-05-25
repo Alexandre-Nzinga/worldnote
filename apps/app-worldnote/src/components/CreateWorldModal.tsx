@@ -1,7 +1,6 @@
 import { Input, Textarea } from "@heroui/react";
-import { Button } from "@worldnote/ui";
+import { AnimatedModal, Button } from "@worldnote/ui";
 import { useCallback, useEffect, useState } from "react";
-import { createPortal } from "react-dom";
 import { useVault } from "../hooks/useVault.js";
 import { useVaultCommands } from "../hooks/useVaultCommands.js";
 import { pickDirectory } from "../services/desktop/pickDirectory.js";
@@ -113,135 +112,121 @@ export function CreateWorldModal({
     setCurrentVaultPath,
   ]);
 
-  if (!isOpen) {
-    return null;
-  }
-
-  return createPortal(
-    <dialog
-      open
-      aria-labelledby="create-world-title"
-      className="fixed inset-0 z-100 m-0 flex h-full max-h-none w-full max-w-none items-center justify-center border-0 bg-transparent p-4"
+  return (
+    <AnimatedModal
+      isOpen={isOpen}
+      onClose={onClose}
+      closeDisabled={isSubmitting}
+      labelledBy="create-world-title"
     >
-      <button
-        type="button"
-        className="absolute inset-0 bg-wn-mono-950/80 backdrop-blur-sm"
-        aria-label="Close dialog"
-        disabled={isSubmitting}
-        onClick={onClose}
-      />
+      <header className="flex flex-col gap-1">
+        <h2
+          id="create-world-title"
+          className="text-xl font-semibold text-wn-mono-50"
+        >
+          Create new world
+        </h2>
+        <p className="text-sm text-wn-mono-400">
+          Name your world, add an optional description, and choose where to
+          store it on your machine.
+        </p>
+      </header>
 
-      <div className="relative z-10 flex w-full max-w-lg flex-col gap-6 rounded-2xl border border-wn-mono-800 bg-wn-mono-900 p-6 text-wn-mono-100 shadow-2xl">
-        <header className="flex flex-col gap-1">
-          <h2
-            id="create-world-title"
-            className="text-xl font-semibold text-wn-mono-50"
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-1">
+          <label
+            htmlFor="create-world-name"
+            className={modalFieldLabelClassName}
           >
-            Create new world
-          </h2>
-          <p className="text-sm text-wn-mono-400">
-            Name your world, add an optional description, and choose where to
-            store it on your machine.
-          </p>
-        </header>
-
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-1">
-            <label
-              htmlFor="create-world-name"
-              className={modalFieldLabelClassName}
-            >
-              Name <span className="text-wn-red-500">*</span>
-            </label>
-            <Input
-              id="create-world-name"
-              autoFocus
-              isRequired
-              aria-label="Name"
-              placeholder="Lost Suns"
-              value={name}
-              onValueChange={setName}
-              classNames={darkFieldInputClassNames}
-            />
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <label
-              htmlFor="create-world-description"
-              className={modalFieldLabelClassName}
-            >
-              Description
-            </label>
-            <Textarea
-              id="create-world-description"
-              aria-label="Description"
-              placeholder="A short summary of your world (optional)"
-              minRows={3}
-              value={description}
-              onValueChange={setDescription}
-              classNames={darkFieldInputClassNames}
-            />
-          </div>
-
-          {!forcedRoot ? (
-            <div className="flex flex-col gap-1">
-              <span className={modalFieldLabelClassName}>
-                Location <span className="text-wn-red-500">*</span>
-              </span>
-              <div className="flex gap-2">
-                <Input
-                  isReadOnly
-                  aria-label="Location"
-                  placeholder="Browse for a folder…"
-                  value={location ?? ""}
-                  classNames={{
-                    ...darkFieldInputClassNames,
-                    base: "flex-1",
-                  }}
-                />
-                <Button
-                  variant="secondary"
-                  size="base"
-                  onPress={() => {
-                    void handleBrowse();
-                  }}
-                >
-                  Browse
-                </Button>
-              </div>
-            </div>
-          ) : null}
-
-          {error ? (
-            <p className="text-sm text-wn-red-400" role="alert">
-              {error}
-            </p>
-          ) : null}
+            Name <span className="text-wn-red-500">*</span>
+          </label>
+          <Input
+            id="create-world-name"
+            autoFocus
+            isRequired
+            aria-label="Name"
+            placeholder="Lost Suns"
+            value={name}
+            onValueChange={setName}
+            classNames={darkFieldInputClassNames}
+          />
         </div>
 
-        <footer className="flex items-center justify-between gap-3">
-          <Button
-            variant="secondary"
-            size="base"
-            isDisabled={isSubmitting}
-            onPress={onClose}
+        <div className="flex flex-col gap-1">
+          <label
+            htmlFor="create-world-description"
+            className={modalFieldLabelClassName}
           >
-            Cancel
-          </Button>
-          <Button
-            variant="white"
-            size="base"
-            className={modalPrimaryButtonClassName}
-            isDisabled={!canSubmit}
-            onPress={() => {
-              void handleSubmit();
-            }}
-          >
-            Create world
-          </Button>
-        </footer>
+            Description
+          </label>
+          <Textarea
+            id="create-world-description"
+            aria-label="Description"
+            placeholder="A short summary of your world (optional)"
+            minRows={3}
+            value={description}
+            onValueChange={setDescription}
+            classNames={darkFieldInputClassNames}
+          />
+        </div>
+
+        {!forcedRoot ? (
+          <div className="flex flex-col gap-1">
+            <span className={modalFieldLabelClassName}>
+              Location <span className="text-wn-red-500">*</span>
+            </span>
+            <div className="flex gap-2">
+              <Input
+                isReadOnly
+                aria-label="Location"
+                placeholder="Browse for a folder…"
+                value={location ?? ""}
+                classNames={{
+                  ...darkFieldInputClassNames,
+                  base: "flex-1",
+                }}
+              />
+              <Button
+                variant="secondary"
+                size="base"
+                onPress={() => {
+                  void handleBrowse();
+                }}
+              >
+                Browse
+              </Button>
+            </div>
+          </div>
+        ) : null}
+
+        {error ? (
+          <p className="text-sm text-wn-red-400" role="alert">
+            {error}
+          </p>
+        ) : null}
       </div>
-    </dialog>,
-    document.body,
+
+      <footer className="flex items-center justify-between gap-3">
+        <Button
+          variant="secondary"
+          size="base"
+          isDisabled={isSubmitting}
+          onPress={onClose}
+        >
+          Cancel
+        </Button>
+        <Button
+          variant="white"
+          size="base"
+          className={modalPrimaryButtonClassName}
+          isDisabled={!canSubmit}
+          onPress={() => {
+            void handleSubmit();
+          }}
+        >
+          Create world
+        </Button>
+      </footer>
+    </AnimatedModal>
   );
 }

@@ -1,6 +1,10 @@
 import { Button as HeroUIButton } from "@heroui/react";
 import clsx from "clsx";
+import { motion } from "framer-motion";
 import type { ComponentProps, ReactNode } from "react";
+import { pressableTap } from "../motion/presets.js";
+import { tapTransition } from "../motion/tokens.js";
+import { usePrefersReducedMotion } from "../motion/usePrefersReducedMotion.js";
 
 export type ButtonVariant =
   | "primary"
@@ -91,25 +95,39 @@ export function Button({
   size = "base",
   children,
   className,
+  isDisabled,
   ...props
 }: ButtonProps) {
   const config = variantConfig[variant];
   const isLink = variant === "link";
+  const reducedMotion = usePrefersReducedMotion();
+  const canAnimate = !isDisabled && !isLink && !reducedMotion;
 
   return (
-    <HeroUIButton
-      {...props}
-      variant={config.heroVariant}
-      color={config.heroColor}
-      size={heroUiSize[size]}
-      radius="full"
+    <motion.span
       className={clsx(
-        !isLink && sizeClass[size],
-        config.className,
-        className,
+        "inline-flex",
+        isLink && "w-auto",
+        !isLink && "w-full max-w-full",
       )}
+      whileTap={canAnimate ? pressableTap : undefined}
+      transition={tapTransition}
     >
-      {children}
-    </HeroUIButton>
+      <HeroUIButton
+        {...props}
+        isDisabled={isDisabled}
+        variant={config.heroVariant}
+        color={config.heroColor}
+        size={heroUiSize[size]}
+        radius="full"
+        className={clsx(
+          !isLink && sizeClass[size],
+          config.className,
+          className,
+        )}
+      >
+        {children}
+      </HeroUIButton>
+    </motion.span>
   );
 }

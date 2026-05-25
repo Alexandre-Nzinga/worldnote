@@ -1,14 +1,18 @@
-import { Button } from "@worldnote/ui";
+import { AnimatedPanel, Button } from "@worldnote/ui";
 import type { Link } from "@worldnote/shared";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { modalFieldLabelClassName } from "../Onboarding/fieldClassNames.js";
 
 function formatSocketId(socketId: string): string {
   return socketId.replace(/_/g, " ");
 }
 
+const panelClassName =
+  "pointer-events-auto absolute right-4 top-4 z-30 flex max-h-[calc(100vh-7rem)] w-[min(100%,22rem)] flex-col overflow-hidden rounded-2xl border border-wn-mono-800 bg-wn-mono-900 shadow-2xl";
+
 type LinkEditorPanelProps = {
-  link: Link;
+  isOpen: boolean;
+  link: Link | undefined;
   sourceCardName: string;
   targetCardName: string;
   onClose: () => void;
@@ -16,19 +20,29 @@ type LinkEditorPanelProps = {
 };
 
 export function LinkEditorPanel({
+  isOpen,
   link,
   sourceCardName,
   targetCardName,
   onClose,
   onDelete,
 }: LinkEditorPanelProps) {
+  const lastLinkRef = useRef<Link | undefined>(undefined);
+  if (link) {
+    lastLinkRef.current = link;
+  }
+  const activeLink = link ?? lastLinkRef.current;
+
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleDelete = useCallback(async () => {
+    if (!activeLink) {
+      return;
+    }
     if (
       !window.confirm(
-        `Remove link from "${formatSocketId(link.source_socket)}" on ${sourceCardName}?`,
+        `Remove link from "${formatSocketId(activeLink.source_socket)}" on ${sourceCardName}?`,
       )
     ) {
       return;
@@ -36,7 +50,7 @@ export function LinkEditorPanel({
     setIsDeleting(true);
     setError(null);
     try {
-      await onDelete(link.id);
+      await onDelete(activeLink.id);
       onClose();
     } catch (deleteError) {
       setError(
@@ -45,10 +59,14 @@ export function LinkEditorPanel({
     } finally {
       setIsDeleting(false);
     }
-  }, [link.id, link.source_socket, onClose, onDelete, sourceCardName]);
+  }, [activeLink, onClose, onDelete, sourceCardName]);
+
+  if (!activeLink) {
+    return null;
+  }
 
   return (
-    <aside className="pointer-events-auto absolute right-4 top-4 z-30 flex max-h-[calc(100vh-7rem)] w-[min(100%,22rem)] flex-col overflow-hidden rounded-2xl border border-wn-mono-800 bg-wn-mono-900 shadow-2xl">
+    <AnimatedPanel isOpen={isOpen} className={panelClassName}>
       <header className="flex items-start justify-between gap-3 border-b border-wn-mono-800 px-4 py-3">
         <div>
           <p className="text-xs font-medium uppercase tracking-wide text-wn-mono-500">
@@ -71,7 +89,7 @@ export function LinkEditorPanel({
           <div className="flex flex-col gap-1">
             <span className={modalFieldLabelClassName}>Socket</span>
             <p className="rounded-xl border border-wn-mono-700 bg-wn-mono-950 px-3 py-2 text-sm text-wn-mono-50">
-              {formatSocketId(link.source_socket)} on {sourceCardName}
+              {formatSocketId(activeLink.source_socket)} on {sourceCardName}
             </p>
           </div>
 
@@ -102,6 +120,6 @@ export function LinkEditorPanel({
           {isDeleting ? "Removing…" : "Remove link"}
         </Button>
       </footer>
-    </aside>
+    </AnimatedPanel>
   );
 }

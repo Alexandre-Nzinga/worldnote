@@ -6,11 +6,13 @@ import {
   useNodeId,
   useUpdateNodeInternals,
 } from "@xyflow/react";
+import { AnimatePresence, motion } from "framer-motion";
 import type { ReactNode } from "react";
 import {
   Fragment,
   memo,
   useCallback,
+  useEffect,
   useLayoutEffect,
   useMemo,
   useState,
@@ -28,6 +30,93 @@ import {
   socketHandleClassName as nodeSocketHandleClassName,
   socketStyleFor,
 } from "./socket-style.js";
+
+/** Mirrors WorldCard card_type slugs (kept in canvas to avoid a shared package dependency). */
+export type WorldNoteCardType =
+  | "character"
+  | "location"
+  | "item"
+  | "vehicle"
+  | "flora"
+  | "fauna"
+  | "building"
+  | "structure"
+  | "species";
+
+type CardVisualConfig = {
+  label: string;
+  badgeClassName: string;
+  widthClass: string;
+  aspectClass: string;
+  titleClassName?: string;
+};
+
+const CARD_VISUAL_CONFIG: Record<WorldNoteCardType, CardVisualConfig> = {
+  character: {
+    label: "Character",
+    badgeClassName: "bg-wn-rose-300",
+    widthClass: "w-[250px]",
+    aspectClass: "aspect-3/4",
+    titleClassName: "text-xl font-semibold leading-tight",
+  },
+  location: {
+    label: "Location",
+    badgeClassName: "bg-wn-azure-300",
+    widthClass: "w-[280px]",
+    aspectClass: "aspect-5/3",
+  },
+  item: {
+    label: "Item",
+    badgeClassName: "bg-wn-amber-300",
+    widthClass: "w-[260px]",
+    aspectClass: "aspect-5/3",
+  },
+  vehicle: {
+    label: "Vehicle",
+    badgeClassName: "bg-wn-indigo-300",
+    widthClass: "w-[280px]",
+    aspectClass: "aspect-5/3",
+  },
+  flora: {
+    label: "Flora",
+    badgeClassName: "bg-wn-lime-300",
+    widthClass: "w-[260px]",
+    aspectClass: "aspect-5/3",
+  },
+  fauna: {
+    label: "Fauna",
+    badgeClassName: "bg-wn-rose-300",
+    widthClass: "w-[260px]",
+    aspectClass: "aspect-5/3",
+  },
+  building: {
+    label: "Building",
+    badgeClassName: "bg-wn-mono-300",
+    widthClass: "w-[280px]",
+    aspectClass: "aspect-5/3",
+  },
+  structure: {
+    label: "Structure",
+    badgeClassName: "bg-wn-mono-400",
+    widthClass: "w-[280px]",
+    aspectClass: "aspect-5/3",
+  },
+  species: {
+    label: "Species",
+    badgeClassName: "bg-wn-azure-300",
+    widthClass: "w-[260px]",
+    aspectClass: "aspect-5/3",
+  },
+};
+
+const DEFAULT_VISUAL_CONFIG = CARD_VISUAL_CONFIG.location;
+
+function visualConfigFor(cardType: WorldNoteCardType | undefined): CardVisualConfig {
+  if (cardType && cardType in CARD_VISUAL_CONFIG) {
+    return CARD_VISUAL_CONFIG[cardType];
+  }
+  return DEFAULT_VISUAL_CONFIG;
+}
 
 export type CardNodeSocket = {
   id: string;
@@ -53,7 +142,7 @@ export type CardNodeData = {
   imageUrl?: string;
   imageFit?: CardImageFit;
   imagePosition?: CardImagePosition;
-  cardType?: "character" | "location";
+  cardType?: WorldNoteCardType;
   sockets?: CardNodeSocket[];
   visibleSockets?: Record<string, boolean>;
   scalars?: CardNodeScalars;
@@ -61,9 +150,31 @@ export type CardNodeData = {
   onUpdate?: (partial: Record<string, unknown>) => void;
   /** Faint border while this card is hovered during a connection drag. */
   connectionHover?: boolean;
+  /** One-shot enter animation when a card is newly created. */
+  enterAnimation?: boolean;
 };
 
 const connectHoverRingClass = "ring-1 ring-inset ring-wn-mono-50/50";
+
+const cardEnterVariants = {
+  hidden: { opacity: 0, scale: 0.92 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    transition: {
+      type: "spring" as const,
+      stiffness: 420,
+      damping: 38,
+      mass: 0.85,
+    },
+  },
+};
+
+const viewCrossfadeVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1 },
+  exit: { opacity: 0 },
+};
 
 export type CardFlowNode = Node<CardNodeData, "worldnoteCard">;
 
@@ -437,28 +548,14 @@ type CardNodeBodyProps = {
 };
 
 function CardNodeBody({ data, viewMode, onToggleView }: CardNodeBodyProps) {
-  const isCharacter = data.cardType === "character";
+  const visual = visualConfigFor(data.cardType);
 
   if (viewMode === "node") {
     return (
       <CardNodeView
         data={data}
-        badgeLabel={isCharacter ? "Character" : "Location"}
-        badgeClassName={isCharacter ? "bg-wn-rose-300" : "bg-wn-azure-300"}
-        onToggleView={onToggleView}
-      />
-    );
-  }
-
-  if (isCharacter) {
-    return (
-      <OverlayMediaCard
-        data={data}
-        widthClass="w-[250px]"
-        aspectClass="aspect-3/4"
-        badgeLabel="Character"
-        badgeClassName="bg-wn-rose-300"
-        titleClassName="text-xl font-semibold leading-tight"
+        badgeLabel={visual.label}
+        badgeClassName={visual.badgeClassName}
         onToggleView={onToggleView}
       />
     );
@@ -467,10 +564,11 @@ function CardNodeBody({ data, viewMode, onToggleView }: CardNodeBodyProps) {
   return (
     <OverlayMediaCard
       data={data}
-      widthClass="w-[280px]"
-      aspectClass="aspect-5/3"
-      badgeLabel="Location"
-      badgeClassName="bg-wn-azure-300"
+      widthClass={visual.widthClass}
+      aspectClass={visual.aspectClass}
+      badgeLabel={visual.label}
+      badgeClassName={visual.badgeClassName}
+      titleClassName={visual.titleClassName}
       onToggleView={onToggleView}
     />
   );
@@ -478,8 +576,15 @@ function CardNodeBody({ data, viewMode, onToggleView }: CardNodeBodyProps) {
 
 function CardNodeInner({ data }: NodeProps<CardFlowNode>) {
   const [viewMode, setViewMode] = useState<CardViewMode>("visual");
+  const [enterDone, setEnterDone] = useState(!data.enterAnimation);
   const sockets = data.sockets ?? [];
   const visibleSockets = data.visibleSockets ?? {};
+
+  useEffect(() => {
+    if (!data.enterAnimation) {
+      setEnterDone(true);
+    }
+  }, [data.enterAnimation]);
 
   const onToggleView = useCallback(() => {
     setViewMode((current) => (current === "visual" ? "node" : "visual"));
@@ -490,15 +595,39 @@ function CardNodeInner({ data }: NodeProps<CardFlowNode>) {
       <CardSocketHandles sockets={sockets} visibleSockets={visibleSockets} />
     ) : null;
 
+  const shouldEnter = Boolean(data.enterAnimation && !enterDone);
+
   return (
-    <div className="group relative">
+    <motion.div
+      className="group relative"
+      variants={cardEnterVariants}
+      initial={shouldEnter ? "hidden" : false}
+      animate="visible"
+      onAnimationComplete={() => {
+        if (data.enterAnimation && !enterDone) {
+          setEnterDone(true);
+          data.onUpdate?.({ enterAnimation: false });
+        }
+      }}
+    >
       {handles}
-      <CardNodeBody
-        data={data}
-        viewMode={viewMode}
-        onToggleView={onToggleView}
-      />
-    </div>
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={viewMode}
+          variants={viewCrossfadeVariants}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+          transition={{ duration: 0.15 }}
+        >
+          <CardNodeBody
+            data={data}
+            viewMode={viewMode}
+            onToggleView={onToggleView}
+          />
+        </motion.div>
+      </AnimatePresence>
+    </motion.div>
   );
 }
 

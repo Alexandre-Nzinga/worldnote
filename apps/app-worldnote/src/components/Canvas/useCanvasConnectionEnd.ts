@@ -208,7 +208,9 @@ export function useCanvasConnectionEnd({
       );
 
       if (dropCardId) {
-        const easy = resolveEasyConnect(origin, dropCardId, cardsById);
+        const easy = resolveEasyConnect(origin, dropCardId, cardsById, {
+          links: Object.values(linksByIdRef.current),
+        });
         if (easy) {
           onConnect(easy);
           return;
@@ -243,6 +245,7 @@ export function useCanvasConnectionEnd({
             title: name,
             subtitle: "Character",
             cardType: "character",
+            enterAnimation: true,
           },
         },
       ]);

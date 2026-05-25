@@ -2,20 +2,27 @@ import { isEntityHandle, canonicalSocketId } from "@worldnote/canvas";
 import type { Connection, Edge } from "@xyflow/react";
 import {
   getSocketDescriptor,
-  listSocketsForCardType,
+  type Link,
   type WorldCard,
 } from "@worldnote/shared";
+import { findTargetSocketForPluggedCard } from "./resolveCharacterKinship.js";
 
 export type ConnectDragOrigin =
   | { kind: "socket"; ownerCardId: string; socketId: string }
   | { kind: "entity"; cardId: string };
+
+export type ResolveEasyConnectOptions = {
+  links?: Link[];
+};
 
 /** React Flow edge: plugged-in card is source (entity), socket owner is target. */
 export function resolveEasyConnect(
   origin: ConnectDragOrigin,
   dropCardId: string,
   cardsById: Record<string, WorldCard>,
+  options: ResolveEasyConnectOptions = {},
 ): Connection | null {
+  const links = options.links ?? [];
   const dropCard = cardsById[dropCardId];
   if (!dropCard) {
     return null;
@@ -43,10 +50,7 @@ export function resolveEasyConnect(
     return null;
   }
 
-  const targetSocket = findTargetSocketForPluggedCard(
-    dropCard,
-    plugged.card_type,
-  );
+  const targetSocket = findTargetSocketForPluggedCard(dropCard, plugged, links);
   if (!targetSocket) {
     return null;
   }
@@ -59,24 +63,13 @@ export function resolveEasyConnect(
   };
 }
 
-function findTargetSocketForPluggedCard(
-  ownerCard: WorldCard,
-  pluggedCardType: WorldCard["card_type"],
-): string | null {
-  for (const { id, descriptor } of listSocketsForCardType(ownerCard.card_type)) {
-    if (descriptor.accepts.includes(pluggedCardType)) {
-      return id;
-    }
-  }
-  return null;
-}
-
 export function canEasyConnect(
   origin: ConnectDragOrigin,
   dropCardId: string,
   cardsById: Record<string, WorldCard>,
+  options: ResolveEasyConnectOptions = {},
 ): boolean {
-  return resolveEasyConnect(origin, dropCardId, cardsById) !== null;
+  return resolveEasyConnect(origin, dropCardId, cardsById, options) !== null;
 }
 
 /** Infer drag origin from a connect-start handle. */
@@ -98,11 +91,11 @@ export function connectOriginFromHandle(
   return null;
 }
 
-/** True when a loose-mode connection (possibly missing targetHandle) can link these nodes. */
 /** Fill in entity + target socket when the drop target is the whole card. */
 export function normalizeConnection(
   connection: Connection,
   cardsById: Record<string, WorldCard>,
+  links: Link[] = [],
 ): Connection | null {
   if (!connection.source || !connection.target) {
     return null;
@@ -135,7 +128,7 @@ export function normalizeConnection(
     return null;
   }
 
-  const socket = findTargetSocketForPluggedCard(owner, plugged.card_type);
+  const socket = findTargetSocketForPluggedCard(owner, plugged, links);
   if (!socket) {
     return null;
   }
@@ -151,6 +144,7 @@ export function normalizeConnection(
 export function isValidEasyConnection(
   connection: Connection | Edge,
   cardsById: Record<string, WorldCard>,
+  links: Link[] = [],
 ): boolean {
   if (!connection.source || !connection.target) {
     return false;
@@ -188,5 +182,5 @@ export function isValidEasyConnection(
     return false;
   }
 
-  return findTargetSocketForPluggedCard(owner, plugged.card_type) !== null;
+  return findTargetSocketForPluggedCard(owner, plugged, links) !== null;
 }

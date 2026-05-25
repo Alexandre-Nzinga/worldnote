@@ -1,3 +1,5 @@
+import { screenFade } from "@worldnote/ui";
+import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useState } from "react";
 import { Canvas } from "./components/Canvas/index.js";
 import { Launcher } from "./components/Launcher/index.js";
@@ -40,9 +42,31 @@ export default function App() {
     );
   }
 
-  if (view === "canvas") {
-    return <Canvas onBack={onBackToLauncher} />;
-  }
-
-  return <Launcher onWorldReady={onWorldReady} />;
+  return (
+    <AnimatePresence mode="wait">
+      {view === "canvas" ? (
+        <motion.div
+          key="canvas"
+          className="min-h-screen"
+          variants={screenFade}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+        >
+          <Canvas onBack={onBackToLauncher} />
+        </motion.div>
+      ) : (
+        <motion.div
+          key="launcher"
+          className="min-h-screen"
+          variants={screenFade}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+        >
+          <Launcher onWorldReady={onWorldReady} />
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
 }

@@ -1,11 +1,12 @@
-import { Button, getHeadingStyle } from "@worldnote/ui";
-import { motion } from "framer-motion";
-import type { ReactNode } from "react";
 import {
   actionItemVariants,
+  Button,
   contentItemVariants,
   contentStaggerVariants,
-} from "./onboardingMotion.js";
+  getHeadingStyle,
+} from "@worldnote/ui";
+import { motion } from "framer-motion";
+import type { ReactNode } from "react";
 
 type StepLayoutProps = {
   eyebrow: ReactNode;

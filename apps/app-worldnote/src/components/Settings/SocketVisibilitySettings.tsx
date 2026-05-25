@@ -1,4 +1,5 @@
 import {
+  CARD_TYPE_LABELS,
   listSocketsForCardType,
   SOCKET_REGISTRY,
   type RegisteredCardType,
@@ -37,11 +38,8 @@ export function SocketVisibilitySettings({
         }
         const cardSettings = value[cardType] ?? {};
         const typeLabel =
-          cardType === "character"
-            ? "Character"
-            : cardType === "location"
-              ? "Location"
-              : cardType;
+          CARD_TYPE_LABELS[cardType as keyof typeof CARD_TYPE_LABELS] ??
+          cardType;
 
         return (
           <div key={cardType} className="flex flex-col gap-2">
