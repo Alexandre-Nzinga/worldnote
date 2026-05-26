@@ -14,7 +14,7 @@ type WorldCardProps = {
 };
 
 const cardClassName = [
-  "group relative flex w-full flex-col overflow-hidden text-left",
+  "group relative flex w-full max-w-[360px] mx-auto flex-col overflow-hidden text-left",
   "rounded-wn-card border border-white/10",
   "bg-gradient-to-b from-white/[0.07] to-white/[0.02]",
   "shadow-[0_1px_0_0_rgba(255,255,255,0.06)_inset,0_24px_48px_-24px_rgba(0,0,0,0.7)]",

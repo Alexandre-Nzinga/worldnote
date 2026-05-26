@@ -2,7 +2,7 @@ import { ActionMenu } from "@worldnote/ui";
 
 type ProfileMenuProps = {
   username: string;
-  onOpenSettings: () => void;
+  onOpenSettings?: () => void;
 };
 
 export function ProfileMenu({ username, onOpenSettings }: ProfileMenuProps) {
@@ -14,7 +14,7 @@ export function ProfileMenu({ username, onOpenSettings }: ProfileMenuProps) {
       placement="bottom-end"
       onAction={(key) => {
         if (key === "settings") {
-          onOpenSettings();
+          onOpenSettings?.();
         }
       }}
       items={[{ id: "settings", label: "Settings" }]}

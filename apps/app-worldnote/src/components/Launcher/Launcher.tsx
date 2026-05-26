@@ -9,7 +9,6 @@ import {
 import { motion } from "framer-motion";
 import { useCallback, useEffect, useState } from "react";
 import { CreateWorldModal } from "../CreateWorldModal.js";
-import { SettingsModal } from "../Settings/SettingsModal.js";
 import { ProfileMenu } from "./ProfileMenu.js";
 import { useSettings } from "../../hooks/useSettings.js";
 import { useVault } from "../../hooks/useVault.js";
@@ -25,9 +24,10 @@ import { VaultModal } from "../Vault/VaultModal.js";
 
 type LauncherProps = {
   onWorldReady: () => void;
+  onOpenSettings?: () => void;
 };
 
-export function Launcher({ onWorldReady }: LauncherProps) {
+export function Launcher({ onWorldReady, onOpenSettings }: LauncherProps) {
   const settings = useSettings((state) => state.settings);
   const { openWorld } = useVaultCommands();
   const setCurrentVault = useVault((state) => state.setCurrentVault);
@@ -36,7 +36,6 @@ export function Launcher({ onWorldReady }: LauncherProps) {
   const [isLoadingWorlds, setIsLoadingWorlds] = useState(true);
   const [isBusy, setIsBusy] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [manageWorld, setManageWorld] = useState<WorldSummary | null>(null);
   const [isVaultOpen, setIsVaultOpen] = useState(false);
 
@@ -96,7 +95,7 @@ export function Launcher({ onWorldReady }: LauncherProps) {
     <div className="relative flex h-screen flex-col overflow-hidden bg-wn-mono-950 text-wn-mono-100">
       <LauncherHeader
         username={username}
-        onOpenSettings={() => setIsSettingsOpen(true)}
+        onOpenSettings={onOpenSettings ?? (() => {})}
       />
 
       <main className="relative flex min-h-0 flex-1 flex-col overflow-hidden px-[46px] pb-8 pt-10">
@@ -138,11 +137,6 @@ export function Launcher({ onWorldReady }: LauncherProps) {
           void refreshWorlds();
           onWorldReady();
         }}
-      />
-
-      <SettingsModal
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
       />
 
       <WorldSettingsModal
@@ -219,7 +213,7 @@ type WorldsSectionProps = {
   onOpenRoot: () => void;
   onOpenVault: () => void;
   onOpenWorld: (world: WorldSummary) => void;
-  onManageWorld: (world: WorldSummary) => void;
+onManageWorld: (world: WorldSummary) => void;
 };
 
 function WorldsSection({

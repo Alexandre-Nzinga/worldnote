@@ -3,13 +3,15 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useState } from "react";
 import { Canvas } from "./components/Canvas/index.js";
 import { Launcher } from "./components/Launcher/index.js";
+import { LoadingScreen } from "./components/LoadingScreen.js";
 import { Onboarding } from "./components/Onboarding/index.js";
+import { Settings } from "./components/Settings/Settings.js";
 import {
   isOnboardingComplete,
   useSettings,
 } from "./hooks/useSettings.js";
 
-type LauncherView = "launcher" | "canvas";
+type LauncherView = "launcher" | "canvas" | "settings";
 
 export default function App() {
   const status = useSettings((state) => state.status);
@@ -23,13 +25,10 @@ export default function App() {
 
   const onWorldReady = useCallback(() => setView("canvas"), []);
   const onBackToLauncher = useCallback(() => setView("launcher"), []);
+  const onOpenSettings = useCallback(() => setView("settings"), []);
 
   if (status === "loading") {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-wn-mono-950 text-wn-mono-400">
-        Loading…
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   if (!isOnboardingComplete(settings)) {
@@ -55,6 +54,17 @@ export default function App() {
         >
           <Canvas onBack={onBackToLauncher} />
         </motion.div>
+      ) : view === "settings" ? (
+        <motion.div
+          key="settings"
+          className="min-h-screen"
+          variants={screenFade}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+        >
+          <Settings onBack={onBackToLauncher} />
+        </motion.div>
       ) : (
         <motion.div
           key="launcher"
@@ -64,7 +74,7 @@ export default function App() {
           animate="visible"
           exit="exit"
         >
-          <Launcher onWorldReady={onWorldReady} />
+          <Launcher onWorldReady={onWorldReady} onOpenSettings={onOpenSettings} />
         </motion.div>
       )}
     </AnimatePresence>
