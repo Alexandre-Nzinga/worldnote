@@ -9,7 +9,8 @@
  * Colors and radii live once in @theme inline — Tailwind generates utilities
  * (bg-wn-mono-950, rounded-wn-card) and exposes the same CSS variables.
  */
-:root {
+@layer base {
+  :root {
   --font-weight-wn-thin: 100;
   --font-weight-wn-extralight: 200;
   --font-weight-wn-light: 300;
@@ -54,6 +55,7 @@
   --text-wn-body: 1rem;
   --text-wn-small: 0.889rem;
   --text-wn-xs: 0.79rem;
+  }
 }
 
 @theme inline {
@@ -160,12 +162,14 @@
   --color-wn-red-950: oklch(25.8% 0.092 26.042);
 }
 
-@utility scrollbar-wn {
-  /* Keep scrolling, hide the native scrollbar chrome. */
-  scrollbar-width: none;
-  scrollbar-color: transparent transparent;
+@layer components {
+  .scrollbar-wn {
+    /* Keep scrolling, hide the native scrollbar chrome. */
+    scrollbar-width: none;
+    scrollbar-color: transparent transparent;
+  }
 
-  &::-webkit-scrollbar {
+  .scrollbar-wn::-webkit-scrollbar {
     width: 0;
     height: 0;
   }

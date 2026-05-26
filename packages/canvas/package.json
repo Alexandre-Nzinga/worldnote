@@ -20,7 +20,7 @@
     "react-dom": "^19.0.0"
   },
   "dependencies": {
-    "@heroui/react": "^2.6.14",
+    "@heroui/react": "^2.8.10",
     "@react-three/fiber": "^9.0.0",
     "@xyflow/react": "^12.3.6",
     "framer-motion": "^11.18.2",
