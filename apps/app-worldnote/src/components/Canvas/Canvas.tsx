@@ -27,6 +27,7 @@ import type { DragEvent } from "react";
 import { useCardCommands } from "../../hooks/useCardCommands.js";
 import { useSettings } from "../../hooks/useSettings.js";
 import { useVault } from "../../hooks/useVault.js";
+import { VaultModal } from "../Vault/VaultModal.js";
 import { worldCardToNodeData } from "../../services/canvas/cardNodeData.js";
 import { createCardPositionUpdater } from "../../services/canvas/updateCardPosition.js";
 import { createWorldCard } from "../../services/crudWorldCard/createWorldCard.js";
@@ -40,12 +41,14 @@ import { listLinks } from "../../services/links/listLinks.js";
 import { LinkEditorPanel } from "./LinkEditorPanel.js";
 import { CardEditorPanel } from "./CardEditorPanel.js";
 import { CanvasFlow } from "./CanvasFlow.js";
+import { CanvasHeader } from "./CanvasHeader.js";
 import { CanvasToolbar } from "./CanvasToolbar.js";
 import { useCanvasDeleteShortcut } from "./useCanvasDeleteShortcut.js";
 import {
   isValidEasyConnection,
   normalizeConnection,
 } from "../../services/links/resolveEasyConnect.js";
+import { copyCardToWorld } from "../../services/library/copyCardToWorld.js";
 
 const nodeTypes = {
   worldnoteCard: CardNode,
@@ -67,8 +70,15 @@ function linksRecord(links: Link[]): Record<string, Link> {
   return Object.fromEntries(links.map((link) => [link.id, link]));
 }
 
+function worldNameFromPath(vaultPath: string): string {
+  const folder = vaultPath.split(/[/\\]/).pop();
+  return folder ?? "World";
+}
+
 export function Canvas({ onBack }: CanvasProps) {
   const vaultPath = useVault((state) => state.currentVaultPath);
+  const storedWorldName = useVault((state) => state.currentWorldName);
+  const worldnoteRoot = useSettings((state) => state.settings?.worldnoteRoot);
   const visibleSocketsSettings = useSettings(
     (state) => state.settings?.visibleSockets,
   );
@@ -79,6 +89,8 @@ export function Canvas({ onBack }: CanvasProps) {
   const [linksById, setLinksById] = useState<Record<string, Link>>({});
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [selectedLinkId, setSelectedLinkId] = useState<string | null>(null);
+  const [isVaultOpen, setIsVaultOpen] = useState(false);
+  const [isBulkTogglingView, setIsBulkTogglingView] = useState(false);
 
   const nodesRef = useRef(nodes);
   nodesRef.current = nodes;
@@ -138,6 +150,48 @@ export function Canvas({ onBack }: CanvasProps) {
     },
     [vaultPath],
   );
+  const toggleAllCardViews = useCallback(async () => {
+    if (!vaultPath || isBulkTogglingView) {
+      return;
+    }
+
+    const cards = Object.values(cardsByIdRef.current);
+    if (cards.length === 0) {
+      return;
+    }
+
+    const currentModes = cards.map(
+      (card) => card.custom_properties?.view_mode as unknown,
+    );
+    const allNode = currentModes.every((mode) => mode === "node");
+    const nextMode = allNode ? "visual" : "node";
+
+    setIsBulkTogglingView(true);
+
+    const updated = cards.map((card) => ({
+      ...card,
+      custom_properties: {
+        ...(card.custom_properties ?? {}),
+        view_mode: nextMode,
+      },
+    }));
+
+    setCardsById((prev) => {
+      const next = { ...prev };
+      for (const card of updated) {
+        next[card.id] = card;
+      }
+      return next;
+    });
+
+    try {
+      await Promise.all(updated.map((card) => updateWorldCard(vaultPath, card)));
+    } catch (error) {
+      console.error("Failed to toggle card views:", error);
+    } finally {
+      setIsBulkTogglingView(false);
+    }
+  }, [isBulkTogglingView, setCardsById, vaultPath]);
 
   const handleSaveCardRef = useRef(handleSaveCard);
   handleSaveCardRef.current = handleSaveCard;
@@ -435,7 +489,11 @@ export function Canvas({ onBack }: CanvasProps) {
   );
 
   const onDragOver = useCallback((event: DragEvent) => {
-    if (!event.dataTransfer.types.includes("application/worldnote-card-type")) {
+    const types = event.dataTransfer.types;
+    if (
+      !types.includes("application/worldnote-card-type") &&
+      !types.includes("application/worldnote-card-ref")
+    ) {
       return;
     }
     event.preventDefault();
@@ -446,6 +504,88 @@ export function Canvas({ onBack }: CanvasProps) {
     (event: DragEvent) => {
       event.preventDefault();
       if (!vaultPath) {
+        return;
+      }
+
+      const cardRefRaw = event.dataTransfer.getData(
+        "application/worldnote-card-ref",
+      );
+      if (cardRefRaw) {
+        try {
+          const parsed = JSON.parse(cardRefRaw) as {
+            sourceWorldPath: string;
+            cardId: string;
+          };
+          if (!parsed?.sourceWorldPath || !parsed?.cardId) {
+            return;
+          }
+          if (parsed.sourceWorldPath === vaultPath) {
+            return;
+          }
+
+          const bounds = event.currentTarget.getBoundingClientRect();
+          const position = {
+            x: event.clientX - bounds.left - 120,
+            y: event.clientY - bounds.top - 60,
+          };
+
+          const tempId = crypto.randomUUID();
+          setNodes((prev) => [
+            ...prev,
+            {
+              id: tempId,
+              type: "worldnoteCard",
+              position,
+              data: {
+                title: "Copying…",
+                subtitle: "Vault",
+                cardType: "item",
+                enterAnimation: true,
+              },
+            },
+          ]);
+
+          void copyCardToWorld({
+            sourceWorldPath: parsed.sourceWorldPath,
+            targetWorldPath: vaultPath,
+            cardId: parsed.cardId,
+            position,
+          })
+            .then(async (created) => {
+              const cards = await listCards(vaultPath);
+              const card = cards.find((entry) => entry.id === created.cardId);
+              if (!card) {
+                throw new Error("Copied card was not found after creation");
+              }
+              setCardsById((prev) => ({ ...prev, [card.id]: card }));
+              const links = await listLinks(vaultPath);
+              setLinksById(linksRecord(links));
+              setNodes((prev) =>
+                prev.map((node) =>
+                  node.id === tempId
+                    ? {
+                        id: card.id,
+                        type: "worldnoteCard",
+                        position: card.position,
+                        data: worldCardToNodeData(card, vaultPath, {
+                          visibleSocketsSettings,
+                          links,
+                          cardsById: { ...cardsByIdRef.current, [card.id]: card },
+                        }),
+                      }
+                    : node,
+                ),
+              );
+              setSelectedCardId(card.id);
+              setSelectedLinkId(null);
+            })
+            .catch((error) => {
+              console.error("Failed to copy card:", error);
+              setNodes((prev) => prev.filter((node) => node.id !== tempId));
+            });
+        } catch (error) {
+          console.error("Failed to parse dropped card ref:", error);
+        }
         return;
       }
 
@@ -475,16 +615,18 @@ export function Canvas({ onBack }: CanvasProps) {
 
       void addCard(droppedType, position);
     },
-    [addCard, vaultPath],
+    [addCard, listCards, vaultPath, visibleSocketsSettings],
   );
 
-  const vaultLabel = useMemo(() => {
-    if (!vaultPath) {
-      return "No vault selected";
+  const worldName = useMemo(() => {
+    if (storedWorldName?.trim()) {
+      return storedWorldName.trim();
     }
-    const name = vaultPath.split(/[/\\]/).pop();
-    return name ? `Vault: ${name}` : "Vault";
-  }, [vaultPath]);
+    if (vaultPath) {
+      return worldNameFromPath(vaultPath);
+    }
+    return "World";
+  }, [storedWorldName, vaultPath]);
 
   const selectedCard = selectedCardId ? cardsById[selectedCardId] : null;
   const selectedLink = selectedLinkId ? linksById[selectedLinkId] : null;
@@ -498,6 +640,8 @@ export function Canvas({ onBack }: CanvasProps) {
 
   return (
     <div className="relative h-screen min-h-0 bg-wn-mono-950 text-wn-mono-100">
+      <CanvasHeader worldName={worldName} onBackToLauncher={onBack} />
+
       <ReactFlowProvider>
         <div
           className="h-full w-full"
@@ -575,11 +719,20 @@ export function Canvas({ onBack }: CanvasProps) {
       />
 
       <CanvasToolbar
-        vaultLabel={vaultLabel}
-        onBack={onBack}
         onCreate={(type) => {
           void addCard(type);
         }}
+        onOpenVault={() => setIsVaultOpen(true)}
+        onToggleAllCardViews={() => {
+          void toggleAllCardViews();
+        }}
+      />
+
+      <VaultModal
+        isOpen={isVaultOpen}
+        onClose={() => setIsVaultOpen(false)}
+        worldnoteRoot={worldnoteRoot ?? ""}
+        currentWorldPath={vaultPath ?? undefined}
       />
     </div>
   );

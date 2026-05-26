@@ -73,15 +73,14 @@ const variantConfig: Record<ButtonVariant, VariantConfig> = {
   },
   danger: {
     heroVariant: "solid",
-    heroColor: "danger",
     className:
-      "border-0 bg-wn-red-500 font-semibold text-wn-mono-50 hover:bg-wn-red-600 data-[hover=true]:bg-wn-red-600",
+      "border-0 !bg-wn-red-500 font-semibold text-wn-mono-50 shadow-none hover:!bg-wn-red-600 data-[hover=true]:!bg-wn-red-600",
   },
 };
 
 const sizeClass: Record<ButtonSize, string> = {
-  sm: "h-9 min-h-9 rounded-full px-6 text-sm",
-  base: "h-10 min-h-10 rounded-full px-8 text-base leading-normal",
+  sm: "!h-auto min-h-9 rounded-full px-6 py-2 text-sm leading-normal",
+  base: "!h-auto min-h-10 rounded-full px-8 py-2.5 text-base leading-normal",
 };
 
 const heroUiSize: Record<ButtonSize, "sm" | "md"> = {
@@ -96,30 +95,37 @@ export function Button({
   children,
   className,
   isDisabled,
+  isIconOnly,
+  fullWidth,
   ...props
 }: ButtonProps) {
   const config = variantConfig[variant];
   const isLink = variant === "link";
   const reducedMotion = usePrefersReducedMotion();
   const canAnimate = !isDisabled && !isLink && !reducedMotion;
+  const isFullWidth = Boolean(fullWidth) && !isLink && !isIconOnly;
 
   return (
     <motion.span
       className={clsx(
-        "inline-flex",
+        "inline-flex shrink-0",
         isLink && "w-auto",
-        !isLink && "w-full max-w-full",
+        isFullWidth && "w-full max-w-full",
       )}
       whileTap={canAnimate ? pressableTap : undefined}
       transition={tapTransition}
     >
       <HeroUIButton
         {...props}
+        fullWidth={fullWidth}
         isDisabled={isDisabled}
         variant={config.heroVariant}
         color={config.heroColor}
         size={heroUiSize[size]}
         radius="full"
+        classNames={{
+          base: "gap-2",
+        }}
         className={clsx(
           !isLink && sizeClass[size],
           config.className,

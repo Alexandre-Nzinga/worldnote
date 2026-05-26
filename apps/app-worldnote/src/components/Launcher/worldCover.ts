@@ -1,3 +1,5 @@
+import { convertFileSrc } from "@tauri-apps/api/core";
+
 export function hashWorldName(name: string): number {
   let hash = 0;
   for (let i = 0; i < name.length; i += 1) {
@@ -6,9 +8,31 @@ export function hashWorldName(name: string): number {
   return Math.abs(hash);
 }
 
+const worldCoverPalette200 = [
+  "mono",
+  "indigo",
+  "azure",
+  "rose",
+  "amber",
+  "lime",
+] as const;
+
+export function worldCoverImageSrc(
+  worldPath: string,
+  coverImage?: string,
+): string | undefined {
+  if (!coverImage?.trim()) {
+    return undefined;
+  }
+  const normalized = coverImage.replace(/\\/g, "/");
+  const fullPath = `${worldPath.replace(/\\/g, "/")}/${normalized}`;
+  return convertFileSrc(fullPath);
+}
+
 export function worldCoverStyle(name: string): { background: string } {
-  const hue = hashWorldName(name) % 360;
-  return { background: `oklch(45% 0.12 ${hue})` };
+  const index = hashWorldName(name) % worldCoverPalette200.length;
+  const palette = worldCoverPalette200[index];
+  return { background: `var(--color-wn-${palette}-200)` };
 }
 
 export function formatRelativeTime(unixSeconds: number): string {

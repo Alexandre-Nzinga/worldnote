@@ -1,11 +1,48 @@
 import type { WorldCard } from "@worldnote/shared";
+import { EnumComboBox } from "@worldnote/ui";
+import { Input } from "@heroui/react";
 import { modalFieldLabelClassName } from "../Onboarding/fieldClassNames.js";
 import { darkFieldInputClassNames } from "../Onboarding/fieldClassNames.js";
-import { Input } from "@heroui/react";
 import type { TypeSpecificEditorState } from "./cardEditorTypes.js";
 
-const selectClassName =
-  "h-10 w-full rounded-xl border border-wn-mono-700 bg-wn-mono-950 px-3 text-sm text-wn-mono-50 outline-none focus:border-wn-mono-500";
+const itemRarityOptions = [
+  { value: "common", label: "Common" },
+  { value: "uncommon", label: "Uncommon" },
+  { value: "rare", label: "Rare" },
+  { value: "epic", label: "Epic" },
+  { value: "legendary", label: "Legendary" },
+  { value: "artifact", label: "Artifact" },
+] as const;
+
+const vehicleSubTypeOptions = [
+  { value: "car", label: "Car" },
+  { value: "ship", label: "Ship" },
+  { value: "spaceship", label: "Spaceship" },
+  { value: "mount", label: "Mount" },
+  { value: "bike", label: "Bike" },
+  { value: "other", label: "Other" },
+] as const;
+
+const floraToxicityOptions = [
+  { value: "harmless", label: "Harmless" },
+  { value: "medicinal", label: "Medicinal" },
+  { value: "toxic", label: "Toxic" },
+  { value: "lethal", label: "Lethal" },
+] as const;
+
+const faunaDietOptions = [
+  { value: "carnivore", label: "Carnivore" },
+  { value: "herbivore", label: "Herbivore" },
+  { value: "omnivore", label: "Omnivore" },
+  { value: "detritivore", label: "Detritivore" },
+] as const;
+
+const structureConditionOptions = [
+  { value: "intact", label: "Intact" },
+  { value: "damaged", label: "Damaged" },
+  { value: "ruined", label: "Ruined" },
+  { value: "under_construction", label: "Under construction" },
+] as const;
 
 type CardTypeFieldsProps = {
   cardType: WorldCard["card_type"];
@@ -72,59 +109,37 @@ export function CardTypeFields({
               classNames={darkFieldInputClassNames}
             />
           </div>
-          <div className="flex flex-col gap-1">
-            <label htmlFor="card-rarity" className={modalFieldLabelClassName}>
-              Rarity
-            </label>
-            <select
-              id="card-rarity"
-              disabled={disabled}
-              value={fields.itemRarity}
-              onChange={(e) =>
-                patch({
-                  itemRarity: e.target.value as TypeSpecificEditorState["itemRarity"],
-                })
-              }
-              className={selectClassName}
-            >
-              <option value="">—</option>
-              <option value="common">Common</option>
-              <option value="uncommon">Uncommon</option>
-              <option value="rare">Rare</option>
-              <option value="epic">Epic</option>
-              <option value="legendary">Legendary</option>
-              <option value="artifact">Artifact</option>
-            </select>
-          </div>
+          <EnumComboBox
+            id="card-rarity"
+            label="Rarity"
+            value={fields.itemRarity ?? ""}
+            options={[...itemRarityOptions]}
+            allowEmpty
+            disabled={disabled}
+            onChange={(itemRarity) =>
+              patch({
+                itemRarity: itemRarity as TypeSpecificEditorState["itemRarity"],
+              })
+            }
+          />
         </>
       );
     case "vehicle":
       return (
         <>
-          <div className="flex flex-col gap-1">
-            <label htmlFor="card-sub-type" className={modalFieldLabelClassName}>
-              Sub type
-            </label>
-            <select
-              id="card-sub-type"
-              disabled={disabled}
-              value={fields.vehicleSubType}
-              onChange={(e) =>
-                patch({
-                  vehicleSubType: e.target
-                    .value as TypeSpecificEditorState["vehicleSubType"],
-                })
-              }
-              className={selectClassName}
-            >
-              <option value="car">Car</option>
-              <option value="ship">Ship</option>
-              <option value="spaceship">Spaceship</option>
-              <option value="mount">Mount</option>
-              <option value="bike">Bike</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
+          <EnumComboBox
+            id="card-sub-type"
+            label="Sub type"
+            value={fields.vehicleSubType}
+            options={[...vehicleSubTypeOptions]}
+            disabled={disabled}
+            onChange={(vehicleSubType) =>
+              patch({
+                vehicleSubType:
+                  vehicleSubType as TypeSpecificEditorState["vehicleSubType"],
+              })
+            }
+          />
           <div className="flex flex-col gap-1">
             <label htmlFor="card-max-speed" className={modalFieldLabelClassName}>
               Max speed
@@ -141,78 +156,51 @@ export function CardTypeFields({
       );
     case "flora":
       return (
-        <div className="flex flex-col gap-1">
-          <label htmlFor="card-toxicity" className={modalFieldLabelClassName}>
-            Toxicity
-          </label>
-          <select
-            id="card-toxicity"
-            disabled={disabled}
-            value={fields.floraToxicity}
-            onChange={(e) =>
-              patch({
-                floraToxicity: e.target
-                  .value as TypeSpecificEditorState["floraToxicity"],
-              })
-            }
-            className={selectClassName}
-          >
-            <option value="harmless">Harmless</option>
-            <option value="medicinal">Medicinal</option>
-            <option value="toxic">Toxic</option>
-            <option value="lethal">Lethal</option>
-          </select>
-        </div>
+        <EnumComboBox
+          id="card-toxicity"
+          label="Toxicity"
+          value={fields.floraToxicity}
+          options={[...floraToxicityOptions]}
+          disabled={disabled}
+          onChange={(floraToxicity) =>
+            patch({
+              floraToxicity:
+                floraToxicity as TypeSpecificEditorState["floraToxicity"],
+            })
+          }
+        />
       );
     case "fauna":
       return (
-        <div className="flex flex-col gap-1">
-          <label htmlFor="card-diet" className={modalFieldLabelClassName}>
-            Diet
-          </label>
-          <select
-            id="card-diet"
-            disabled={disabled}
-            value={fields.faunaDiet}
-            onChange={(e) =>
-              patch({
-                faunaDiet: e.target.value as TypeSpecificEditorState["faunaDiet"],
-              })
-            }
-            className={selectClassName}
-          >
-            <option value="">—</option>
-            <option value="carnivore">Carnivore</option>
-            <option value="herbivore">Herbivore</option>
-            <option value="omnivore">Omnivore</option>
-            <option value="detritivore">Detritivore</option>
-          </select>
-        </div>
+        <EnumComboBox
+          id="card-diet"
+          label="Diet"
+          value={fields.faunaDiet ?? ""}
+          options={[...faunaDietOptions]}
+          allowEmpty
+          disabled={disabled}
+          onChange={(faunaDiet) =>
+            patch({
+              faunaDiet: faunaDiet as TypeSpecificEditorState["faunaDiet"],
+            })
+          }
+        />
       );
     case "structure":
       return (
-        <div className="flex flex-col gap-1">
-          <label htmlFor="card-condition" className={modalFieldLabelClassName}>
-            Condition
-          </label>
-          <select
-            id="card-condition"
-            disabled={disabled}
-            value={fields.structureCondition}
-            onChange={(e) =>
-              patch({
-                structureCondition: e.target
-                  .value as TypeSpecificEditorState["structureCondition"],
-              })
-            }
-            className={selectClassName}
-          >
-            <option value="intact">Intact</option>
-            <option value="damaged">Damaged</option>
-            <option value="ruined">Ruined</option>
-            <option value="under_construction">Under construction</option>
-          </select>
-        </div>
+        <EnumComboBox
+          id="card-condition"
+          label="Condition"
+          value={fields.structureCondition}
+          options={[...structureConditionOptions]}
+          disabled={disabled}
+          onChange={(structureCondition) =>
+            patch({
+              structureCondition:
+                structureCondition as TypeSpecificEditorState["structureCondition"],
+            })
+          }
+        />
       );
     case "species":
       return (

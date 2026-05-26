@@ -10,7 +10,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
-    "check-types": "tsc -p tsconfig.build.json --noEmit",
+    "check-types": "tsc -p tsconfig.json --noEmit",
     "lint": "biome check .",
     "dev": "tsc -p tsconfig.build.json --watch",
     "test": "vitest run --passWithNoTests"
@@ -20,6 +20,7 @@
     "react-dom": "^19.0.0"
   },
   "dependencies": {
+    "@heroui/react": "^2.6.14",
     "@react-three/fiber": "^9.0.0",
     "@xyflow/react": "^12.3.6",
     "framer-motion": "^11.18.2",

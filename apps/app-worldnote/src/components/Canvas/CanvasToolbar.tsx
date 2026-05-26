@@ -33,9 +33,9 @@ const createMenuIcons: Record<CreateOption, string> = {
 
 type CanvasToolbarProps = {
   className?: string;
-  vaultLabel?: string;
-  onBack?: () => void;
   onCreate?: (type: CreateOption) => void;
+  onOpenVault?: () => void;
+  onToggleAllCardViews?: () => void;
 };
 
 const primaryTools: {
@@ -87,9 +87,9 @@ function ToolbarButton({
 
 export function CanvasToolbar({
   className,
-  vaultLabel,
-  onBack,
   onCreate,
+  onOpenVault,
+  onToggleAllCardViews,
 }: CanvasToolbarProps) {
   const [createMenuOpen, setCreateMenuOpen] = useState(false);
   const [activeTool, setActiveTool] = useState<CanvasTool>("select");
@@ -97,6 +97,11 @@ export function CanvasToolbar({
   const createMenuRef = useRef<HTMLDivElement>(null);
 
   const supportsCreate = useMemo(() => !!onCreate, [onCreate]);
+  const supportsVault = useMemo(() => !!onOpenVault, [onOpenVault]);
+  const supportsBulkViewToggle = useMemo(
+    () => !!onToggleAllCardViews,
+    [onToggleAllCardViews],
+  );
 
   useEffect(() => {
     if (!createMenuOpen) {
@@ -167,16 +172,21 @@ export function CanvasToolbar({
           })}
         </div>
 
-        <div className="mx-1 h-7 w-px bg-wn-mono-700" aria-hidden />
+        <ToolbarButton
+          label="Vault"
+          icon="ri-stack-line"
+          isDisabled={!supportsVault}
+          onPress={onOpenVault}
+        />
+
+        <ToolbarButton
+          label="Toggle all card views"
+          icon="ri-layout-masonry-line"
+          isDisabled={!supportsBulkViewToggle}
+          onPress={onToggleAllCardViews}
+        />
 
         <div ref={createMenuRef} className="relative flex items-center gap-0.5">
-          <ToolbarButton
-            label={vaultLabel ? `Vault: ${vaultLabel}` : "Vault"}
-            icon="ri-stack-line"
-            emphasis
-            onPress={onBack}
-          />
-
           <ToolbarButton
             label="Create card"
             icon="ri-add-line"

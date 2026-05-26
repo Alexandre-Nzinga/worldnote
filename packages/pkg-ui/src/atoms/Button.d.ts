@@ -8,5 +8,5 @@ export type ButtonProps = Omit<ComponentProps<typeof HeroUIButton>, "variant" | 
     children?: ReactNode;
 };
 /** HeroUI button styled with WorldNote design tokens. */
-export declare function Button({ variant, size, children, className, ...props }: ButtonProps): import("react/jsx-runtime").JSX.Element;
+export declare function Button({ variant, size, children, className, isDisabled, ...props }: ButtonProps): import("react/jsx-runtime").JSX.Element;
 //# sourceMappingURL=Button.d.ts.map

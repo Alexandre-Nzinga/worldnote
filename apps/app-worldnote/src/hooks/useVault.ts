@@ -2,10 +2,16 @@ import { create } from "zustand";
 
 type VaultState = {
   currentVaultPath: string | null;
-  setCurrentVaultPath: (path: string | null) => void;
+  currentWorldName: string | null;
+  setCurrentVault: (path: string | null, name?: string | null) => void;
 };
 
 export const useVault = create<VaultState>((set) => ({
   currentVaultPath: null,
-  setCurrentVaultPath: (path) => set({ currentVaultPath: path }),
+  currentWorldName: null,
+  setCurrentVault: (path, name = null) =>
+    set({
+      currentVaultPath: path,
+      currentWorldName: path ? name : null,
+    }),
 }));

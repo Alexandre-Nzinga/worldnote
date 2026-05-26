@@ -1,6 +1,10 @@
 import { jsx as _jsx } from "react/jsx-runtime";
 import { Button as HeroUIButton } from "@heroui/react";
 import clsx from "clsx";
+import { motion } from "framer-motion";
+import { pressableTap } from "../motion/presets.js";
+import { tapTransition } from "../motion/tokens.js";
+import { usePrefersReducedMotion } from "../motion/usePrefersReducedMotion.js";
 /** WorldNote button variants — all colors/radii from design tokens (tailwind.css). */
 const variantConfig = {
     primary: {
@@ -47,8 +51,10 @@ const heroUiSize = {
     base: "md",
 };
 /** HeroUI button styled with WorldNote design tokens. */
-export function Button({ variant = "primary", size = "base", children, className, ...props }) {
+export function Button({ variant = "primary", size = "base", children, className, isDisabled, ...props }) {
     const config = variantConfig[variant];
     const isLink = variant === "link";
-    return (_jsx(HeroUIButton, { ...props, variant: config.heroVariant, color: config.heroColor, size: heroUiSize[size], radius: "full", className: clsx(!isLink && sizeClass[size], config.className, className), children: children }));
+    const reducedMotion = usePrefersReducedMotion();
+    const canAnimate = !isDisabled && !isLink && !reducedMotion;
+    return (_jsx(motion.span, { className: clsx("inline-flex", isLink && "w-auto", !isLink && "w-full max-w-full"), whileTap: canAnimate ? pressableTap : undefined, transition: tapTransition, children: _jsx(HeroUIButton, { ...props, isDisabled: isDisabled, variant: config.heroVariant, color: config.heroColor, size: heroUiSize[size], radius: "full", className: clsx(!isLink && sizeClass[size], config.className, className), children: children }) }));
 }

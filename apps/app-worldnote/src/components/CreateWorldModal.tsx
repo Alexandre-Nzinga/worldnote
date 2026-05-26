@@ -25,7 +25,7 @@ export function CreateWorldModal({
   forcedRoot,
 }: CreateWorldModalProps) {
   const { createWorld } = useVaultCommands();
-  const setCurrentVaultPath = useVault((state) => state.setCurrentVaultPath);
+  const setCurrentVault = useVault((state) => state.setCurrentVault);
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -90,7 +90,7 @@ export function CreateWorldModal({
         name: name.trim(),
         description: description.trim(),
       });
-      setCurrentVaultPath(worldPath);
+      setCurrentVault(worldPath, name.trim());
       onWorldReady();
       onClose();
     } catch (submitError) {
@@ -109,7 +109,7 @@ export function CreateWorldModal({
     name,
     onClose,
     onWorldReady,
-    setCurrentVaultPath,
+    setCurrentVault,
   ]);
 
   return (

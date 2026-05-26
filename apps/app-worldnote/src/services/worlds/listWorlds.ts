@@ -6,6 +6,7 @@ export type WorldSummary = {
   description: string;
   cardCount: number;
   lastOpened: number;
+  coverImage?: string;
 };
 
 export async function listWorlds(root: string): Promise<WorldSummary[]> {

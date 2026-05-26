@@ -1,9 +1,12 @@
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import {
+  Button,
   WorldNoteLogo,
   getBodyTextStyle,
   getHeadingStyle,
+  springSnappy,
 } from "@worldnote/ui";
+import { motion } from "framer-motion";
 import { useCallback, useEffect, useState } from "react";
 import { CreateWorldModal } from "../CreateWorldModal.js";
 import { SettingsModal } from "../Settings/SettingsModal.js";
@@ -17,6 +20,8 @@ import {
 } from "../../services/worlds/listWorlds.js";
 import { getTimeOfDayGreeting } from "./worldCover.js";
 import { WorldCard } from "./WorldCard.js";
+import { WorldSettingsModal } from "./WorldSettingsModal.js";
+import { VaultModal } from "../Vault/VaultModal.js";
 
 type LauncherProps = {
   onWorldReady: () => void;
@@ -25,13 +30,15 @@ type LauncherProps = {
 export function Launcher({ onWorldReady }: LauncherProps) {
   const settings = useSettings((state) => state.settings);
   const { openWorld } = useVaultCommands();
-  const setCurrentVaultPath = useVault((state) => state.setCurrentVaultPath);
+  const setCurrentVault = useVault((state) => state.setCurrentVault);
 
   const [worlds, setWorlds] = useState<WorldSummary[]>([]);
   const [isLoadingWorlds, setIsLoadingWorlds] = useState(true);
   const [isBusy, setIsBusy] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [manageWorld, setManageWorld] = useState<WorldSummary | null>(null);
+  const [isVaultOpen, setIsVaultOpen] = useState(false);
 
   const refreshWorlds = useCallback(async () => {
     if (!settings?.worldnoteRoot) {
@@ -60,7 +67,7 @@ export function Launcher({ onWorldReady }: LauncherProps) {
       setIsBusy(true);
       try {
         await openWorld(world.path);
-        setCurrentVaultPath(world.path);
+        setCurrentVault(world.path, world.name);
         onWorldReady();
       } catch (error) {
         console.error("Failed to open world:", error);
@@ -68,7 +75,7 @@ export function Launcher({ onWorldReady }: LauncherProps) {
         setIsBusy(false);
       }
     },
-    [onWorldReady, openWorld, setCurrentVaultPath],
+    [onWorldReady, openWorld, setCurrentVault],
   );
 
   const handleOpenRootFolder = useCallback(async () => {
@@ -86,15 +93,15 @@ export function Launcher({ onWorldReady }: LauncherProps) {
   const greeting = getTimeOfDayGreeting();
 
   return (
-    <div className="relative flex min-h-screen flex-col bg-wn-mono-950 text-wn-mono-100">
+    <div className="relative flex h-screen flex-col overflow-hidden bg-wn-mono-950 text-wn-mono-100">
       <LauncherHeader
         username={username}
         onOpenSettings={() => setIsSettingsOpen(true)}
       />
 
-      <main className="relative z-10 flex flex-1 flex-col px-[46px] pb-8 pt-10">
+      <main className="relative flex min-h-0 flex-1 flex-col overflow-hidden px-[46px] pb-8 pt-10">
         <p
-          className="mb-2 text-center text-wn-mono-400"
+          className="mb-2 shrink-0 text-center text-wn-mono-400"
           style={{
             ...getBodyTextStyle("body"),
             fontSize: "20px",
@@ -113,29 +120,12 @@ export function Launcher({ onWorldReady }: LauncherProps) {
           onOpenRoot={() => {
             void handleOpenRootFolder();
           }}
+          onOpenVault={() => setIsVaultOpen(true)}
           onOpenWorld={(world) => {
             void handleOpenWorld(world);
           }}
+          onManageWorld={setManageWorld}
         />
-
-        <p
-          className="mx-auto mt-10 max-w-[570px] text-center text-wn-mono-400"
-          style={{
-            ...getBodyTextStyle("body"),
-            fontSize: "14px",
-            fontWeight: "var(--font-weight-wn-medium)",
-          }}
-        >
-          Each world is a folder on your machine with a{" "}
-          <code className="rounded bg-wn-mono-900 px-1 py-0.5 text-wn-mono-300">
-            .worldnote
-          </code>{" "}
-          config and a{" "}
-          <code className="rounded bg-wn-mono-900 px-1 py-0.5 text-wn-mono-300">
-            lore/
-          </code>{" "}
-          JSON store. Nothing leaves your computer.
-        </p>
       </main>
 
       <Footer />
@@ -154,6 +144,21 @@ export function Launcher({ onWorldReady }: LauncherProps) {
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
       />
+
+      <WorldSettingsModal
+        world={manageWorld}
+        isOpen={manageWorld !== null}
+        onClose={() => setManageWorld(null)}
+        onWorldsChanged={() => {
+          void refreshWorlds();
+        }}
+      />
+
+      <VaultModal
+        isOpen={isVaultOpen}
+        onClose={() => setIsVaultOpen(false)}
+        worldnoteRoot={settings?.worldnoteRoot ?? ""}
+      />
     </div>
   );
 }
@@ -166,7 +171,7 @@ function LauncherHeader({
   onOpenSettings: () => void;
 }) {
   return (
-    <header className="relative z-10 flex items-center justify-between px-[46px] pt-7">
+    <header className="relative flex shrink-0 items-center justify-between px-[46px] pt-7">
       <div className="flex items-center gap-3">
         <WorldNoteLogo
           variant="icon"
@@ -193,7 +198,7 @@ function LauncherHeader({
 function HeroTitle() {
   return (
     <h1
-      className="mx-auto mb-16 max-w-[648px] text-center leading-tight text-wn-mono-50"
+      className="mx-auto mb-10 max-w-[648px] shrink-0 text-center leading-tight text-wn-mono-50"
       style={{
         ...getHeadingStyle("h1"),
         fontSize: "48px",
@@ -212,7 +217,9 @@ type WorldsSectionProps = {
   worlds: WorldSummary[];
   onCreate: () => void;
   onOpenRoot: () => void;
+  onOpenVault: () => void;
   onOpenWorld: (world: WorldSummary) => void;
+  onManageWorld: (world: WorldSummary) => void;
 };
 
 function WorldsSection({
@@ -221,11 +228,13 @@ function WorldsSection({
   worlds,
   onCreate,
   onOpenRoot,
+  onOpenVault,
   onOpenWorld,
+  onManageWorld,
 }: WorldsSectionProps) {
   return (
-    <section className="mx-auto w-full max-w-[1008px]">
-      <div className="mb-6 flex items-center justify-between">
+    <section className="mx-auto flex min-h-0 w-full max-w-[1008px] flex-1 flex-col">
+      <div className="mb-6 flex shrink-0 items-center justify-between">
         <h2
           className="text-wn-mono-50"
           style={{
@@ -235,66 +244,90 @@ function WorldsSection({
         >
           Your Worlds
         </h2>
-        <div className="flex items-center gap-8">
-          <HeaderAction
-            disabled={isBusy}
-            iconClass="ri-folder-open-line"
-            label="Open folder"
-            onClick={onOpenRoot}
-          />
-          <HeaderAction
-            disabled={isBusy}
-            iconClass="ri-add-line"
-            label="Create world"
-            onClick={onCreate}
-          />
+        <div className="flex items-center gap-6">
+          <Button
+            variant="secondary"
+            size="sm"
+            isDisabled={isBusy}
+            onPress={onOpenVault}
+            startContent={<i className="ri-stack-line text-base" aria-hidden />}
+          >
+            Vault
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            isDisabled={isBusy}
+            onPress={onOpenRoot}
+            startContent={
+              <i className="ri-folder-open-line text-base" aria-hidden />
+            }
+          >
+            Open folder
+          </Button>
+          <Button
+            variant="white"
+            size="sm"
+            isDisabled={isBusy}
+            onPress={onCreate}
+            startContent={<i className="ri-add-line text-base" aria-hidden />}
+          >
+            Create world
+          </Button>
         </div>
       </div>
 
-      {isLoading ? (
-        <div className="flex h-[270px] items-center justify-center rounded-wn-card border border-wn-mono-800 bg-wn-mono-950/20 text-wn-mono-500">
-          Loading worlds…
-        </div>
-      ) : worlds.length > 0 ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {worlds.map((world) => (
-            <WorldCard
-              key={world.path}
-              world={world}
-              disabled={isBusy}
-              onOpen={onOpenWorld}
-            />
-          ))}
-        </div>
-      ) : (
-        <EmptyWorldsState disabled={isBusy} onCreate={onCreate} />
-      )}
+      <div className="scrollbar-wn flex min-h-0 flex-1 flex-col overflow-y-auto pr-2 pb-6">
+        {isLoading ? (
+          <div className="flex h-[270px] items-center justify-center rounded-wn-card border border-wn-mono-800 bg-wn-mono-950/20 text-wn-mono-500">
+            Loading worlds…
+          </div>
+        ) : worlds.length > 0 ? (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {worlds.map((world, index) => (
+              <motion.div
+                key={world.path}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.25 }}
+                transition={{
+                  ...springSnappy,
+                  delay: Math.min(index, 5) * 0.04,
+                }}
+              >
+                <WorldCard
+                  world={world}
+                  disabled={isBusy}
+                  onOpen={onOpenWorld}
+                  onManage={onManageWorld}
+                />
+              </motion.div>
+            ))}
+          </div>
+        ) : (
+          <EmptyWorldsState disabled={isBusy} onCreate={onCreate} />
+        )}
+
+        <p
+          className="mx-auto mt-10 max-w-[570px] text-center text-wn-mono-400"
+          style={{
+            ...getBodyTextStyle("body"),
+            fontSize: "14px",
+            fontWeight: "var(--font-weight-wn-medium)",
+          }}
+        >
+          Each world is a folder on your machine with a{" "}
+          <code className="rounded bg-wn-mono-900 px-1 py-0.5 text-wn-mono-300">
+            .worldnote
+          </code>{" "}
+          config and a{" "}
+          <code className="rounded bg-wn-mono-900 px-1 py-0.5 text-wn-mono-300">
+            lore/
+          </code>{" "}
+          JSON store. Nothing leaves your computer.
+        </p>
+      </div>
     </section>
-  );
-}
-
-type HeaderActionProps = {
-  iconClass: string;
-  label: string;
-  onClick: () => void;
-  disabled?: boolean;
-};
-
-function HeaderAction({ iconClass, label, onClick, disabled }: HeaderActionProps) {
-  return (
-    <button
-      type="button"
-      disabled={disabled}
-      onClick={onClick}
-      className="flex items-center gap-2 text-wn-mono-50 transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-50"
-      style={{
-        fontSize: "20px",
-        fontWeight: "var(--font-weight-wn-medium)",
-      }}
-    >
-      <i className={`${iconClass} text-[18px] leading-none`} aria-hidden />
-      {label}
-    </button>
   );
 }
 
@@ -318,39 +351,16 @@ function EmptyWorldsState({ onCreate, disabled }: EmptyWorldsStateProps) {
       >
         No worlds yet
       </p>
-      <button
-        type="button"
-        disabled={disabled}
-        onClick={onCreate}
-        className="text-wn-mono-50 underline-offset-4 transition-opacity hover:underline disabled:cursor-not-allowed disabled:opacity-50"
-        style={{
-          fontSize: "16px",
-          fontWeight: "var(--font-weight-wn-medium)",
-        }}
-      >
+      <Button variant="white" size="sm" isDisabled={disabled} onPress={onCreate}>
         Create your first world
-      </button>
+      </Button>
     </div>
   );
 }
 
 function Footer() {
   return (
-    <footer className="relative z-10 flex items-center justify-between px-[46px] py-6 text-wn-mono-400">
-      <div className="flex items-center gap-2">
-        <span
-          className="inline-block h-[5px] w-[5px] rounded-full"
-          style={{
-            backgroundColor:
-              "color-mix(in oklab, var(--color-wn-lime-500) 80%, transparent)",
-          }}
-        />
-        <span
-          style={{ fontSize: "14px", fontWeight: "var(--font-weight-wn-medium)" }}
-        >
-          online
-        </span>
-      </div>
+    <footer className="relative flex shrink-0 items-center justify-between px-[46px] py-6 text-wn-mono-400">
       <div
         className="flex items-center gap-2"
         style={{ fontSize: "14px", fontWeight: "var(--font-weight-wn-medium)" }}

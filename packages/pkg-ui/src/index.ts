@@ -1,4 +1,5 @@
 export * from "./atoms/Button.js";
+export * from "./atoms/Pill.js";
 export * from "./atoms/Tooltip.js";
 export * from "./motion/index.js";
 export * from "./brand/colors.js";
@@ -6,6 +7,8 @@ export * from "./brand/palette.js";
 export * from "./brand/logo.js";
 export * from "./brand/typography.js";
 export * from "./molecules/Card.js";
+export * from "./molecules/ActionMenu.js";
+export * from "./molecules/EnumComboBox.js";
 export * from "./layouts/index.js";
 export * from "./pages/index.js";
 export * from "./provider.js";

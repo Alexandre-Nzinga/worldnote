@@ -110,6 +110,10 @@ export function worldCardToNodeData(
     (cardId) => cardsById[cardId]?.name,
   );
 
+  const viewModeRaw = card.custom_properties?.view_mode;
+  const viewMode =
+    viewModeRaw === "visual" || viewModeRaw === "node" ? viewModeRaw : undefined;
+
   return {
     cardId: card.id,
     title: card.name,
@@ -130,6 +134,8 @@ export function worldCardToNodeData(
     ),
     scalars: scalarsFromCard(card),
     socketValues: socketLinkLabels,
+    viewMode,
+    customProperties: card.custom_properties,
     onUpdate,
   };
 }

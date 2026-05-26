@@ -1,5 +1,6 @@
 export * from "./Canvas.js";
 export * from "./CollapsibleMiniMap.js";
+export * from "./ZoomControls.js";
 export * from "./edges/floating-edge-utils.js";
 export * from "./edges/LinkEdge.js";
 export * from "./manifest/canvas-manifest.js";

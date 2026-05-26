@@ -1,11 +1,7 @@
-import {
-  Background,
-  Controls,
-  ReactFlow,
-  type ReactFlowProps,
-} from "@xyflow/react";
+import { Background, ReactFlow, type ReactFlowProps } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { CollapsibleMiniMap } from "./CollapsibleMiniMap.js";
+import { ZoomControls } from "./ZoomControls.js";
 
 export type WorldNoteCanvasProps = Omit<ReactFlowProps, "children"> & {
   children?: React.ReactNode;
@@ -54,12 +50,7 @@ export function WorldNoteCanvas({
           color={backgroundColor}
         />
         <CollapsibleMiniMap />
-        <Controls
-          position="bottom-left"
-          showFitView={false}
-          showInteractive={false}
-          className="!border !border-wn-mono-700 !bg-wn-mono-900 !shadow-sm [&_button]:!border-wn-mono-700 [&_button]:!bg-wn-mono-800 [&_button]:!text-wn-mono-200 [&_button:hover]:!bg-wn-mono-700"
-        />
+        <ZoomControls />
         {children}
       </ReactFlow>
     </div>

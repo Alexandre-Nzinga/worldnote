@@ -65,6 +65,9 @@
   --radius-3xl: 1.5rem;
   --radius-full: 9999px;
 
+  /* Stacking — modals portaled to document.body */
+  --z-index-modal: 100;
+
   /* WORLDNOTE-MONO */
   --color-wn-mono-50: oklch(98.5% 0 0);
   --color-wn-mono-100: oklch(96.7% 0 0);
@@ -155,4 +158,15 @@
   --color-wn-red-800: oklch(44.4% 0.177 26.899);
   --color-wn-red-900: oklch(39.6% 0.141 25.723);
   --color-wn-red-950: oklch(25.8% 0.092 26.042);
+}
+
+@utility scrollbar-wn {
+  /* Keep scrolling, hide the native scrollbar chrome. */
+  scrollbar-width: none;
+  scrollbar-color: transparent transparent;
+
+  &::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
 }

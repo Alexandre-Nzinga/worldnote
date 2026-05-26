@@ -1,3 +1,4 @@
+import { CardTypePill } from "./CardTypePill.js";
 import {
   Handle,
   type Node,
@@ -49,31 +50,33 @@ type CardVisualConfig = {
   widthClass: string;
   aspectClass: string;
   titleClassName?: string;
+  badgeTextColor?: string;
 };
 
 const CARD_VISUAL_CONFIG: Record<WorldNoteCardType, CardVisualConfig> = {
   character: {
     label: "Character",
-    badgeClassName: "bg-wn-rose-300",
+    badgeClassName: "bg-wn-mono-300",
     widthClass: "w-[250px]",
     aspectClass: "aspect-3/4",
     titleClassName: "text-xl font-semibold leading-tight",
   },
   location: {
     label: "Location",
-    badgeClassName: "bg-wn-azure-300",
+    badgeClassName: "bg-wn-mono-800",
+    badgeTextColor: "text-wn-mono-50",
     widthClass: "w-[280px]",
     aspectClass: "aspect-5/3",
   },
   item: {
     label: "Item",
-    badgeClassName: "bg-wn-amber-300",
+    badgeClassName: "bg-wn-amber-200",
     widthClass: "w-[260px]",
     aspectClass: "aspect-5/3",
   },
   vehicle: {
     label: "Vehicle",
-    badgeClassName: "bg-wn-indigo-300",
+    badgeClassName: "bg-wn-indigo-200",
     widthClass: "w-[280px]",
     aspectClass: "aspect-5/3",
   },
@@ -103,7 +106,7 @@ const CARD_VISUAL_CONFIG: Record<WorldNoteCardType, CardVisualConfig> = {
   },
   species: {
     label: "Species",
-    badgeClassName: "bg-wn-azure-300",
+    badgeClassName: "bg-wn-azure-200",
     widthClass: "w-[260px]",
     aspectClass: "aspect-5/3",
   },
@@ -148,6 +151,10 @@ export type CardNodeData = {
   scalars?: CardNodeScalars;
   socketValues?: Record<string, string[]>;
   onUpdate?: (partial: Record<string, unknown>) => void;
+  /** Persisted user preference for card display mode. */
+  viewMode?: CardViewMode;
+  /** Pass-through card custom properties for persisting view toggles. */
+  customProperties?: Record<string, unknown>;
   /** Faint border while this card is hovered during a connection drag. */
   connectionHover?: boolean;
   /** One-shot enter animation when a card is newly created. */
@@ -329,6 +336,7 @@ type OverlayMediaCardProps = {
   aspectClass: string;
   badgeLabel: string;
   badgeClassName: string;
+  badgeTextColor?: string;
   titleClassName?: string;
   onToggleView: () => void;
 };
@@ -340,6 +348,7 @@ function OverlayMediaCard({
   aspectClass,
   badgeLabel,
   badgeClassName,
+  badgeTextColor,
   titleClassName = "text-lg font-semibold leading-tight",
   onToggleView,
 }: OverlayMediaCardProps) {
@@ -377,11 +386,9 @@ function OverlayMediaCard({
               </div>
             ) : null}
           </div>
-          <span
-            className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium text-wn-mono-950 ${badgeClassName}`}
-          >
+          <CardTypePill className={badgeClassName} textClassName={badgeTextColor}>
             {badgeLabel}
-          </span>
+          </CardTypePill>
         </div>
       </div>
     </CardImageBorderFrame>
@@ -413,6 +420,7 @@ type CardNodeViewProps = {
   data: CardNodeData;
   badgeLabel: string;
   badgeClassName: string;
+  badgeTextColor?: string;
   onToggleView: () => void;
 };
 
@@ -420,6 +428,7 @@ function CardNodeView({
   data,
   badgeLabel,
   badgeClassName,
+  badgeTextColor,
   onToggleView,
 }: CardNodeViewProps) {
   const nodeId = useNodeId();
@@ -470,11 +479,12 @@ function CardNodeView({
               </div>
             ) : null}
           </div>
-          <span
-            className={`absolute right-4 top-12 shrink-0 rounded-full px-2.5 py-1 text-xs font-medium text-wn-mono-950 ${badgeClassName}`}
+          <CardTypePill
+            className={`absolute right-4 top-12 ${badgeClassName}`}
+            textClassName={badgeTextColor}
           >
             {badgeLabel}
-          </span>
+          </CardTypePill>
         </div>
 
         <div data-socket-list className="flex flex-col gap-1.5 px-4 py-3">
@@ -556,6 +566,7 @@ function CardNodeBody({ data, viewMode, onToggleView }: CardNodeBodyProps) {
         data={data}
         badgeLabel={visual.label}
         badgeClassName={visual.badgeClassName}
+        badgeTextColor={visual.badgeTextColor}
         onToggleView={onToggleView}
       />
     );
@@ -568,6 +579,7 @@ function CardNodeBody({ data, viewMode, onToggleView }: CardNodeBodyProps) {
       aspectClass={visual.aspectClass}
       badgeLabel={visual.label}
       badgeClassName={visual.badgeClassName}
+      badgeTextColor={visual.badgeTextColor}
       titleClassName={visual.titleClassName}
       onToggleView={onToggleView}
     />
@@ -575,7 +587,7 @@ function CardNodeBody({ data, viewMode, onToggleView }: CardNodeBodyProps) {
 }
 
 function CardNodeInner({ data }: NodeProps<CardFlowNode>) {
-  const [viewMode, setViewMode] = useState<CardViewMode>("visual");
+  const [viewMode, setViewMode] = useState<CardViewMode>(data.viewMode ?? "visual");
   const [enterDone, setEnterDone] = useState(!data.enterAnimation);
   const sockets = data.sockets ?? [];
   const visibleSockets = data.visibleSockets ?? {};
@@ -586,9 +598,24 @@ function CardNodeInner({ data }: NodeProps<CardFlowNode>) {
     }
   }, [data.enterAnimation]);
 
+  useEffect(() => {
+    if (data.viewMode) {
+      setViewMode(data.viewMode);
+    }
+  }, [data.viewMode]);
+
   const onToggleView = useCallback(() => {
-    setViewMode((current) => (current === "visual" ? "node" : "visual"));
-  }, []);
+    setViewMode((current) => {
+      const next: CardViewMode = current === "visual" ? "node" : "visual";
+      data.onUpdate?.({
+        custom_properties: {
+          ...(data.customProperties ?? {}),
+          view_mode: next,
+        },
+      });
+      return next;
+    });
+  }, [data.customProperties, data.onUpdate]);
 
   const handles =
     viewMode === "visual" ? (
