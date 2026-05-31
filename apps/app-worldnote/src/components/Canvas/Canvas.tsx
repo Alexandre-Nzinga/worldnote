@@ -27,7 +27,6 @@ import type { DragEvent } from "react";
 import { useCardCommands } from "../../hooks/useCardCommands.js";
 import { useSettings } from "../../hooks/useSettings.js";
 import { useVault } from "../../hooks/useVault.js";
-import { VaultModal } from "../Vault/VaultModal.js";
 import { worldCardToNodeData } from "../../services/canvas/cardNodeData.js";
 import { createCardPositionUpdater } from "../../services/canvas/updateCardPosition.js";
 import { createWorldCard } from "../../services/crudWorldCard/createWorldCard.js";
@@ -39,7 +38,7 @@ import { deleteLink } from "../../services/links/deleteLink.js";
 import { linkToEdge } from "../../services/links/linkToEdge.js";
 import { listLinks } from "../../services/links/listLinks.js";
 import { LinkEditorPanel } from "./LinkEditorPanel.js";
-import { CardEditorPanel } from "./CardEditorPanel.js";
+import { Inspector, type InspectorMode } from "./Inspector.js";
 import { CanvasFlow } from "./CanvasFlow.js";
 import { CanvasHeader } from "./CanvasHeader.js";
 import { CanvasToolbar } from "./CanvasToolbar.js";
@@ -49,6 +48,7 @@ import {
   normalizeConnection,
 } from "../../services/links/resolveEasyConnect.js";
 import { copyCardToWorld } from "../../services/library/copyCardToWorld.js";
+import { listWorlds } from "../../services/worlds/listWorlds.js";
 
 const nodeTypes = {
   worldnoteCard: CardNode,
@@ -60,6 +60,7 @@ const edgeTypes: EdgeTypes = {
 
 type CanvasProps = {
   onBack: () => void;
+  onOpenVault?: () => void;
 };
 
 function cardsRecord(cards: WorldCard[]): Record<string, WorldCard> {
@@ -75,13 +76,14 @@ function worldNameFromPath(vaultPath: string): string {
   return folder ?? "World";
 }
 
-export function Canvas({ onBack }: CanvasProps) {
+export function Canvas({ onBack, onOpenVault }: CanvasProps) {
   const vaultPath = useVault((state) => state.currentVaultPath);
   const storedWorldName = useVault((state) => state.currentWorldName);
   const worldnoteRoot = useSettings((state) => state.settings?.worldnoteRoot);
   const visibleSocketsSettings = useSettings(
     (state) => state.settings?.visibleSockets,
   );
+  const [resolvedWorldName, setResolvedWorldName] = useState<string | null>(null);
   const { listCards, loadCanvasManifest } = useCardCommands();
   const [nodes, setNodes, onNodesChange] = useNodesState<CardFlowNode>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
@@ -89,6 +91,7 @@ export function Canvas({ onBack }: CanvasProps) {
   const [linksById, setLinksById] = useState<Record<string, Link>>({});
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [selectedLinkId, setSelectedLinkId] = useState<string | null>(null);
+  const [inspectorMode, setInspectorMode] = useState<InspectorMode>("read");
   const [isVaultOpen, setIsVaultOpen] = useState(false);
   const [isBulkTogglingView, setIsBulkTogglingView] = useState(false);
 
@@ -125,6 +128,9 @@ export function Canvas({ onBack }: CanvasProps) {
       );
       setSelectedCardId(selected?.id ?? null);
       setSelectedLinkId(null);
+      if (selected) {
+        setInspectorMode("read");
+      }
     },
     [],
   );
@@ -191,7 +197,7 @@ export function Canvas({ onBack }: CanvasProps) {
     } finally {
       setIsBulkTogglingView(false);
     }
-  }, [isBulkTogglingView, setCardsById, vaultPath]);
+  }, [isBulkTogglingView, vaultPath]);
 
   const handleSaveCardRef = useRef(handleSaveCard);
   handleSaveCardRef.current = handleSaveCard;
@@ -418,6 +424,7 @@ export function Canvas({ onBack }: CanvasProps) {
           );
           setSelectedCardId(card.id);
           setSelectedLinkId(null);
+          setInspectorMode("edit");
         })
         .catch((error) => {
           console.error("Failed to persist card:", error);
@@ -578,6 +585,7 @@ export function Canvas({ onBack }: CanvasProps) {
               );
               setSelectedCardId(card.id);
               setSelectedLinkId(null);
+              setInspectorMode("edit");
             })
             .catch((error) => {
               console.error("Failed to copy card:", error);
@@ -615,18 +623,41 @@ export function Canvas({ onBack }: CanvasProps) {
 
       void addCard(droppedType, position);
     },
-    [addCard, listCards, vaultPath, visibleSocketsSettings],
+    [addCard, listCards, setNodes, vaultPath, visibleSocketsSettings],
   );
+
+  useEffect(() => {
+    if (storedWorldName?.trim() || !vaultPath?.trim() || !worldnoteRoot?.trim()) {
+      setResolvedWorldName(null);
+      return;
+    }
+
+    let cancelled = false;
+    void listWorlds(worldnoteRoot).then((worlds) => {
+      if (cancelled) {
+        return;
+      }
+      const match = worlds.find((world) => world.path === vaultPath);
+      setResolvedWorldName(match?.name ?? null);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [storedWorldName, vaultPath, worldnoteRoot]);
 
   const worldName = useMemo(() => {
     if (storedWorldName?.trim()) {
       return storedWorldName.trim();
     }
+    if (resolvedWorldName?.trim()) {
+      return resolvedWorldName.trim();
+    }
     if (vaultPath) {
       return worldNameFromPath(vaultPath);
     }
     return "World";
-  }, [storedWorldName, vaultPath]);
+  }, [resolvedWorldName, storedWorldName, vaultPath]);
 
   const selectedCard = selectedCardId ? cardsById[selectedCardId] : null;
   const selectedLink = selectedLinkId ? linksById[selectedLinkId] : null;
@@ -639,8 +670,8 @@ export function Canvas({ onBack }: CanvasProps) {
   });
 
   return (
-    <div className="relative h-screen min-h-0 bg-wn-mono-950 text-wn-mono-100">
-      <CanvasHeader worldName={worldName} onBackToLauncher={onBack} />
+    <div className="relative h-screen min-h-0 overflow-hidden bg-wn-mono-950 text-wn-mono-100">
+      <CanvasHeader worldName={worldName} onBackToHome={onBack} />
 
       <ReactFlowProvider>
         <div
@@ -668,6 +699,7 @@ export function Canvas({ onBack }: CanvasProps) {
             setLinksById={setLinksById}
             setSelectedCardId={setSelectedCardId}
             setSelectedLinkId={setSelectedLinkId}
+            setInspectorMode={setInspectorMode}
             onNodeDragStop={(_, node) => {
               if (!updateCardPosition) {
                 return;
@@ -681,6 +713,7 @@ export function Canvas({ onBack }: CanvasProps) {
             onNodeDoubleClick={(_, node) => {
               setSelectedCardId(node.id);
               setSelectedLinkId(null);
+              setInspectorMode("edit");
             }}
             onEdgeDoubleClick={(_, edge) => {
               setSelectedLinkId(edge.id);
@@ -690,8 +723,10 @@ export function Canvas({ onBack }: CanvasProps) {
         </div>
       </ReactFlowProvider>
 
-      <CardEditorPanel
+      <Inspector
         isOpen={Boolean(selectedCard && vaultPath && !selectedLink)}
+        mode={inspectorMode}
+        onModeChange={setInspectorMode}
         card={selectedCard ?? undefined}
         vaultPath={vaultPath ?? ""}
         links={Object.values(linksById)}
@@ -722,18 +757,12 @@ export function Canvas({ onBack }: CanvasProps) {
         onCreate={(type) => {
           void addCard(type);
         }}
-        onOpenVault={() => setIsVaultOpen(true)}
+        onOpenVault={onOpenVault}
         onToggleAllCardViews={() => {
           void toggleAllCardViews();
         }}
       />
 
-      <VaultModal
-        isOpen={isVaultOpen}
-        onClose={() => setIsVaultOpen(false)}
-        worldnoteRoot={worldnoteRoot ?? ""}
-        currentWorldPath={vaultPath ?? undefined}
-      />
     </div>
   );
 }

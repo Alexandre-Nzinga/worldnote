@@ -1,16 +1,19 @@
 @import "tailwindcss";
+@import "./material-symbols.css";
 
 @plugin "./hero.ts";
 @source "../../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}";
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Typography lives in :root (used via inline styles / getHeadingStyle).
- * Colors and radii live once in @theme inline — Tailwind generates utilities
- * (bg-wn-mono-950, rounded-wn-card) and exposes the same CSS variables.
+ * Design tokens live once in @theme inline — Tailwind generates utilities
+ * (bg-wn-mono-950, text-wn-h1, font-wn-semibold, rounded-wn-card) and exposes
+ * the same CSS variables for getHeadingStyle / getBodyTextStyle.
  */
-@layer base {
-  :root {
+
+@theme inline {
+  --font-sans: "Urbanist", ui-sans-serif, system-ui, sans-serif;
+
   --font-weight-wn-thin: 100;
   --font-weight-wn-extralight: 200;
   --font-weight-wn-light: 300;
@@ -55,11 +58,6 @@
   --text-wn-body: 1rem;
   --text-wn-small: 0.889rem;
   --text-wn-xs: 0.79rem;
-  }
-}
-
-@theme inline {
-  --font-sans: "Urbanist", ui-sans-serif, system-ui, sans-serif;
 
   --radius-xl: 0.75rem;
   --radius-2xl: 1rem;
@@ -154,8 +152,8 @@
   --color-wn-red-200: oklch(88.5% 0.062 18.334);
   --color-wn-red-300: oklch(80.8% 0.114 19.571);
   --color-wn-red-400: oklch(70.4% 0.191 22.216);
-  --color-wn-red-500: oklch(63.7% 0.237 25.331);
-  --color-wn-red-600: oklch(57.7% 0.245 27.325);
+  --color-wn-red-500: oklch(50.95% 0.2086 28.51);
+  --color-wn-red-600: oklch(44.5% 0.19 28.51);
   --color-wn-red-700: oklch(50.5% 0.213 27.518);
   --color-wn-red-800: oklch(44.4% 0.177 26.899);
   --color-wn-red-900: oklch(39.6% 0.141 25.723);

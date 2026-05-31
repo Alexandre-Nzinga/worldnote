@@ -3,14 +3,17 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts",
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
     "./theme/tailwind.css": "./src/theme/tailwind.css"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json && node ./scripts/copy-brand-assets.mjs",
     "check-types": "tsc -p tsconfig.build.json --noEmit",
     "lint": "biome check .",
     "dev": "tsc -p tsconfig.build.json --watch",
@@ -21,6 +24,7 @@
     "react-dom": "^19.0.0"
   },
   "dependencies": {
+    "@fontsource-variable/material-symbols-outlined": "^5.2.45",
     "@heroui/react": "^2.8.10",
     "@heroui/theme": "^2.4.26",
     "clsx": "^2.1.1",

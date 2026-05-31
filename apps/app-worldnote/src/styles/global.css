@@ -1,11 +1,15 @@
 @import "@worldnote/ui/theme/tailwind.css";
-@import "remixicon/fonts/remixicon.css";
+@source "../**/*.{ts,tsx}";
 @source "../../../../packages/canvas/src/**/*.{ts,tsx}";
+@source "../../../../packages/pkg-ui/src/**/*.{ts,tsx}";
+@source "../../../../packages/pkg-ui/dist/**/*.js";
 
 html,
 body,
 #root {
-  min-height: 100%;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
   background-color: var(--color-wn-mono-950);
   color: var(--color-wn-mono-50);
   font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
@@ -21,5 +25,74 @@ body,
   background: transparent;
   border: none;
   box-shadow: none;
+  padding: 0;
+}
+
+.inspector-markdown :where(p, ul, ol, blockquote, pre) {
+  margin-block: 0.75rem;
+  font-size: var(--text-wn-body);
+}
+
+.inspector-markdown :where(p:first-child, ul:first-child, ol:first-child) {
+  margin-block-start: 0;
+}
+
+.inspector-markdown :where(p:last-child, ul:last-child, ol:last-child) {
+  margin-block-end: 0;
+}
+
+.inspector-markdown :where(h1) {
+  margin-block: 1rem 0.5rem;
+  font-size: var(--text-wn-h4);
+  font-weight: 600;
+  color: var(--color-wn-mono-50);
+}
+
+.inspector-markdown :where(h2) {
+  margin-block: 0.875rem 0.5rem;
+  font-size: var(--text-wn-h5);
+  font-weight: 600;
+  color: var(--color-wn-mono-50);
+}
+
+.inspector-markdown :where(h3, h4) {
+  margin-block: 0.75rem 0.375rem;
+  font-size: var(--text-wn-h6);
+  font-weight: 600;
+  color: var(--color-wn-mono-50);
+}
+
+.inspector-markdown :where(ul, ol) {
+  padding-inline-start: 1.25rem;
+}
+
+.inspector-markdown :where(a) {
+  color: var(--color-wn-azure-400);
+  text-decoration: underline;
+}
+
+.inspector-markdown :where(blockquote) {
+  border-inline-start: 3px solid var(--color-wn-mono-700);
+  padding-inline-start: 0.75rem;
+  color: var(--color-wn-mono-400);
+}
+
+.inspector-markdown :where(code) {
+  border-radius: 0.375rem;
+  background-color: var(--color-wn-mono-950);
+  padding: 0.125rem 0.375rem;
+  font-size: 0.875em;
+}
+
+.inspector-markdown :where(pre) {
+  overflow-x: auto;
+  border-radius: 0.75rem;
+  border: 1px solid var(--color-wn-mono-800);
+  background-color: var(--color-wn-mono-950);
+  padding: 0.75rem;
+}
+
+.inspector-markdown :where(pre code) {
+  background: transparent;
   padding: 0;
 }

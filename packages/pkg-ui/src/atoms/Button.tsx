@@ -73,6 +73,7 @@ const variantConfig: Record<ButtonVariant, VariantConfig> = {
   },
   danger: {
     heroVariant: "solid",
+    heroColor: "danger",
     className:
       "border-0 !bg-wn-red-500 font-semibold text-wn-mono-50 shadow-none hover:!bg-wn-red-600 data-[hover=true]:!bg-wn-red-600",
   },

@@ -31,6 +31,11 @@ pub struct LibraryCard {
     pub created_at: u64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub image_path: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub image_fit: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub image_position: Option<serde_json::Value>,
+    pub subtitle: String,
 }
 
 fn worldnote_dir(world_path: &Path) -> PathBuf {
@@ -76,6 +81,54 @@ fn is_world_folder(world_path: &Path) -> bool {
 
 fn extract_string_field(card: &serde_json::Value, key: &str) -> Option<String> {
     card.get(key).and_then(|value| value.as_str()).map(ToString::to_string)
+}
+
+fn capitalize_first(value: &str) -> String {
+    let mut chars = value.chars();
+    match chars.next() {
+        None => String::new(),
+        Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
+    }
+}
+
+fn subtitle_for_card(card: &serde_json::Value, card_type: &str) -> String {
+    let type_label = |fallback: &str| fallback.to_string();
+
+    match card_type {
+        "character" => extract_string_field(card, "birthdate")
+            .filter(|value| !value.trim().is_empty())
+            .or_else(|| extract_string_field(card, "description").filter(|value| !value.trim().is_empty()))
+            .unwrap_or_else(|| type_label("Character")),
+        "location" => extract_string_field(card, "coordinates")
+            .filter(|value| !value.trim().is_empty())
+            .or_else(|| extract_string_field(card, "description").filter(|value| !value.trim().is_empty()))
+            .unwrap_or_else(|| type_label("Location")),
+        "item" => extract_string_field(card, "rarity")
+            .map(|value| capitalize_first(value.trim()))
+            .filter(|value| !value.is_empty())
+            .unwrap_or_else(|| type_label("Item")),
+        "vehicle" => extract_string_field(card, "max_speed")
+            .filter(|value| !value.trim().is_empty())
+            .or_else(|| extract_string_field(card, "sub_type"))
+            .unwrap_or_else(|| type_label("Vehicle")),
+        "flora" => extract_string_field(card, "toxicity_level")
+            .filter(|value| !value.trim().is_empty())
+            .unwrap_or_else(|| type_label("Flora")),
+        "fauna" => extract_string_field(card, "diet")
+            .map(|value| capitalize_first(value.trim()))
+            .filter(|value| !value.is_empty())
+            .unwrap_or_else(|| type_label("Fauna")),
+        "structure" => extract_string_field(card, "condition")
+            .filter(|value| !value.trim().is_empty())
+            .unwrap_or_else(|| type_label("Structure")),
+        "species" => extract_string_field(card, "average_lifespan")
+            .filter(|value| !value.trim().is_empty())
+            .unwrap_or_else(|| type_label("Species")),
+        "building" => extract_string_field(card, "description")
+            .filter(|value| !value.trim().is_empty())
+            .unwrap_or_else(|| type_label("Building")),
+        _ => type_label(card_type),
+    }
 }
 
 fn extract_tags(card: &serde_json::Value) -> Vec<String> {
@@ -136,10 +189,16 @@ pub fn list_all_cards(root: String) -> Result<Vec<LibraryCard>, String> {
                 world_name: metadata.name.clone(),
                 world_cover_image: metadata.cover_image.clone(),
                 card_id,
-                card_type,
+                card_type: card_type.clone(),
                 name,
                 created_at: file_modified_secs(&card_path),
                 image_path: extract_string_field(&card, "image_path"),
+                image_fit: extract_string_field(&card, "image_fit"),
+                image_position: card
+                    .get("image_position")
+                    .filter(|value| value.is_object())
+                    .cloned(),
+                subtitle: subtitle_for_card(&card, &card_type),
             });
         }
     }
@@ -245,15 +304,23 @@ pub fn copy_card_to_world(
     )?;
 
     let target_metadata = read_world_metadata(&target_world)?;
+    let card_type =
+        extract_string_field(&card, "card_type").unwrap_or_else(|| "unknown".to_string());
     Ok(LibraryCard {
         world_path: target_world.to_string_lossy().into_owned(),
         world_name: target_metadata.name,
         world_cover_image: target_metadata.cover_image,
         card_id: new_id,
-        card_type: extract_string_field(&card, "card_type").unwrap_or_else(|| "unknown".to_string()),
+        card_type: card_type.clone(),
         name,
         created_at: file_modified_secs(&target_card_path),
         image_path: extract_string_field(&card, "image_path"),
+        image_fit: extract_string_field(&card, "image_fit"),
+        image_position: card
+            .get("image_position")
+            .filter(|value| value.is_object())
+            .cloned(),
+        subtitle: subtitle_for_card(&card, &card_type),
     })
 }
 

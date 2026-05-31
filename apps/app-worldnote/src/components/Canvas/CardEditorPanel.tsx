@@ -1,5 +1,5 @@
 import { Input, Textarea } from "@heroui/react";
-import { AnimatedPanel, Button } from "@worldnote/ui";
+import { AnimatedPanel, Button, MaterialSymbol } from "@worldnote/ui";
 import {
   CARD_TYPE_LABELS,
   DEFAULT_CARD_IMAGE_POSITION,
@@ -9,14 +9,17 @@ import {
   type Link,
   type WorldCard,
 } from "@worldnote/shared";
-import { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   darkFieldInputClassNames,
   modalFieldLabelClassName,
   modalPrimaryButtonClassName,
 } from "../Onboarding/fieldClassNames.js";
 import { cardImageSrc } from "../../services/canvas/cardNodeData.js";
-import { pickCardImageFile, saveCardImage } from "../../services/desktop/saveCardImage.js";
+import {
+  pickCardImageFile,
+  saveCardImage,
+} from "../../services/desktop/saveCardImage.js";
 import {
   formatSocketLinkValue,
   getSocketLinkLabels,
@@ -58,9 +61,7 @@ function stringToTags(raw: string): string[] {
     .filter((tag) => tag.length > 0);
 }
 
-function propertiesToRows(
-  properties: Record<string, unknown>,
-): PropertyRow[] {
+function propertiesToRows(properties: Record<string, unknown>): PropertyRow[] {
   return Object.entries(properties).map(([key, value]) => ({
     key,
     value: typeof value === "string" ? value : JSON.stringify(value),
@@ -138,7 +139,11 @@ export function CardEditorPanel({
     ? listSocketsForCardType(activeCard.card_type)
     : [];
   const socketLinkLabels = activeCard
-    ? getSocketLinkLabels(activeCard.id, links, (cardId) => cardsById[cardId]?.name)
+    ? getSocketLinkLabels(
+        activeCard.id,
+        links,
+        (cardId) => cardsById[cardId]?.name,
+      )
     : {};
 
   const imagePreview = cardImageSrc(vaultPath, imagePath);
@@ -199,7 +204,11 @@ export function CardEditorPanel({
       if (!sourcePath) {
         return;
       }
-      const relativePath = await saveCardImage(vaultPath, activeCard.id, sourcePath);
+      const relativePath = await saveCardImage(
+        vaultPath,
+        activeCard.id,
+        sourcePath,
+      );
       setImagePath(relativePath);
     } catch (imageError) {
       setError(
@@ -226,7 +235,9 @@ export function CardEditorPanel({
       onClose();
     } catch (deleteError) {
       setError(
-        deleteError instanceof Error ? deleteError.message : String(deleteError),
+        deleteError instanceof Error
+          ? deleteError.message
+          : String(deleteError),
       );
     } finally {
       setIsDeleting(false);
@@ -234,9 +245,7 @@ export function CardEditorPanel({
   }, [activeCard, onClose, onDelete]);
 
   const isBusy = isSaving || isDeleting;
-  const typeLabel = activeCard
-    ? CARD_TYPE_LABELS[activeCard.card_type]
-    : "";
+  const typeLabel = activeCard ? CARD_TYPE_LABELS[activeCard.card_type] : "";
 
   if (!activeCard) {
     return null;
@@ -379,7 +388,9 @@ export function CardEditorPanel({
 
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
-              <span className={modalFieldLabelClassName}>Custom properties</span>
+              <span className={modalFieldLabelClassName}>
+                Custom properties
+              </span>
               <Button
                 variant="ghost"
                 size="sm"
@@ -392,7 +403,9 @@ export function CardEditorPanel({
               </Button>
             </div>
             {propertyRows.length === 0 ? (
-              <p className="text-xs text-wn-mono-500">No custom properties yet.</p>
+              <p className="text-xs text-wn-mono-500">
+                No custom properties yet.
+              </p>
             ) : (
               propertyRows.map((row, index) => (
                 <div key={`${row.key}-${index}`} className="flex gap-2">
@@ -419,7 +432,9 @@ export function CardEditorPanel({
                     onValueChange={(next) =>
                       setPropertyRows((rows) =>
                         rows.map((entry, rowIndex) =>
-                          rowIndex === index ? { ...entry, value: next } : entry,
+                          rowIndex === index
+                            ? { ...entry, value: next }
+                            : entry,
                         ),
                       )
                     }
@@ -439,7 +454,7 @@ export function CardEditorPanel({
                       )
                     }
                   >
-                    <i className="ri-delete-bin-line text-base" aria-hidden />
+                    <MaterialSymbol name="delete" className="text-base" />
                   </button>
                 </div>
               ))
@@ -454,7 +469,7 @@ export function CardEditorPanel({
         </div>
       </div>
 
-      <footer className="flex flex-col gap-2 border-t border-wn-mono-800 px-4 py-3">
+      <footer className="flex gap-2 border-t border-wn-mono-800 px-4 py-3">
         <Button
           variant="white"
           size="base"

@@ -1,4 +1,4 @@
-import { MotionPressable, Pill, WorldNoteLogo } from "@worldnote/ui";
+import { MaterialSymbol, MotionPressable, Pill, WorldNoteLogo } from "@worldnote/ui";
 import type { WorldSummary } from "../../services/worlds/listWorlds.js";
 import {
   formatRelativeTime,
@@ -9,12 +9,16 @@ import {
 type WorldCardProps = {
   world: WorldSummary;
   disabled?: boolean;
+  isPinned?: boolean;
+  canPin?: boolean;
+  pinError?: string | null;
+  onTogglePin?: (world: WorldSummary) => void;
   onOpen: (world: WorldSummary) => void;
   onManage?: (world: WorldSummary) => void;
 };
 
 const cardClassName = [
-  "group relative flex w-full max-w-[360px] mx-auto flex-col overflow-hidden text-left",
+  "group relative mx-auto flex w-full max-w-[360px] flex-col overflow-hidden text-left",
   "rounded-wn-card border border-white/10",
   "bg-gradient-to-b from-white/[0.07] to-white/[0.02]",
   "shadow-[0_1px_0_0_rgba(255,255,255,0.06)_inset,0_24px_48px_-24px_rgba(0,0,0,0.7)]",
@@ -28,24 +32,76 @@ const pillClassName = ["bg-wn-mono-700", "shadow-[0_1px_0_rgba(255,255,255,0.06)
   " ",
 );
 
-/** Launcher world card — iOS "liquid glass" surface with hashed cover. */
-export function WorldCard({ world, disabled, onOpen, onManage }: WorldCardProps) {
+/** Home world card — iOS "liquid glass" surface with hashed cover. */
+export function WorldCard({
+  world,
+  disabled,
+  isPinned = false,
+  canPin = true,
+  pinError,
+  onTogglePin,
+  onOpen,
+  onManage,
+}: WorldCardProps) {
   const coverSrc = worldCoverImageSrc(world.path, world.coverImage);
+  const showPin = onTogglePin != null;
+  const pinDisabled = disabled || (!isPinned && !canPin);
+
+  const shellClassName = [
+    cardClassName,
+    isPinned && "border-wn-azure-500/40 ring-1 ring-wn-azure-500/25",
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
-    <MotionPressable
-      disabled={disabled}
-      enableHover
-      onClick={() => onOpen(world)}
-      onContextMenu={(event) => {
-        event.preventDefault();
-        if (!disabled) {
-          onManage?.(world);
-        }
-      }}
-      className={cardClassName}
-      style={{ borderRadius: "var(--radius-wn-card)" }}
-    >
+    <div className={shellClassName} style={{ borderRadius: "var(--radius-wn-card)" }}>
+      {showPin ? (
+        <button
+          type="button"
+          disabled={pinDisabled}
+          title={
+            pinError ??
+            (isPinned ? "Unpin from home" : canPin ? "Pin to home" : "Pin limit reached (3)")
+          }
+          aria-label={
+            isPinned ? `Unpin ${world.name}` : `Pin ${world.name} to home`
+          }
+          aria-pressed={isPinned}
+          className={[
+            "absolute left-5 top-5 z-20 flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-wn-mono-950/70 text-wn-mono-100 backdrop-blur-md transition-colors",
+            "hover:border-white/35 hover:bg-wn-mono-900/90 hover:text-wn-mono-50",
+            "disabled:cursor-not-allowed disabled:opacity-40",
+            isPinned && "border-wn-azure-400/50 bg-wn-azure-600/30 text-wn-azure-100",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+          onClick={(event) => {
+            event.stopPropagation();
+            if (!pinDisabled) {
+              onTogglePin(world);
+            }
+          }}
+        >
+          <MaterialSymbol
+            name="keep"
+            filled={isPinned}
+            className="text-base leading-none"
+          />
+        </button>
+      ) : null}
+      <MotionPressable
+        disabled={disabled}
+        enableHover
+        onClick={() => onOpen(world)}
+        onContextMenu={(event) => {
+          event.preventDefault();
+          if (!disabled) {
+            onManage?.(world);
+          }
+        }}
+        className="flex w-full flex-col text-left"
+      >
       <div className="p-2.5">
         <div
           className="relative h-[160px] overflow-hidden rounded-2xl bg-wn-mono-900"
@@ -88,6 +144,7 @@ export function WorldCard({ world, disabled, onOpen, onManage }: WorldCardProps)
           {formatRelativeTime(world.lastOpened)}
         </span>
       </div>
-    </MotionPressable>
+      </MotionPressable>
+    </div>
   );
 }

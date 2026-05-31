@@ -1,43 +1,54 @@
-import { ActionMenu, Button } from "@worldnote/ui";
-import { RemixIcon } from "./RemixIcon.js";
+import {
+  ActionMenu,
+  Button,
+  MaterialSymbol,
+  getHeadingStyle,
+  headingClass,
+} from "@worldnote/ui";
 
 type CanvasHeaderProps = {
   worldName: string;
-  onBackToLauncher: () => void;
+  onBackToHome: () => void;
 };
 
-export function CanvasHeader({ worldName, onBackToLauncher }: CanvasHeaderProps) {
+export function CanvasHeader({ worldName, onBackToHome }: CanvasHeaderProps) {
   return (
-    <header className="pointer-events-auto absolute left-4 top-4 z-20 flex max-w-[calc(100vw-2rem)] flex-nowrap items-center gap-3">
-      <ActionMenu
-        ariaLabel="World menu"
-        placement="bottom-start"
-        onAction={(key) => {
-          if (key === "launcher") {
-            onBackToLauncher();
+    <header className="pointer-events-auto absolute left-4 top-4 z-30 flex items-center gap-3">
+      <div className="shrink-0">
+        <ActionMenu
+          ariaLabel="World menu"
+          placement="bottom-start"
+          onAction={(key) => {
+            if (key === "home") {
+              onBackToHome();
+            }
+          }}
+          items={[
+            {
+              id: "home",
+              label: "Home",
+              icon: <MaterialSymbol name="home" className="text-[20px]" />,
+            },
+          ]}
+          trigger={
+            <Button
+              variant="tertiary"
+              size="sm"
+              isIconOnly
+              aria-label="World menu"
+              className="min-w-9 px-0"
+            >
+              <MaterialSymbol name="menu" className="text-lg" />
+            </Button>
           }
-        }}
-        items={[
-          {
-            id: "launcher",
-            label: "Back to launcher",
-            icon: <RemixIcon name="ri-home-line" />,
-          },
-        ]}
-        trigger={
-          <Button
-            variant="tertiary"
-            size="sm"
-            isIconOnly
-            aria-label="World menu"
-            className="min-w-9 px-0"
-          >
-            <RemixIcon name="ri-menu-line" className="text-lg" />
-          </Button>
-        }
-      />
+        />
+      </div>
       <h1
-        className="min-w-0 flex-1 truncate whitespace-nowrap text-lg font-semibold leading-tight text-wn-mono-50"
+        className={`max-w-[min(24rem,calc(100vw-6rem))] min-w-0 truncate whitespace-nowrap text-wn-mono-50 ${headingClass.h4}`}
+        style={{
+          ...getHeadingStyle("h4"),
+          color: "var(--color-wn-mono-50)",
+        }}
         title={worldName}
       >
         {worldName}

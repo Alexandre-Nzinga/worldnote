@@ -30,7 +30,7 @@ export function StepLayout({
   actionDisabled = false,
 }: StepLayoutProps) {
   return (
-    <main className="flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto px-6 py-10">
+    <main className="scrollbar-wn flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto px-6 py-10">
       <motion.div
         className="my-auto w-full max-w-[520px]"
         variants={contentStaggerVariants}

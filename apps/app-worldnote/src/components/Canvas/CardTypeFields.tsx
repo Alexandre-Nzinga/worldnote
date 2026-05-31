@@ -1,8 +1,11 @@
 import type { WorldCard } from "@worldnote/shared";
 import { EnumComboBox } from "@worldnote/ui";
 import { Input } from "@heroui/react";
-import { modalFieldLabelClassName } from "../Onboarding/fieldClassNames.js";
-import { darkFieldInputClassNames } from "../Onboarding/fieldClassNames.js";
+import {
+  inspectorFieldLabelClassName,
+  inspectorFieldValueClassName,
+  inspectorInlineInputClassNames,
+} from "./inspector/inspectorFieldStyles.js";
 import type { TypeSpecificEditorState } from "./cardEditorTypes.js";
 
 const itemRarityOptions = [
@@ -44,11 +47,28 @@ const structureConditionOptions = [
   { value: "under_construction", label: "Under construction" },
 ] as const;
 
+function labelForOption(
+  options: ReadonlyArray<{ value: string; label: string }>,
+  value: string,
+): string {
+  return options.find((option) => option.value === value)?.label ?? value;
+}
+
+function ReadOnlyField({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex flex-col gap-0.5">
+      <span className={inspectorFieldLabelClassName}>{label}</span>
+      <p className={inspectorFieldValueClassName}>{value.trim() || "—"}</p>
+    </div>
+  );
+}
+
 type CardTypeFieldsProps = {
   cardType: WorldCard["card_type"];
   fields: TypeSpecificEditorState;
   onChange: (next: TypeSpecificEditorState) => void;
   disabled?: boolean;
+  readOnly?: boolean;
 };
 
 export function CardTypeFields({
@@ -56,15 +76,19 @@ export function CardTypeFields({
   fields,
   onChange,
   disabled = false,
+  readOnly = false,
 }: CardTypeFieldsProps) {
   const patch = (partial: Partial<TypeSpecificEditorState>) =>
     onChange({ ...fields, ...partial });
 
   switch (cardType) {
     case "character":
+      if (readOnly) {
+        return <ReadOnlyField label="Birthdate" value={fields.birthdate} />;
+      }
       return (
         <div className="flex flex-col gap-1">
-          <label htmlFor="card-birthdate" className={modalFieldLabelClassName}>
+          <label htmlFor="card-birthdate" className={inspectorFieldLabelClassName}>
             Birthdate
           </label>
           <Input
@@ -73,14 +97,17 @@ export function CardTypeFields({
             value={fields.birthdate}
             isDisabled={disabled}
             onValueChange={(birthdate) => patch({ birthdate })}
-            classNames={darkFieldInputClassNames}
+            classNames={inspectorInlineInputClassNames}
           />
         </div>
       );
     case "location":
+      if (readOnly) {
+        return <ReadOnlyField label="Coordinates" value={fields.coordinates} />;
+      }
       return (
         <div className="flex flex-col gap-1">
-          <label htmlFor="card-coordinates" className={modalFieldLabelClassName}>
+          <label htmlFor="card-coordinates" className={inspectorFieldLabelClassName}>
             Coordinates
           </label>
           <Input
@@ -89,15 +116,30 @@ export function CardTypeFields({
             value={fields.coordinates}
             isDisabled={disabled}
             onValueChange={(coordinates) => patch({ coordinates })}
-            classNames={darkFieldInputClassNames}
+            classNames={inspectorInlineInputClassNames}
           />
         </div>
       );
     case "item":
+      if (readOnly) {
+        return (
+          <>
+            <ReadOnlyField label="Weight" value={fields.itemWeight} />
+            <ReadOnlyField
+              label="Rarity"
+              value={
+                fields.itemRarity
+                  ? labelForOption(itemRarityOptions, fields.itemRarity)
+                  : ""
+              }
+            />
+          </>
+        );
+      }
       return (
         <>
           <div className="flex flex-col gap-1">
-            <label htmlFor="card-weight" className={modalFieldLabelClassName}>
+            <label htmlFor="card-weight" className={inspectorFieldLabelClassName}>
               Weight
             </label>
             <Input
@@ -106,7 +148,7 @@ export function CardTypeFields({
               value={fields.itemWeight}
               isDisabled={disabled}
               onValueChange={(itemWeight) => patch({ itemWeight })}
-              classNames={darkFieldInputClassNames}
+              classNames={inspectorInlineInputClassNames}
             />
           </div>
           <EnumComboBox
@@ -125,6 +167,17 @@ export function CardTypeFields({
         </>
       );
     case "vehicle":
+      if (readOnly) {
+        return (
+          <>
+            <ReadOnlyField
+              label="Sub type"
+              value={labelForOption(vehicleSubTypeOptions, fields.vehicleSubType)}
+            />
+            <ReadOnlyField label="Max speed" value={fields.maxSpeed} />
+          </>
+        );
+      }
       return (
         <>
           <EnumComboBox
@@ -141,7 +194,7 @@ export function CardTypeFields({
             }
           />
           <div className="flex flex-col gap-1">
-            <label htmlFor="card-max-speed" className={modalFieldLabelClassName}>
+            <label htmlFor="card-max-speed" className={inspectorFieldLabelClassName}>
               Max speed
             </label>
             <Input
@@ -149,12 +202,20 @@ export function CardTypeFields({
               value={fields.maxSpeed}
               isDisabled={disabled}
               onValueChange={(maxSpeed) => patch({ maxSpeed })}
-              classNames={darkFieldInputClassNames}
+              classNames={inspectorInlineInputClassNames}
             />
           </div>
         </>
       );
     case "flora":
+      if (readOnly) {
+        return (
+          <ReadOnlyField
+            label="Toxicity"
+            value={labelForOption(floraToxicityOptions, fields.floraToxicity)}
+          />
+        );
+      }
       return (
         <EnumComboBox
           id="card-toxicity"
@@ -171,6 +232,18 @@ export function CardTypeFields({
         />
       );
     case "fauna":
+      if (readOnly) {
+        return (
+          <ReadOnlyField
+            label="Diet"
+            value={
+              fields.faunaDiet
+                ? labelForOption(faunaDietOptions, fields.faunaDiet)
+                : ""
+            }
+          />
+        );
+      }
       return (
         <EnumComboBox
           id="card-diet"
@@ -187,6 +260,17 @@ export function CardTypeFields({
         />
       );
     case "structure":
+      if (readOnly) {
+        return (
+          <ReadOnlyField
+            label="Condition"
+            value={labelForOption(
+              structureConditionOptions,
+              fields.structureCondition,
+            )}
+          />
+        );
+      }
       return (
         <EnumComboBox
           id="card-condition"
@@ -203,11 +287,19 @@ export function CardTypeFields({
         />
       );
     case "species":
+      if (readOnly) {
+        return (
+          <ReadOnlyField
+            label="Average lifespan"
+            value={fields.averageLifespan}
+          />
+        );
+      }
       return (
         <div className="flex flex-col gap-1">
           <label
             htmlFor="card-lifespan"
-            className={modalFieldLabelClassName}
+            className={inspectorFieldLabelClassName}
           >
             Average lifespan
           </label>
@@ -216,12 +308,14 @@ export function CardTypeFields({
             value={fields.averageLifespan}
             isDisabled={disabled}
             onValueChange={(averageLifespan) => patch({ averageLifespan })}
-            classNames={darkFieldInputClassNames}
+            classNames={inspectorInlineInputClassNames}
           />
         </div>
       );
     case "building":
-      return null;
+      return readOnly ? (
+        <p className="text-sm text-wn-mono-500">No type-specific fields.</p>
+      ) : null;
     default:
       return null;
   }

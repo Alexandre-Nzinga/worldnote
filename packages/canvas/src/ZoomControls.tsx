@@ -1,4 +1,5 @@
 import { Button, ButtonGroup } from "@heroui/react";
+import { MaterialSymbol } from "@worldnote/ui";
 import { Panel, useReactFlow, useViewport } from "@xyflow/react";
 
 const panelClassName =
@@ -42,7 +43,7 @@ export function ZoomControls() {
           className={zoomButtonClassName}
           onPress={() => zoomIn()}
         >
-          <i className="ri-add-line text-base" aria-hidden />
+          <MaterialSymbol name="add" className="text-base" />
         </Button>
         <ZoomDivider />
         <Button
@@ -61,7 +62,7 @@ export function ZoomControls() {
           className={zoomButtonClassName}
           onPress={() => zoomOut()}
         >
-          <i className="ri-subtract-line text-base" aria-hidden />
+          <MaterialSymbol name="remove" className="text-base" />
         </Button>
       </ButtonGroup>
     </Panel>

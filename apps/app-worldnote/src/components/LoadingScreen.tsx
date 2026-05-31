@@ -3,12 +3,12 @@ import { motion } from "framer-motion";
 
 export function LoadingScreen() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-8 bg-wn-mono-950">
+    <div className="flex h-screen flex-col items-center justify-center gap-8 bg-wn-mono-950">
       <motion.div
         animate={{ rotate: 360 }}
         transition={{
           duration: 2,
-          repeat: Infinity,
+          repeat: Number.POSITIVE_INFINITY,
           ease: "linear",
         }}
       >
@@ -27,7 +27,7 @@ export function LoadingScreen() {
           animate={{ opacity: [0.5, 1, 0.5] }}
           transition={{
             duration: 1.5,
-            repeat: Infinity,
+            repeat: Number.POSITIVE_INFINITY,
             ease: "easeInOut",
           }}
         >

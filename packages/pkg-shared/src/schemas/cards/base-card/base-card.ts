@@ -18,6 +18,10 @@ export const BaseCardSchema = z.object({
   /** Focal point for object-position, as percentages 0–100. */
   image_position: CardImagePositionSchema.optional(),
   description: z.string().optional(),
+  /** Epithet, alias, or secondary name (e.g. "Muad'Dib"). */
+  subtitle: z.string().optional(),
+  /** Long-form markdown body for the Lore tab. */
+  lore: z.string().optional(),
   custom_properties: z.record(z.string(), z.any()),
 });
 

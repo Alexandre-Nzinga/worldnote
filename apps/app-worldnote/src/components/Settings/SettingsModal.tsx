@@ -99,7 +99,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             </p>
           </header>
 
-          <div className="flex flex-1 flex-col gap-4 overflow-y-auto pr-1">
+          <div className="scrollbar-wn flex flex-1 flex-col gap-4 overflow-y-auto pr-1">
             <div className="flex flex-col gap-1">
               <label
                 htmlFor="settings-username"

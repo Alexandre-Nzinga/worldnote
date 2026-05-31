@@ -15,6 +15,9 @@ pub struct AppSettings {
     pub onboarded_at: u64,
     #[serde(default)]
     pub visible_sockets: HashMap<String, HashMap<String, bool>>,
+    /// Home-only; world folder paths (max 3 enforced in the app).
+    #[serde(default)]
+    pub pinned_world_paths: Vec<String>,
 }
 
 fn settings_path(app: &tauri::AppHandle) -> Result<PathBuf, String> {

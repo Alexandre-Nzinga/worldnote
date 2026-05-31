@@ -69,7 +69,7 @@ export const Secondary: Story = {
 };
 
 export const Outline: Story = {
-  args: { variant: "outline", children: "Back to launcher" },
+  args: { variant: "outline", children: "Back to home" },
 };
 
 export const AllVariants: Story = {

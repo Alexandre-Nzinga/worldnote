@@ -40,6 +40,7 @@ type CanvasFlowProps = {
   setLinksById: React.Dispatch<React.SetStateAction<Record<string, Link>>>;
   setSelectedCardId: React.Dispatch<React.SetStateAction<string | null>>;
   setSelectedLinkId: React.Dispatch<React.SetStateAction<string | null>>;
+  setInspectorMode: React.Dispatch<React.SetStateAction<"read" | "edit">>;
 };
 
 export function CanvasFlow({
@@ -65,6 +66,7 @@ export function CanvasFlow({
   setLinksById,
   setSelectedCardId,
   setSelectedLinkId,
+  setInspectorMode,
 }: CanvasFlowProps) {
   const {
     onConnectStart,
@@ -83,6 +85,7 @@ export function CanvasFlow({
     setLinksById,
     setSelectedCardId,
     setSelectedLinkId,
+    setInspectorMode,
   });
 
   const onNodeMouseEnter = onCardMouseEnter as NodeMouseHandler<Node>;

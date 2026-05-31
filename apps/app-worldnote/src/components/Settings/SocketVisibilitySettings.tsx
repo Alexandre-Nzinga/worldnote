@@ -4,6 +4,7 @@ import {
   SOCKET_REGISTRY,
   type RegisteredCardType,
 } from "@worldnote/shared";
+import { MaterialSymbol } from "@worldnote/ui";
 import { modalFieldLabelClassName } from "../Onboarding/fieldClassNames.js";
 import type { VisibleSocketsByCardType } from "../../services/settings/settings.js";
 import { formatSocketId } from "../../services/settings/visibleSocketSettings.js";
@@ -74,11 +75,9 @@ export function SocketVisibilitySettings({
                         })
                       }
                     >
-                      <i
-                        className={
-                          isVisible ? "ri-eye-line" : "ri-eye-off-line"
-                        }
-                        aria-hidden
+                      <MaterialSymbol
+                        name={isVisible ? "visibility" : "visibility_off"}
+                        className="text-base"
                       />
                     </button>
                     <div className="min-w-0 flex-1">

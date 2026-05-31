@@ -8,6 +8,8 @@ export type AppSettings = {
   worldnoteRoot: string;
   onboardedAt: number;
   visibleSockets?: VisibleSocketsByCardType;
+  /** Home-only; world folder paths, max 3. */
+  pinnedWorldPaths?: string[];
 };
 
 export async function getSettings(): Promise<AppSettings | null> {

@@ -19,6 +19,8 @@ type CardBaseFields = {
   position: { x: number; y: number };
   tags: string[];
   description?: string;
+  subtitle?: string;
+  lore?: string;
   image_path?: string;
   image_position?: CardImagePosition;
   custom_properties: Record<string, unknown>;

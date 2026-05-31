@@ -31,95 +31,12 @@ import {
   socketHandleClassName as nodeSocketHandleClassName,
   socketStyleFor,
 } from "./socket-style.js";
+import {
+  visualConfigFor,
+  type WorldNoteCardType,
+} from "./card-visual-config.js";
 
-/** Mirrors WorldCard card_type slugs (kept in canvas to avoid a shared package dependency). */
-export type WorldNoteCardType =
-  | "character"
-  | "location"
-  | "item"
-  | "vehicle"
-  | "flora"
-  | "fauna"
-  | "building"
-  | "structure"
-  | "species";
-
-type CardVisualConfig = {
-  label: string;
-  badgeClassName: string;
-  widthClass: string;
-  aspectClass: string;
-  titleClassName?: string;
-  badgeTextColor?: string;
-};
-
-const CARD_VISUAL_CONFIG: Record<WorldNoteCardType, CardVisualConfig> = {
-  character: {
-    label: "Character",
-    badgeClassName: "bg-wn-mono-300",
-    widthClass: "w-[250px]",
-    aspectClass: "aspect-3/4",
-    titleClassName: "text-xl font-semibold leading-tight",
-  },
-  location: {
-    label: "Location",
-    badgeClassName: "bg-wn-mono-800",
-    badgeTextColor: "text-wn-mono-50",
-    widthClass: "w-[280px]",
-    aspectClass: "aspect-5/3",
-  },
-  item: {
-    label: "Item",
-    badgeClassName: "bg-wn-amber-200",
-    widthClass: "w-[260px]",
-    aspectClass: "aspect-5/3",
-  },
-  vehicle: {
-    label: "Vehicle",
-    badgeClassName: "bg-wn-indigo-200",
-    widthClass: "w-[280px]",
-    aspectClass: "aspect-5/3",
-  },
-  flora: {
-    label: "Flora",
-    badgeClassName: "bg-wn-lime-300",
-    widthClass: "w-[260px]",
-    aspectClass: "aspect-5/3",
-  },
-  fauna: {
-    label: "Fauna",
-    badgeClassName: "bg-wn-rose-300",
-    widthClass: "w-[260px]",
-    aspectClass: "aspect-5/3",
-  },
-  building: {
-    label: "Building",
-    badgeClassName: "bg-wn-mono-300",
-    widthClass: "w-[280px]",
-    aspectClass: "aspect-5/3",
-  },
-  structure: {
-    label: "Structure",
-    badgeClassName: "bg-wn-mono-400",
-    widthClass: "w-[280px]",
-    aspectClass: "aspect-5/3",
-  },
-  species: {
-    label: "Species",
-    badgeClassName: "bg-wn-azure-200",
-    widthClass: "w-[260px]",
-    aspectClass: "aspect-5/3",
-  },
-};
-
-const DEFAULT_VISUAL_CONFIG = CARD_VISUAL_CONFIG.location;
-
-function visualConfigFor(cardType: WorldNoteCardType | undefined): CardVisualConfig {
-  if (cardType && cardType in CARD_VISUAL_CONFIG) {
-    return CARD_VISUAL_CONFIG[cardType];
-  }
-  return DEFAULT_VISUAL_CONFIG;
-}
+export type { WorldNoteCardType } from "./card-visual-config.js";
 
 export type CardNodeSocket = {
   id: string;

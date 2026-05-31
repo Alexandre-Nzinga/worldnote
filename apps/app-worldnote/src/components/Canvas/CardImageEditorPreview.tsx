@@ -3,6 +3,7 @@ import {
   type CardImagePosition,
 } from "@worldnote/shared";
 import { useCallback, useRef } from "react";
+import { inspectorImageOverlayLabelClassName } from "./inspector/inspectorFieldStyles.js";
 
 function clampPercent(value: number): number {
   return Math.min(100, Math.max(0, value));
@@ -12,12 +13,18 @@ type CardImageEditorPreviewProps = {
   src: string;
   position: CardImagePosition;
   onPositionChange: (position: CardImagePosition) => void;
+  /** Full-bleed inspector header — no border or outer radius. */
+  embedded?: boolean;
+  /** Reposition hint is rendered by the parent when embedded. */
+  showRepositionHint?: boolean;
 };
 
 export function CardImageEditorPreview({
   src,
   position,
   onPositionChange,
+  embedded = false,
+  showRepositionHint = true,
 }: CardImageEditorPreviewProps) {
   const frameRef = useRef<HTMLDivElement>(null);
   const draggingRef = useRef(false);
@@ -44,7 +51,11 @@ export function CardImageEditorPreview({
   return (
     <div
       ref={frameRef}
-      className="relative touch-none overflow-hidden rounded-xl border border-wn-mono-700 bg-wn-mono-950"
+      className={
+        embedded
+          ? "relative touch-none overflow-hidden bg-wn-mono-950"
+          : "relative touch-none overflow-hidden rounded-xl border border-wn-mono-700 bg-wn-mono-950"
+      }
       onPointerDown={(event) => {
         draggingRef.current = true;
         event.currentTarget.setPointerCapture(event.pointerId);
@@ -68,13 +79,17 @@ export function CardImageEditorPreview({
       <img
         src={src}
         alt=""
-        className="aspect-5/3 w-full select-none"
+        className="aspect-video w-full select-none"
         style={{ objectFit, objectPosition }}
         draggable={false}
       />
-      <p className="pointer-events-none absolute bottom-2 left-2 rounded-md bg-wn-mono-950/80 px-2 py-0.5 text-[11px] text-wn-mono-400">
-        Drag to reposition
-      </p>
+      {showRepositionHint ? (
+        <p
+          className={`pointer-events-none absolute bottom-3 left-3 ${inspectorImageOverlayLabelClassName}`}
+        >
+          Drag to reposition
+        </p>
+      ) : null}
     </div>
   );
 }

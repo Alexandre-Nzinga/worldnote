@@ -1,5 +1,5 @@
 import { Input } from "@heroui/react";
-import { AnimatedModal, Button } from "@worldnote/ui";
+import { AnimatedModal, Button, MaterialSymbol } from "@worldnote/ui";
 import { useCallback, useEffect, useState } from "react";
 import { useVault } from "../../hooks/useVault.js";
 import { useVaultCommands } from "../../hooks/useVaultCommands.js";
@@ -16,6 +16,8 @@ type WorldSettingsModalProps = {
   isOpen: boolean;
   onClose: () => void;
   onWorldsChanged: () => void;
+  onWorldRenamed?: (oldPath: string, newPath: string) => void;
+  onWorldDeleted?: (path: string) => void;
 };
 
 export function WorldSettingsModal({
@@ -23,6 +25,8 @@ export function WorldSettingsModal({
   isOpen,
   onClose,
   onWorldsChanged,
+  onWorldRenamed,
+  onWorldDeleted,
 }: WorldSettingsModalProps) {
   const { renameWorld, saveWorldCover, deleteWorld } = useVaultCommands();
   const currentVaultPath = useVault((state) => state.currentVaultPath);
@@ -73,11 +77,13 @@ export function WorldSettingsModal({
     setIsBusy(true);
     setError(null);
     try {
+      const oldPath = worldPath;
       const newPath = await renameWorld(worldPath, trimmed);
       if (currentVaultPath === worldPath) {
         setCurrentVault(newPath, trimmed);
       }
       setWorldPath(newPath);
+      onWorldRenamed?.(oldPath, newPath);
       onWorldsChanged();
       onClose();
     } catch (renameError) {
@@ -93,6 +99,7 @@ export function WorldSettingsModal({
     currentVaultPath,
     name,
     onClose,
+    onWorldRenamed,
     onWorldsChanged,
     renameWorld,
     setCurrentVault,
@@ -130,10 +137,12 @@ export function WorldSettingsModal({
     setIsBusy(true);
     setError(null);
     try {
+      const deletedPath = worldPath;
       await deleteWorld(worldPath);
       if (currentVaultPath === worldPath) {
         setCurrentVault(null);
       }
+      onWorldDeleted?.(deletedPath);
       onWorldsChanged();
       onClose();
     } catch (deleteError) {
@@ -147,6 +156,7 @@ export function WorldSettingsModal({
     currentVaultPath,
     deleteWorld,
     onClose,
+    onWorldDeleted,
     onWorldsChanged,
     setCurrentVault,
     worldPath,
@@ -203,7 +213,7 @@ export function WorldSettingsModal({
                 void handleEditCover();
               }}
               startContent={
-                <i className="ri-image-edit-line text-base" aria-hidden />
+                <MaterialSymbol name="image" className="text-base" />
               }
             >
               Choose image…
@@ -248,7 +258,7 @@ export function WorldSettingsModal({
                 isDisabled={isBusy}
                 onPress={() => setConfirmDelete(true)}
                 startContent={
-                  <i className="ri-delete-bin-line text-base" aria-hidden />
+                  <MaterialSymbol name="delete" className="text-base" />
                 }
               >
                 Delete world

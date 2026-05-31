@@ -1,4 +1,5 @@
 export * from "./atoms/Button.js";
+export * from "./atoms/MaterialSymbol.js";
 export * from "./atoms/Pill.js";
 export * from "./atoms/Tooltip.js";
 export * from "./motion/index.js";

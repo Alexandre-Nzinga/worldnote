@@ -8,7 +8,14 @@
     "rootDir": "src",
     "jsx": "react-jsx",
     "module": "NodeNext",
-    "moduleResolution": "NodeNext"
+    "moduleResolution": "NodeNext",
+    "baseUrl": ".",
+    "paths": {
+      "@worldnote/ui": ["../pkg-ui/dist/index.d.ts"],
+      "@worldnote/ui/*": ["../pkg-ui/dist/*"],
+      "@worldnote/shared": ["../pkg-shared/dist/index.d.ts"],
+      "@worldnote/shared/*": ["../pkg-shared/dist/*"]
+    }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["node_modules", "dist"]

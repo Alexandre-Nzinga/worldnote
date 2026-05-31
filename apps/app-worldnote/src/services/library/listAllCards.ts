@@ -1,5 +1,10 @@
 import { invoke } from "@tauri-apps/api/core";
 
+export type LibraryCardImagePosition = {
+  x: number;
+  y: number;
+};
+
 export type LibraryCard = {
   worldPath: string;
   worldName: string;
@@ -9,6 +14,9 @@ export type LibraryCard = {
   name: string;
   createdAt: number;
   imagePath?: string;
+  imageFit?: string;
+  imagePosition?: LibraryCardImagePosition;
+  subtitle: string;
 };
 
 export async function listAllCards(root: string): Promise<LibraryCard[]> {

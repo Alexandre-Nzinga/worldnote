@@ -97,7 +97,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-wn-mono-950 text-wn-mono-100">
+    <div className="flex h-screen flex-col overflow-hidden bg-wn-mono-950 text-wn-mono-100">
       <motion.header
         className="flex items-center gap-3 px-[46px] pt-7"
         initial={{ opacity: 0, y: -8 }}
@@ -113,7 +113,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         <span className="text-2xl font-semibold text-wn-mono-50">WorldNote</span>
       </motion.header>
 
-      <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex min-h-0 flex-1 flex-col overflow-x-hidden">
         <AnimatePresence mode="wait" custom={direction}>
           <motion.div
             key={step}

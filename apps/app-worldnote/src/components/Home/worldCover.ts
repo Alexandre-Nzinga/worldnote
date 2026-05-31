@@ -8,7 +8,7 @@ export function hashWorldName(name: string): number {
   return Math.abs(hash);
 }
 
-const worldCoverPalette200 = [
+export const worldCoverPalette200 = [
   "mono",
   "indigo",
   "azure",
@@ -16,6 +16,12 @@ const worldCoverPalette200 = [
   "amber",
   "lime",
 ] as const;
+
+export type WorldCoverPaletteKey = (typeof worldCoverPalette200)[number];
+
+export function worldCoverPaletteKey(name: string): WorldCoverPaletteKey {
+  return worldCoverPalette200[hashWorldName(name) % worldCoverPalette200.length];
+}
 
 export function worldCoverImageSrc(
   worldPath: string,
@@ -30,8 +36,7 @@ export function worldCoverImageSrc(
 }
 
 export function worldCoverStyle(name: string): { background: string } {
-  const index = hashWorldName(name) % worldCoverPalette200.length;
-  const palette = worldCoverPalette200[index];
+  const palette = worldCoverPaletteKey(name);
   return { background: `var(--color-wn-${palette}-200)` };
 }
 

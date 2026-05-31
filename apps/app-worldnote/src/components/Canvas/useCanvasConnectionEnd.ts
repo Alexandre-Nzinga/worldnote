@@ -39,6 +39,7 @@ type UseCanvasConnectionEndOptions = {
   setLinksById: React.Dispatch<React.SetStateAction<Record<string, Link>>>;
   setSelectedCardId: React.Dispatch<React.SetStateAction<string | null>>;
   setSelectedLinkId: React.Dispatch<React.SetStateAction<string | null>>;
+  setInspectorMode: React.Dispatch<React.SetStateAction<"read" | "edit">>;
 };
 
 function pointerFromEvent(event: MouseEvent | TouchEvent): { x: number; y: number } {
@@ -102,6 +103,7 @@ export function useCanvasConnectionEnd({
   setLinksById,
   setSelectedCardId,
   setSelectedLinkId,
+  setInspectorMode,
 }: UseCanvasConnectionEndOptions) {
   const { screenToFlowPosition, getIntersectingNodes } =
     useReactFlow<CardFlowNode>();
@@ -326,6 +328,7 @@ export function useCanvasConnectionEnd({
           );
           setSelectedLinkId(link.id);
           setSelectedCardId(newCard.id);
+          setInspectorMode("edit");
         })
         .catch((error) => {
           console.error("Failed to create character from socket drop:", error);
@@ -346,6 +349,7 @@ export function useCanvasConnectionEnd({
       setNodes,
       setSelectedCardId,
       setSelectedLinkId,
+      setInspectorMode,
       vaultPath,
       visibleSocketsSettingsRef,
     ],

@@ -1,5 +1,10 @@
 import { Input } from "@heroui/react";
-import { Button, WorldNoteLogo, getBodyTextStyle } from "@worldnote/ui";
+import {
+  Button,
+  MaterialSymbol,
+  WorldNoteLogo,
+  getBodyTextStyle,
+} from "@worldnote/ui";
 import { motion } from "framer-motion";
 import { useCallback, useEffect, useState } from "react";
 import { useSettings } from "../../hooks/useSettings.js";
@@ -76,12 +81,12 @@ export function Settings({ onBack }: SettingsProps) {
 
   if (!settings) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-wn-mono-950">
+      <div className="flex h-screen items-center justify-center bg-wn-mono-950">
         <motion.div
           animate={{ rotate: 360 }}
           transition={{
             duration: 2,
-            repeat: Infinity,
+            repeat: Number.POSITIVE_INFINITY,
             ease: "linear",
           }}
         >
@@ -102,13 +107,13 @@ export function Settings({ onBack }: SettingsProps) {
         <div className="flex items-center gap-3">
           <Button
             isIconOnly
-            variant="light"
+            variant="ghost"
             size="sm"
             onPress={onBack}
-            aria-label="Back to launcher"
-            className="text-wn-mono-400 hover:text-wn-mono-50"
+            aria-label="Back to home"
+            className="min-w-0 border-0 bg-transparent px-2 text-wn-mono-400 shadow-none hover:bg-transparent hover:text-wn-mono-50 data-[hover=true]:bg-transparent data-[hover=true]:text-wn-mono-50"
           >
-            <i className="ri-arrow-left-line text-lg" aria-hidden />
+            <MaterialSymbol name="arrow_back" className="text-lg" />
           </Button>
           <div className="flex items-center gap-3">
             <span
@@ -126,7 +131,7 @@ export function Settings({ onBack }: SettingsProps) {
       </header>
 
       <main className="relative flex min-h-0 flex-1 flex-col overflow-hidden px-[46px] pb-8 pt-10">
-        <div className="mx-auto w-full max-w-2xl flex-1 overflow-y-auto">
+        <div className="scrollbar-wn mx-auto w-full max-w-2xl flex-1 overflow-y-auto">
           <div className="flex flex-col gap-8">
             <div className="flex flex-col gap-1">
               <h1 className="text-2xl font-semibold text-wn-mono-50">

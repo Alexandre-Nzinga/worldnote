@@ -30,11 +30,11 @@ export function Card({ title, subtitle, children, className }: CardProps) {
             hasBody && "border-b border-wn-mono-200",
           )}
         >
-          <h3 className="text-base font-semibold leading-snug text-wn-mono-950">
+          <h3 className="text-wn-body font-wn-semibold leading-snug text-wn-mono-950">
             {title}
           </h3>
           {subtitle ? (
-            <p className="mt-1 text-sm leading-snug text-wn-mono-500">
+            <p className="mt-1 text-wn-small leading-snug text-wn-mono-500">
               {subtitle}
             </p>
           ) : null}
@@ -42,7 +42,7 @@ export function Card({ title, subtitle, children, className }: CardProps) {
       ) : null}
 
       {hasBody ? (
-        <div className="px-4 py-3 text-sm leading-relaxed text-wn-mono-900">
+        <div className="px-4 py-3 text-wn-small leading-relaxed text-wn-mono-900">
           {children}
         </div>
       ) : null}
