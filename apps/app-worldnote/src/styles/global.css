@@ -10,8 +10,8 @@ body,
   height: 100%;
   overflow: hidden;
   overscroll-behavior: none;
-  background-color: var(--color-wn-mono-950);
-  color: var(--color-wn-mono-50);
+  background-color: var(--color-wn-bg);
+  color: var(--color-wn-text);
   font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
 }
 
@@ -95,4 +95,90 @@ body,
 .inspector-markdown :where(pre code) {
   background: transparent;
   padding: 0;
+}
+
+/* Quill lore editor — transparent so the inspector panel background shows through */
+.lore-editor-prose .ql-container,
+.lore-editor-prose .ql-editor {
+  background: transparent;
+}
+
+.lore-editor-prose .ql-container {
+  font-family: inherit;
+  font-size: inherit;
+  box-sizing: border-box;
+  border: none;
+}
+
+.lore-editor-prose .ql-editor {
+  min-height: 12rem;
+  padding: 0;
+  outline: none;
+  color: var(--color-wn-mono-100);
+  line-height: 1.6;
+}
+
+.lore-editor-editable .lore-editor-prose .ql-editor {
+  padding: 0.75rem;
+}
+
+.lore-editor-prose .ql-editor.ql-blank::before {
+  color: var(--color-wn-mono-500);
+  font-style: normal;
+  left: 0;
+  right: 0;
+  content: attr(data-placeholder);
+}
+
+.lore-editor-editable .lore-editor-prose .ql-editor.ql-blank::before {
+  left: 0.75rem;
+  right: 0.75rem;
+}
+
+.lore-editor-prose .ql-editor img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.75rem;
+  border: 1px solid var(--color-wn-mono-800);
+  margin-block: 0.75rem;
+}
+
+.lore-editor-readonly .ql-editor {
+  min-height: 0;
+}
+
+.lore-editor-readonly .lore-card-mention {
+  cursor: pointer;
+}
+
+.lore-card-mention {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.125rem;
+  border-radius: 0.375rem;
+  background-color: var(--color-wn-azure-950);
+  color: var(--color-wn-azure-300);
+  padding: 0.125rem 0.375rem;
+  font-size: 0.875em;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.lore-editor-prose:not(:has(:focus)) .lore-card-mention:hover,
+.lore-card-mention:hover {
+  background-color: var(--color-wn-azure-900);
+  color: var(--color-wn-azure-200);
+}
+
+.lore-gallery-block {
+  user-select: none;
+}
+
+.lore-gallery-grid img {
+  display: block;
+}
+
+.lore-mention-suggestion {
+  pointer-events: auto;
 }

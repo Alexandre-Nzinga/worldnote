@@ -27,6 +27,7 @@ import {
   listWorlds,
   type WorldSummary,
 } from "../../services/worlds/listWorlds.js";
+import { useResolvedTheme } from "../../theme/ThemeProvider.js";
 import { getTimeOfDayGreeting } from "./worldCover.js";
 import { WorldCard } from "./WorldCard.js";
 import { WorldSettingsModal } from "./WorldSettingsModal.js";
@@ -250,12 +251,13 @@ function HomeHeader({
   username: string;
   onOpenSettings: () => void;
 }) {
+  const theme = useResolvedTheme();
   return (
     <header className="relative flex shrink-0 items-center justify-between px-[46px] pt-7">
       <div className="flex items-center gap-3">
         <WorldNoteLogo
           variant="icon"
-          tone="white"
+          tone={theme === "dark" ? "white" : "black"}
           className="h-7 w-7 opacity-90"
           alt="WorldNote"
         />

@@ -17,8 +17,6 @@ export function socketRightHandleId(socketId: string): string {
   return `${socketId}${SOCKET_RIGHT_SUFFIX}`;
 }
 
-export function isEntityHandle(
-  handleId: string | null | undefined,
-): boolean {
+export function isEntityHandle(handleId: string | null | undefined): boolean {
   return handleId === "entity" || handleId === "entity__left";
 }

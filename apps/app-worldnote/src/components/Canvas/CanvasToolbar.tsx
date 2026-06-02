@@ -1,13 +1,22 @@
-import { CARD_TYPE_LABELS } from "@worldnote/shared";
-import { AnimatedPopover, MaterialSymbol, MotionPressable } from "@worldnote/ui";
+import {
+  CARD_CLASS_BY_TYPE,
+  CARD_CLASS_LABELS,
+  CARD_CLASS_ORDER,
+  CARD_TYPE_LABELS,
+  type CardClass,
+} from "@worldnote/shared";
+import {
+  AnimatedPopover,
+  MaterialSymbol,
+  MotionPressable,
+  WorldNoteLogo,
+} from "@worldnote/ui";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { NewCardType } from "../../services/crudWorldCard/cardTemplates.js";
 import { DockTabs, type DockTabItem } from "../ui/DockTabs.js";
 
 export type CreateOption = NewCardType;
-export type CanvasTool = "select" | "link" | "text" | "actions";
-
-const LINK_HINT_DISMISS_MS = 6_000;
+export type CanvasTool = "select" | "text" | "actions";
 
 const creatableTypes: CreateOption[] = [
   "character",
@@ -19,6 +28,24 @@ const creatableTypes: CreateOption[] = [
   "building",
   "structure",
   "species",
+  "planet",
+  "organization",
+  "polity",
+  "event",
+  "family",
+  "group",
+  "star",
+  "moon",
+  "asteroid",
+  "satellite",
+  "law",
+  "religion",
+  "language",
+  "culture",
+  "spell",
+  "disease",
+  "disaster",
+  "combat_style",
 ];
 
 const createMenuIcons: Record<CreateOption, string> = {
@@ -31,13 +58,47 @@ const createMenuIcons: Record<CreateOption, string> = {
   building: "apartment",
   structure: "holiday_village",
   species: "bug_report",
+  planet: "public",
+  organization: "corporate_fare",
+  polity: "flag",
+  event: "event",
+  family: "family_restroom",
+  group: "groups",
+  star: "star",
+  moon: "dark_mode",
+  asteroid: "scatter_plot",
+  satellite: "satellite_alt",
+  law: "gavel",
+  religion: "church",
+  language: "translate",
+  culture: "diversity_3",
+  spell: "auto_fix_high",
+  disease: "coronavirus",
+  disaster: "storm",
+  combat_style: "swords",
 };
+
+const createSearchInputClassName =
+  "w-full rounded-xl border border-wn-mono-700 bg-wn-mono-950 px-3 py-2 text-sm text-wn-mono-50 placeholder:text-wn-mono-500 outline-none transition-colors hover:border-wn-mono-600 focus:border-wn-mono-500";
+
+function matchesCreateQuery(type: CreateOption, normalizedQuery: string): boolean {
+  if (!normalizedQuery) {
+    return true;
+  }
+  const label = CARD_TYPE_LABELS[type].toLowerCase();
+  return (
+    label.includes(normalizedQuery) ||
+    type.toLowerCase().includes(normalizedQuery)
+  );
+}
 
 type CanvasToolbarProps = {
   className?: string;
   onCreate?: (type: CreateOption) => void;
   onOpenVault?: () => void;
   onToggleAllCardViews?: () => void;
+  onToggleWizard?: () => void;
+  isWizardOpen?: boolean;
 };
 
 export function CanvasToolbar({
@@ -45,11 +106,13 @@ export function CanvasToolbar({
   onCreate,
   onOpenVault,
   onToggleAllCardViews,
+  onToggleWizard,
+  isWizardOpen = false,
 }: CanvasToolbarProps) {
   const [createMenuOpen, setCreateMenuOpen] = useState(false);
-  const [activeTool, setActiveTool] = useState<CanvasTool>("select");
-  const [linkHintVisible, setLinkHintVisible] = useState(false);
+  const [createQuery, setCreateQuery] = useState("");
   const createMenuRef = useRef<HTMLDivElement>(null);
+  const createSearchRef = useRef<HTMLInputElement>(null);
 
   const supportsCreate = useMemo(() => !!onCreate, [onCreate]);
   const supportsVault = useMemo(() => !!onOpenVault, [onOpenVault]);
@@ -57,6 +120,11 @@ export function CanvasToolbar({
     () => !!onToggleAllCardViews,
     [onToggleAllCardViews],
   );
+
+  const closeCreateMenu = useCallback(() => {
+    setCreateMenuOpen(false);
+    setCreateQuery("");
+  }, []);
 
   useEffect(() => {
     if (!createMenuOpen) {
@@ -69,12 +137,12 @@ export function CanvasToolbar({
         createMenuRef.current &&
         !createMenuRef.current.contains(target)
       ) {
-        setCreateMenuOpen(false);
+        closeCreateMenu();
       }
     };
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        setCreateMenuOpen(false);
+        closeCreateMenu();
       }
     };
     document.addEventListener("pointerdown", onPointerDown);
@@ -83,33 +151,34 @@ export function CanvasToolbar({
       document.removeEventListener("pointerdown", onPointerDown);
       document.removeEventListener("keydown", onKeyDown);
     };
-  }, [createMenuOpen]);
+  }, [closeCreateMenu, createMenuOpen]);
 
   useEffect(() => {
-    if (!linkHintVisible) {
+    if (!createMenuOpen) {
       return;
     }
-    const timer = window.setTimeout(() => {
-      setLinkHintVisible(false);
-    }, LINK_HINT_DISMISS_MS);
-    return () => {
-      window.clearTimeout(timer);
-    };
-  }, [linkHintVisible]);
+    const id = requestAnimationFrame(() => {
+      createSearchRef.current?.focus();
+    });
+    return () => cancelAnimationFrame(id);
+  }, [createMenuOpen]);
 
-  const handleToolPress = useCallback((tool: CanvasTool) => {
-    if (tool === "select" || tool === "link") {
-      setActiveTool(tool);
-      if (tool === "link") {
-        setLinkHintVisible(true);
-      } else {
-        setLinkHintVisible(false);
-      }
-    }
-  }, []);
+  const groupedCreateOptions = useMemo(() => {
+    const normalizedQuery = createQuery.trim().toLowerCase();
+    return CARD_CLASS_ORDER.map((cardClass) => ({
+      cardClass,
+      types: creatableTypes.filter(
+        (type) =>
+          CARD_CLASS_BY_TYPE[type] === cardClass &&
+          matchesCreateQuery(type, normalizedQuery),
+      ),
+    })).filter((group) => group.types.length > 0);
+  }, [createQuery]);
+
+  const hasCreateResults = groupedCreateOptions.length > 0;
 
   const handleSelectCreateOption = (option: CreateOption) => {
-    setCreateMenuOpen(false);
+    closeCreateMenu();
     onCreate?.(option);
   };
 
@@ -119,37 +188,41 @@ export function CanvasToolbar({
         id: "select",
         name: "Select",
         icon: "near_me",
-        colorClassName: "bg-wn-azure-500 text-wn-mono-50",
-        isActive: activeTool === "select",
-        onPress: () => handleToolPress("select"),
-      },
-      {
-        id: "link",
-        name: "Link",
-        icon: "link",
-        colorClassName: "bg-wn-indigo-500 text-wn-mono-50",
-        isActive: activeTool === "link",
-        onPress: () => handleToolPress("link"),
+        iconClassName: "-scale-x-100",
+        colorClassName: "bg-wn-mono-50 text-wn-mono-950",
+        isActive: true,
       },
       {
         id: "text",
         name: "Text",
         icon: "title",
-        colorClassName: "bg-wn-mono-700 text-wn-mono-300",
+        colorClassName: "bg-wn-mono-800 text-wn-mono-50",
         disabled: true,
       },
       {
-        id: "actions",
-        name: "Actions",
-        icon: "widgets",
-        colorClassName: "bg-wn-mono-700 text-wn-mono-300",
-        disabled: true,
+        id: "wizard",
+        name: "WorldWizard",
+        iconNode: (
+          <WorldNoteLogo
+            variant="icon"
+            format="svg"
+            tone={isWizardOpen ? "black" : "white"}
+            className="h-5 w-5 opacity-95"
+            alt=""
+          />
+        ),
+        colorClassName: isWizardOpen
+          ? "bg-wn-mono-50 text-wn-mono-950"
+          : "bg-wn-mono-800 text-wn-mono-50",
+        isActive: isWizardOpen,
+        disabled: !onToggleWizard,
+        onPress: onToggleWizard,
       },
       {
         id: "vault",
         name: "Vault",
         icon: "layers",
-        colorClassName: "bg-wn-rose-500 text-wn-mono-950",
+        colorClassName: "bg-wn-mono-800 text-wn-mono-50",
         disabled: !supportsVault,
         onPress: onOpenVault,
       },
@@ -157,7 +230,7 @@ export function CanvasToolbar({
         id: "toggle-views",
         name: "Toggle all card views",
         icon: "view_quilt",
-        colorClassName: "bg-wn-lime-400 text-wn-mono-950",
+        colorClassName: "bg-wn-mono-800 text-wn-mono-50",
         disabled: !supportsBulkViewToggle,
         onPress: onToggleAllCardViews,
       },
@@ -165,21 +238,28 @@ export function CanvasToolbar({
         id: "create",
         name: "Create card",
         icon: "add",
-        colorClassName: "bg-wn-amber-300 text-wn-mono-950",
+        colorClassName: "bg-wn-mono-800 text-wn-mono-50",
         isActive: createMenuOpen,
         disabled: !supportsCreate,
-        onPress: () => setCreateMenuOpen((open) => !open),
+        onPress: () => {
+          if (createMenuOpen) {
+            closeCreateMenu();
+          } else {
+            setCreateMenuOpen(true);
+          }
+        },
       },
     ],
     [
-      activeTool,
+      closeCreateMenu,
       createMenuOpen,
+      isWizardOpen,
       onOpenVault,
       onToggleAllCardViews,
+      onToggleWizard,
       supportsBulkViewToggle,
       supportsCreate,
       supportsVault,
-      handleToolPress,
     ],
   );
 
@@ -187,13 +267,6 @@ export function CanvasToolbar({
     <footer
       className={`pointer-events-none absolute inset-x-0 bottom-4 z-20 flex flex-col items-center gap-3 px-4 ${className ?? ""}`}
     >
-      {linkHintVisible ? (
-        <p className="pointer-events-auto w-max max-w-[min(90vw,20rem)] rounded-xl border border-wn-mono-700 bg-wn-mono-900 px-3 py-2 text-center text-xs text-wn-mono-300 shadow-lg">
-          Show sockets on a card in the editor, then drag from a card&apos;s
-          right output into a socket on the left.
-        </p>
-      ) : null}
-
       <div
         ref={createMenuRef}
         className="pointer-events-auto relative flex justify-center"
@@ -202,35 +275,80 @@ export function CanvasToolbar({
 
         <AnimatedPopover
           isOpen={createMenuOpen}
-          className="scrollbar-wn absolute bottom-full left-1/2 z-50 mb-3 max-h-80 w-64 -translate-x-1/2 overflow-y-auto rounded-xl border border-wn-mono-700 bg-wn-mono-900 p-2 shadow-lg"
+          className="scrollbar-wn absolute bottom-full left-1/2 z-50 mb-3 max-h-[60vh] w-136 max-w-[calc(100vw-2rem)] -translate-x-1/2 overflow-y-auto rounded-xl border border-wn-mono-700 bg-wn-mono-900 p-3 shadow-lg"
         >
-          <div className="mb-2 px-2 pt-1 text-[11px] font-semibold uppercase tracking-wide text-wn-mono-500">
-            Create card
+          <div className="mb-3 space-y-2">
+            <div className="px-1 text-[11px] font-semibold uppercase tracking-wide text-wn-mono-500">
+              Create card
+            </div>
+            <input
+              ref={createSearchRef}
+              type="search"
+              aria-label="Search card types"
+              placeholder="Search card types…"
+              value={createQuery}
+              onChange={(event) => setCreateQuery(event.target.value)}
+              className={createSearchInputClassName}
+            />
           </div>
-          {creatableTypes.map((type) => (
-            <MotionPressable
-              key={type}
-              className="mb-1 flex w-full items-center gap-2 rounded-xl border border-transparent px-2 py-2 text-left text-wn-mono-200 hover:border-wn-mono-700 hover:bg-wn-mono-800"
-              onClick={() => handleSelectCreateOption(type)}
-            >
-              <span className="text-wn-mono-400">
-                <MaterialSymbol
-                  name={createMenuIcons[type]}
-                  className="text-[16px]"
+
+          {hasCreateResults ? (
+            <div className="grid grid-cols-3 gap-3">
+              {groupedCreateOptions.map(({ cardClass, types }) => (
+                <CreateCardClassColumn
+                  key={cardClass}
+                  cardClass={cardClass}
+                  types={types}
+                  onSelect={handleSelectCreateOption}
                 />
-              </span>
-              <span className="flex flex-col items-start leading-tight">
-                <span className="text-[12px] font-medium text-wn-mono-100">
-                  {CARD_TYPE_LABELS[type]}
-                </span>
-                <span className="text-[10px] text-wn-mono-500">
-                  Create a {CARD_TYPE_LABELS[type].toLowerCase()} card
-                </span>
-              </span>
-            </MotionPressable>
-          ))}
+              ))}
+            </div>
+          ) : (
+            <p className="px-1 py-4 text-center text-sm text-wn-mono-500">
+              No matching cards
+            </p>
+          )}
         </AnimatedPopover>
       </div>
     </footer>
+  );
+}
+
+type CreateCardClassColumnProps = {
+  cardClass: CardClass;
+  types: CreateOption[];
+  onSelect: (type: CreateOption) => void;
+};
+
+function CreateCardClassColumn({
+  cardClass,
+  types,
+  onSelect,
+}: CreateCardClassColumnProps) {
+  return (
+    <div className="min-w-0">
+      <div className="mb-1.5 px-1 text-[11px] font-semibold uppercase tracking-wide text-wn-mono-500">
+        {CARD_CLASS_LABELS[cardClass]}
+      </div>
+      <div className="flex flex-col gap-0.5">
+        {types.map((type) => (
+          <MotionPressable
+            key={type}
+            className="flex w-full items-center gap-2 rounded-lg border border-transparent px-2 py-1.5 text-left text-wn-mono-200 hover:border-wn-mono-700 hover:bg-wn-mono-800"
+            onClick={() => onSelect(type)}
+          >
+            <span className="shrink-0 text-wn-mono-400">
+              <MaterialSymbol
+                name={createMenuIcons[type]}
+                className="text-[16px]"
+              />
+            </span>
+            <span className="truncate text-[12px] font-medium text-wn-mono-100">
+              {CARD_TYPE_LABELS[type]}
+            </span>
+          </MotionPressable>
+        ))}
+      </div>
+    </div>
   );
 }

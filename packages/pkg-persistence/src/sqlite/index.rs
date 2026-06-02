@@ -42,4 +42,29 @@ impl SqliteIndex {
             .execute("DELETE FROM cards WHERE id = ?1", (id,))?;
         Ok(())
     }
+
+    /// All indexed cards (id, name, tags), sorted by name.
+    pub fn list_all(&self) -> Result<Vec<(String, String, Vec<String>)>, PersistenceError> {
+        let mut stmt = self
+            .conn
+            .prepare("SELECT id, name, tags FROM cards ORDER BY name COLLATE NOCASE")?;
+        let rows = stmt.query_map([], |row| {
+            let id: String = row.get(0)?;
+            let name: String = row.get(1)?;
+            let tags_csv: String = row.get(2)?;
+            let tags = if tags_csv.is_empty() {
+                Vec::new()
+            } else {
+                tags_csv
+                    .split(',')
+                    .map(str::trim)
+                    .filter(|tag| !tag.is_empty())
+                    .map(str::to_owned)
+                    .collect()
+            };
+            Ok((id, name, tags))
+        })?;
+        rows.collect::<Result<Vec<_>, _>>()
+            .map_err(PersistenceError::from)
+    }
 }

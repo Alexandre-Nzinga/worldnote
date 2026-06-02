@@ -1,9 +1,8 @@
-export type InspectorTabId = "info" | "properties" | "lore";
+export type InspectorTabId = "info" | "properties";
 
 const TABS: Array<{ id: InspectorTabId; label: string }> = [
   { id: "info", label: "Info" },
   { id: "properties", label: "Properties" },
-  { id: "lore", label: "Lore" },
 ];
 
 type InspectorTabsProps = {

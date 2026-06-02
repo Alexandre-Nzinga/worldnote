@@ -11,8 +11,23 @@
       rel="stylesheet"
     />
     <title>WorldNote</title>
+    <script>
+      // Apply the saved theme before first paint to avoid a flash of the wrong theme.
+      (function () {
+        try {
+          var pref = localStorage.getItem("wn-theme") || "system";
+          var prefersDark =
+            window.matchMedia &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches;
+          var dark = pref === "dark" || (pref === "system" && prefersDark);
+          document.documentElement.classList.add(dark ? "dark" : "light");
+        } catch (error) {
+          document.documentElement.classList.add("dark");
+        }
+      })();
+    </script>
   </head>
-  <body class="h-screen overflow-hidden bg-wn-mono-950 text-wn-mono-100 antialiased">
+  <body class="h-screen overflow-hidden bg-wn-bg text-wn-text antialiased">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

@@ -15,7 +15,7 @@ export function MarkdownView({ content }: MarkdownViewProps) {
 
   if (!normalized.trim()) {
     return (
-      <p className="text-sm text-wn-mono-500">No lore written yet.</p>
+      <p className="text-sm text-wn-mono-500">No description yet.</p>
     );
   }
 

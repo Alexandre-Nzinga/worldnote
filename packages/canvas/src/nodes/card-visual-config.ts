@@ -7,7 +7,25 @@ export type WorldNoteCardType =
   | "fauna"
   | "building"
   | "structure"
-  | "species";
+  | "species"
+  | "planet"
+  | "organization"
+  | "polity"
+  | "event"
+  | "family"
+  | "group"
+  | "star"
+  | "moon"
+  | "asteroid"
+  | "satellite"
+  | "law"
+  | "religion"
+  | "language"
+  | "culture"
+  | "spell"
+  | "disease"
+  | "disaster"
+  | "combat_style";
 
 export type CardVisualConfig = {
   label: string;
@@ -72,6 +90,121 @@ export const CARD_VISUAL_CONFIG: Record<WorldNoteCardType, CardVisualConfig> = {
   species: {
     label: "Species",
     badgeClassName: "bg-wn-azure-200",
+    widthClass: "w-[260px]",
+    aspectClass: "aspect-5/3",
+  },
+  planet: {
+    label: "Planet",
+    badgeClassName: "bg-wn-amber-400",
+    badgeTextColor: "text-wn-mono-50",
+    widthClass: "w-[260px]",
+    aspectClass: "aspect-5/3",
+  },
+  organization: {
+    label: "Organization",
+    badgeClassName: "bg-wn-azure-400",
+    badgeTextColor: "text-wn-mono-50",
+    widthClass: "w-[260px]",
+    aspectClass: "aspect-5/3",
+  },
+  polity: {
+    label: "Polity",
+    badgeClassName: "bg-wn-lime-400",
+    badgeTextColor: "text-wn-mono-50",
+    widthClass: "w-[260px]",
+    aspectClass: "aspect-5/3",
+  },
+  event: {
+    label: "Event",
+    badgeClassName: "bg-wn-mono-500",
+    badgeTextColor: "text-wn-mono-50",
+    widthClass: "w-[260px]",
+    aspectClass: "aspect-5/3",
+  },
+  family: {
+    label: "Family",
+    badgeClassName: "bg-wn-lime-300",
+    widthClass: "w-[260px]",
+    aspectClass: "aspect-5/3",
+  },
+  group: {
+    label: "Group",
+    badgeClassName: "bg-wn-azure-300",
+    widthClass: "w-[260px]",
+    aspectClass: "aspect-5/3",
+  },
+  star: {
+    label: "Star",
+    badgeClassName: "bg-wn-amber-300",
+    widthClass: "w-[260px]",
+    aspectClass: "aspect-5/3",
+  },
+  moon: {
+    label: "Moon",
+    badgeClassName: "bg-wn-indigo-300",
+    widthClass: "w-[260px]",
+    aspectClass: "aspect-5/3",
+  },
+  asteroid: {
+    label: "Asteroid",
+    badgeClassName: "bg-wn-amber-200",
+    widthClass: "w-[260px]",
+    aspectClass: "aspect-5/3",
+  },
+  satellite: {
+    label: "Satellite",
+    badgeClassName: "bg-wn-indigo-400",
+    badgeTextColor: "text-wn-mono-50",
+    widthClass: "w-[260px]",
+    aspectClass: "aspect-5/3",
+  },
+  law: {
+    label: "Law",
+    badgeClassName: "bg-wn-mono-600",
+    badgeTextColor: "text-wn-mono-50",
+    widthClass: "w-[260px]",
+    aspectClass: "aspect-5/3",
+  },
+  religion: {
+    label: "Religion",
+    badgeClassName: "bg-wn-indigo-300",
+    widthClass: "w-[260px]",
+    aspectClass: "aspect-5/3",
+  },
+  language: {
+    label: "Language",
+    badgeClassName: "bg-wn-azure-300",
+    widthClass: "w-[260px]",
+    aspectClass: "aspect-5/3",
+  },
+  culture: {
+    label: "Culture",
+    badgeClassName: "bg-wn-amber-300",
+    widthClass: "w-[260px]",
+    aspectClass: "aspect-5/3",
+  },
+  spell: {
+    label: "Spell",
+    badgeClassName: "bg-wn-indigo-400",
+    widthClass: "w-[260px]",
+    aspectClass: "aspect-5/3",
+  },
+  disease: {
+    label: "Disease",
+    badgeClassName: "bg-wn-red-300",
+    widthClass: "w-[260px]",
+    aspectClass: "aspect-5/3",
+  },
+  disaster: {
+    label: "Disaster",
+    badgeClassName: "bg-wn-red-400",
+    badgeTextColor: "text-wn-mono-50",
+    widthClass: "w-[260px]",
+    aspectClass: "aspect-5/3",
+  },
+  combat_style: {
+    label: "Combat Style",
+    badgeClassName: "bg-wn-rose-400",
     widthClass: "w-[260px]",
     aspectClass: "aspect-5/3",
   },

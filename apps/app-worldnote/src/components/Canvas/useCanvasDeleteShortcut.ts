@@ -12,25 +12,25 @@ function isEditableTarget(target: EventTarget | null): boolean {
 }
 
 type UseCanvasDeleteShortcutOptions = {
-  selectedCardId: string | null;
+  selectedCardIds: string[];
   selectedLinkId: string | null;
   onDeleteCard: (cardId: string) => Promise<void>;
   onDeleteLink: (linkId: string) => Promise<void>;
 };
 
-/** Delete / Backspace removes the selected link or card (link takes priority). */
+/** Delete / Backspace removes the selected link or all selected cards (link takes priority). */
 export function useCanvasDeleteShortcut({
-  selectedCardId,
+  selectedCardIds,
   selectedLinkId,
   onDeleteCard,
   onDeleteLink,
 }: UseCanvasDeleteShortcutOptions) {
-  const selectedCardIdRef = useRef(selectedCardId);
+  const selectedCardIdsRef = useRef(selectedCardIds);
   const selectedLinkIdRef = useRef(selectedLinkId);
   const onDeleteCardRef = useRef(onDeleteCard);
   const onDeleteLinkRef = useRef(onDeleteLink);
 
-  selectedCardIdRef.current = selectedCardId;
+  selectedCardIdsRef.current = selectedCardIds;
   selectedLinkIdRef.current = selectedLinkId;
   onDeleteCardRef.current = onDeleteCard;
   onDeleteLinkRef.current = onDeleteLink;
@@ -51,10 +51,12 @@ export function useCanvasDeleteShortcut({
         return;
       }
 
-      const cardId = selectedCardIdRef.current;
-      if (cardId) {
+      const cardIds = selectedCardIdsRef.current;
+      if (cardIds.length > 0) {
         event.preventDefault();
-        void onDeleteCardRef.current(cardId);
+        for (const cardId of cardIds) {
+          void onDeleteCardRef.current(cardId);
+        }
       }
     };
 

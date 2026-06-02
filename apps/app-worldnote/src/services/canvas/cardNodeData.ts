@@ -10,6 +10,7 @@ import {
   type WorldCard,
 } from "@worldnote/shared";
 
+import { makeCardDragStartHandler } from "./cardDragOut.js";
 import { getSocketLinkLabels } from "../links/socketLinks.js";
 import type { VisibleSocketsByCardType } from "../settings/settings.js";
 import { getVisibleSocketsForCardType } from "../settings/visibleSocketSettings.js";
@@ -44,18 +45,34 @@ function scalarsFromCard(card: WorldCard): CardNodeScalars {
   }
 }
 
+function cardDescriptionLine(card: WorldCard): string | undefined {
+  const fromDescription = card.description?.trim();
+  if (fromDescription) {
+    return fromDescription;
+  }
+  const fromLore = card.lore?.trim();
+  if (!fromLore) {
+    return undefined;
+  }
+  return fromLore
+    .split("\n")
+    .map((line) => line.trim())
+    .find((line) => line.length > 0);
+}
+
 function subtitleForCard(card: WorldCard): string {
   const typeLabel = CARD_TYPE_LABELS[card.card_type];
+  const explicitSubtitle = card.subtitle?.trim();
+  if (explicitSubtitle) {
+    return explicitSubtitle;
+  }
+  const descriptionLine = cardDescriptionLine(card);
 
   switch (card.card_type) {
     case "character":
-      return (
-        card.birthdate?.trim() || card.description?.trim() || typeLabel
-      );
+      return card.birthdate?.trim() || descriptionLine || typeLabel;
     case "location":
-      return (
-        card.coordinates?.trim() || card.description?.trim() || typeLabel
-      );
+      return card.coordinates?.trim() || descriptionLine || typeLabel;
     case "item":
       return card.rarity
         ? `${card.rarity.charAt(0).toUpperCase()}${card.rarity.slice(1)}`
@@ -72,8 +89,28 @@ function subtitleForCard(card: WorldCard): string {
       return card.condition || typeLabel;
     case "species":
       return card.average_lifespan?.trim() || typeLabel;
+    case "planet":
+      return card.planet_type?.trim() || typeLabel;
+    case "organization":
+      return card.founding_date?.trim() || typeLabel;
+    case "polity":
+      return card.government_type?.trim() || typeLabel;
+    case "event":
+      return card.event_date?.trim() || typeLabel;
+    case "family":
+      return card.motto?.trim() || typeLabel;
+    case "group":
+      return card.group_type?.trim() || typeLabel;
+    case "star":
+      return card.spectral_class?.trim() || typeLabel;
+    case "moon":
+      return card.orbital_period?.trim() || typeLabel;
+    case "asteroid":
+      return card.composition?.trim() || typeLabel;
+    case "satellite":
+      return card.orbit_type?.trim() || typeLabel;
     case "building":
-      return card.description?.trim() || typeLabel;
+      return descriptionLine || typeLabel;
     default:
       return typeLabel;
   }
@@ -119,7 +156,7 @@ export function worldCardToNodeData(
     title: card.name,
     subtitle: subtitleForCard(card),
     cardType: card.card_type,
-    description: card.description,
+    description: cardDescriptionLine(card),
     imageUrl: cardImageSrc(vaultPath, card.image_path),
     imageFit: imageDisplay.fit,
     imagePosition: imageDisplay.position,
@@ -137,5 +174,6 @@ export function worldCardToNodeData(
     viewMode,
     customProperties: card.custom_properties,
     onUpdate,
+    onDragCardStart: makeCardDragStartHandler(card.id, card.name),
   };
 }

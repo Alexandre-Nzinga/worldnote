@@ -9,9 +9,31 @@ import {
 type CanvasHeaderProps = {
   worldName: string;
   onBackToHome: () => void;
+  onOpenVault?: () => void;
 };
 
-export function CanvasHeader({ worldName, onBackToHome }: CanvasHeaderProps) {
+export function CanvasHeader({
+  worldName,
+  onBackToHome,
+  onOpenVault,
+}: CanvasHeaderProps) {
+  const menuItems = [
+    {
+      id: "home",
+      label: "Home",
+      icon: <MaterialSymbol name="home" className="text-[20px]" />,
+    },
+    ...(onOpenVault
+      ? [
+          {
+            id: "vault",
+            label: "Vault",
+            icon: <MaterialSymbol name="layers" className="text-[20px]" />,
+          },
+        ]
+      : []),
+  ];
+
   return (
     <header className="pointer-events-auto absolute left-4 top-4 z-30 flex items-center gap-3">
       <div className="shrink-0">
@@ -21,15 +43,13 @@ export function CanvasHeader({ worldName, onBackToHome }: CanvasHeaderProps) {
           onAction={(key) => {
             if (key === "home") {
               onBackToHome();
+              return;
+            }
+            if (key === "vault") {
+              onOpenVault?.();
             }
           }}
-          items={[
-            {
-              id: "home",
-              label: "Home",
-              icon: <MaterialSymbol name="home" className="text-[20px]" />,
-            },
-          ]}
+          items={menuItems}
           trigger={
             <Button
               variant="tertiary"

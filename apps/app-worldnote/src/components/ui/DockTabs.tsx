@@ -11,9 +11,10 @@ import { useRef, useState, type ReactNode, type RefObject } from "react";
 export type DockTabItem = {
   id: string;
   name: string;
-  icon: string;
-  /** Tailwind background + text classes from design tokens. */
+  icon?: string;
+  iconNode?: ReactNode;
   colorClassName: string;
+  iconClassName?: string;
   isActive?: boolean;
   disabled?: boolean;
   onPress?: () => void;
@@ -108,12 +109,20 @@ function DockIcon({ item, mouseX, itemRef }: DockIconProps) {
             damping: 17,
           }}
         >
-          <MaterialSymbol name={item.icon} className="text-xl" />
+          <MaterialSymbol
+            name={item.icon ?? "help"}
+            className={`text-xl ${item.iconClassName ?? ""} ${
+              item.iconNode ? "hidden" : ""
+            }`}
+          />
+          {item.iconNode ? (
+            <span className="flex items-center justify-center">{item.iconNode}</span>
+          ) : null}
         </motion.span>
 
         <motion.span
           aria-hidden
-          className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br from-wn-mono-50/20 to-transparent"
+          className="pointer-events-none absolute inset-0 rounded-2xl bg-linear-to-br from-wn-mono-50/20 to-transparent"
           animate={{
             opacity: isHovered && !item.disabled ? 0.35 : 0.12,
           }}
@@ -134,7 +143,7 @@ function DockIcon({ item, mouseX, itemRef }: DockIconProps) {
           stiffness: 500,
           damping: 30,
         }}
-        className="pointer-events-none absolute -top-10 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-md border border-wn-mono-700 bg-wn-mono-950/90 px-2 py-1 text-xs text-wn-mono-100 backdrop-blur-sm"
+        className="pointer-events-none absolute -top-10 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-md border border-wn-mono-700 bg-wn-mono-950/90 px-2 py-1 text-xs font-semibold text-wn-mono-100 backdrop-blur-sm"
       >
         {item.name}
       </motion.span>
@@ -163,7 +172,7 @@ export function DockTabs({
     <motion.div
       onMouseMove={(event) => mouseX.set(event.pageX)}
       onMouseLeave={() => mouseX.set(Number.POSITIVE_INFINITY)}
-      className={`mx-auto flex h-[4.5rem] items-end gap-3 rounded-3xl border border-wn-mono-700/80 bg-wn-mono-900/85 px-3 pb-3 pt-2 shadow-xl backdrop-blur-md ${className ?? ""}`}
+      className={`mx-auto flex h-18 items-end gap-3 rounded-3xl border border-wn-mono-700/80 bg-wn-mono-900/85 px-3 pb-3 pt-2 shadow-xl backdrop-blur-md ${className ?? ""}`}
       initial={{ y: 24, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{

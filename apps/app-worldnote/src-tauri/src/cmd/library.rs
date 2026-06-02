@@ -94,6 +94,13 @@ fn capitalize_first(value: &str) -> String {
 fn subtitle_for_card(card: &serde_json::Value, card_type: &str) -> String {
     let type_label = |fallback: &str| fallback.to_string();
 
+    if let Some(subtitle) = extract_string_field(card, "subtitle")
+        .map(|value| value.trim().to_string())
+        .filter(|value| !value.is_empty())
+    {
+        return subtitle;
+    }
+
     match card_type {
         "character" => extract_string_field(card, "birthdate")
             .filter(|value| !value.trim().is_empty())
@@ -124,9 +131,63 @@ fn subtitle_for_card(card: &serde_json::Value, card_type: &str) -> String {
         "species" => extract_string_field(card, "average_lifespan")
             .filter(|value| !value.trim().is_empty())
             .unwrap_or_else(|| type_label("Species")),
+        "planet" => extract_string_field(card, "planet_type")
+            .filter(|value| !value.trim().is_empty())
+            .unwrap_or_else(|| type_label("Planet")),
+        "organization" => extract_string_field(card, "founding_date")
+            .filter(|value| !value.trim().is_empty())
+            .unwrap_or_else(|| type_label("Organization")),
+        "polity" => extract_string_field(card, "government_type")
+            .filter(|value| !value.trim().is_empty())
+            .unwrap_or_else(|| type_label("Polity")),
+        "event" => extract_string_field(card, "event_date")
+            .filter(|value| !value.trim().is_empty())
+            .unwrap_or_else(|| type_label("Event")),
+        "family" => extract_string_field(card, "motto")
+            .filter(|value| !value.trim().is_empty())
+            .unwrap_or_else(|| type_label("Family")),
+        "group" => extract_string_field(card, "group_type")
+            .filter(|value| !value.trim().is_empty())
+            .unwrap_or_else(|| type_label("Group")),
+        "star" => extract_string_field(card, "spectral_class")
+            .filter(|value| !value.trim().is_empty())
+            .unwrap_or_else(|| type_label("Star")),
+        "moon" => extract_string_field(card, "orbital_period")
+            .filter(|value| !value.trim().is_empty())
+            .unwrap_or_else(|| type_label("Moon")),
+        "asteroid" => extract_string_field(card, "composition")
+            .filter(|value| !value.trim().is_empty())
+            .unwrap_or_else(|| type_label("Asteroid")),
+        "satellite" => extract_string_field(card, "orbit_type")
+            .filter(|value| !value.trim().is_empty())
+            .unwrap_or_else(|| type_label("Satellite")),
         "building" => extract_string_field(card, "description")
             .filter(|value| !value.trim().is_empty())
             .unwrap_or_else(|| type_label("Building")),
+        "law" => extract_string_field(card, "description")
+            .filter(|value| !value.trim().is_empty())
+            .unwrap_or_else(|| type_label("Law")),
+        "religion" => extract_string_field(card, "description")
+            .filter(|value| !value.trim().is_empty())
+            .unwrap_or_else(|| type_label("Religion")),
+        "language" => extract_string_field(card, "description")
+            .filter(|value| !value.trim().is_empty())
+            .unwrap_or_else(|| type_label("Language")),
+        "culture" => extract_string_field(card, "description")
+            .filter(|value| !value.trim().is_empty())
+            .unwrap_or_else(|| type_label("Culture")),
+        "spell" => extract_string_field(card, "description")
+            .filter(|value| !value.trim().is_empty())
+            .unwrap_or_else(|| type_label("Spell")),
+        "disease" => extract_string_field(card, "description")
+            .filter(|value| !value.trim().is_empty())
+            .unwrap_or_else(|| type_label("Disease")),
+        "disaster" => extract_string_field(card, "description")
+            .filter(|value| !value.trim().is_empty())
+            .unwrap_or_else(|| type_label("Disaster")),
+        "combat_style" => extract_string_field(card, "description")
+            .filter(|value| !value.trim().is_empty())
+            .unwrap_or_else(|| type_label("Combat Style")),
         _ => type_label(card_type),
     }
 }

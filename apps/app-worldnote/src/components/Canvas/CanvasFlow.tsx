@@ -1,6 +1,7 @@
 import { WorldNoteCanvas, type CardFlowNode } from "@worldnote/canvas";
 import {
   ConnectionMode,
+  SelectionMode,
   type Connection,
   type Edge,
   type EdgeTypes,
@@ -12,10 +13,13 @@ import {
   type OnNodesChange,
   type OnSelectionChangeParams,
 } from "@xyflow/react";
-import type { MouseEvent, RefObject } from "react";
+import type { MouseEvent, MutableRefObject, RefObject } from "react";
 import type { Link, WorldCard } from "@worldnote/shared";
 import type { VisibleSocketsByCardType } from "../../services/settings/settings.js";
+import { BulkSelectionToolbar } from "./BulkSelectionToolbar.js";
+import { CanvasFocusBridge } from "./CanvasFocusBridge.js";
 import { useCanvasConnectionEnd } from "./useCanvasConnectionEnd.js";
+import { useResolvedTheme } from "../../theme/ThemeProvider.js";
 
 type CanvasFlowProps = {
   nodeTypes: NodeTypes;
@@ -30,6 +34,7 @@ type CanvasFlowProps = {
   onNodeDragStop: (event: MouseEvent, node: Node) => void;
   onNodeDoubleClick: (event: MouseEvent, node: Node) => void;
   onEdgeDoubleClick: (event: MouseEvent, edge: Edge) => void;
+  nodesDraggable?: boolean;
   vaultPath: string | null;
   cardsByIdRef: RefObject<Record<string, WorldCard>>;
   linksByIdRef: RefObject<Record<string, Link>>;
@@ -38,9 +43,13 @@ type CanvasFlowProps = {
   setEdges: React.Dispatch<React.SetStateAction<Edge[]>>;
   setCardsById: React.Dispatch<React.SetStateAction<Record<string, WorldCard>>>;
   setLinksById: React.Dispatch<React.SetStateAction<Record<string, Link>>>;
-  setSelectedCardId: React.Dispatch<React.SetStateAction<string | null>>;
+  setSelectedCardIds: React.Dispatch<React.SetStateAction<string[]>>;
   setSelectedLinkId: React.Dispatch<React.SetStateAction<string | null>>;
   setInspectorMode: React.Dispatch<React.SetStateAction<"read" | "edit">>;
+  selectedCardIds: string[];
+  onDuplicateSelectedCards: () => Promise<void>;
+  onDeleteSelectedCards: () => Promise<void>;
+  focusCardRef: MutableRefObject<((cardId: string) => void) | undefined>;
 };
 
 export function CanvasFlow({
@@ -56,6 +65,7 @@ export function CanvasFlow({
   onNodeDragStop,
   onNodeDoubleClick,
   onEdgeDoubleClick,
+  nodesDraggable = true,
   vaultPath,
   cardsByIdRef,
   linksByIdRef,
@@ -64,9 +74,13 @@ export function CanvasFlow({
   setEdges,
   setCardsById,
   setLinksById,
-  setSelectedCardId,
+  setSelectedCardIds,
   setSelectedLinkId,
   setInspectorMode,
+  selectedCardIds,
+  onDuplicateSelectedCards,
+  onDeleteSelectedCards,
+  focusCardRef,
 }: CanvasFlowProps) {
   const {
     onConnectStart,
@@ -83,13 +97,15 @@ export function CanvasFlow({
     setEdges,
     setCardsById,
     setLinksById,
-    setSelectedCardId,
+    setSelectedCardIds,
     setSelectedLinkId,
     setInspectorMode,
   });
 
   const onNodeMouseEnter = onCardMouseEnter as NodeMouseHandler<Node>;
   const onNodeMouseLeave = onCardMouseLeave as NodeMouseHandler<Node>;
+
+  const resolvedTheme = useResolvedTheme();
 
   return (
     <WorldNoteCanvas
@@ -113,20 +129,34 @@ export function CanvasFlow({
       backgroundVariant="dots"
       backgroundColor="var(--color-wn-mono-700)"
       backgroundGap={16}
-      colorMode="dark"
-      panOnDrag={[1]}
+      colorMode={resolvedTheme}
+      panOnDrag={[1, 2]}
       panOnScroll={false}
       zoomOnScroll
       zoomOnPinch
-      nodesDraggable
+      nodesDraggable={nodesDraggable}
       nodesConnectable
       elementsSelectable
+      selectNodesOnDrag={false}
+      selectionOnDrag
+      selectionMode={SelectionMode.Partial}
+      selectionKeyCode={null}
+      panActivationKeyCode="Space"
       minZoom={0.25}
       maxZoom={2}
       onNodeDragStop={onNodeDragStop}
       onNodeDoubleClick={onNodeDoubleClick}
       onEdgeDoubleClick={onEdgeDoubleClick}
       fitView
-    />
+    >
+      <CanvasFocusBridge focusCardRef={focusCardRef} />
+      {selectedCardIds.length > 1 ? (
+        <BulkSelectionToolbar
+          selectedCardIds={selectedCardIds}
+          onDuplicate={onDuplicateSelectedCards}
+          onDelete={onDeleteSelectedCards}
+        />
+      ) : null}
+    </WorldNoteCanvas>
   );
 }

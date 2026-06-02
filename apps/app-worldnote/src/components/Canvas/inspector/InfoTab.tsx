@@ -1,9 +1,13 @@
-import { Input, Textarea } from "@heroui/react";
-import { getBodyTextStyle, Pill, type PillTone } from "@worldnote/ui";
+import { Input } from "@heroui/react";
+import type { WorldCard } from "@worldnote/shared";
+import { Pill, type PillTone } from "@worldnote/ui";
+import { useMemo, type Ref } from "react";
+import { LoreEditor, type LoreEditorHandle } from "./loreEditor/LoreEditor.js";
+import type { LoreDoc } from "./loreEditor/loreDocTypes.js";
+import { resolveInitialLoreDoc } from "./loreEditor/seedLoreDoc.js";
 import {
   inspectorInlineInputClassNames,
   inspectorSectionLabelClassName,
-  inspectorTextareaClassNames,
 } from "./inspectorFieldStyles.js";
 
 const TAG_TONES: PillTone[] = [
@@ -17,47 +21,53 @@ const TAG_TONES: PillTone[] = [
 
 type InfoTabProps = {
   readOnly: boolean;
-  description: string;
   tags: string[];
   tagsInput: string;
-  onDescriptionChange: (value: string) => void;
   onTagsInputChange: (value: string) => void;
+  lore: string;
+  loreDoc?: Record<string, unknown>;
+  legacyDescription?: string;
+  vaultPath: string;
+  cardId: string;
+  cardsById: Record<string, WorldCard>;
+  onDescriptionChange: (plainText: string, doc: LoreDoc) => void;
+  onNavigateToCard?: (cardId: string) => void;
+  loreEditorRef?: Ref<LoreEditorHandle>;
 };
 
 export function InfoTab({
   readOnly,
-  description,
   tags,
   tagsInput,
-  onDescriptionChange,
   onTagsInputChange,
+  lore,
+  loreDoc,
+  legacyDescription,
+  vaultPath,
+  cardId,
+  cardsById,
+  onDescriptionChange,
+  onNavigateToCard,
+  loreEditorRef,
 }: InfoTabProps) {
+  const initialDoc = useMemo(
+    () => resolveInitialLoreDoc(loreDoc, lore, legacyDescription),
+    [loreDoc, lore, legacyDescription],
+  );
+
   return (
     <div className="flex flex-col gap-5">
       <section className="flex flex-col gap-2">
-        <span className={inspectorSectionLabelClassName}>Description</span>
-        {readOnly ? (
-          description.trim() ? (
-            <p
-              className="whitespace-pre-wrap text-wn-mono-200"
-              style={getBodyTextStyle("body")}
-            >
-              {description}
-            </p>
-          ) : (
-            <p className="text-sm text-wn-mono-500">No description yet.</p>
-          )
-        ) : (
-          <Textarea
-            id="inspector-description"
-            minRows={3}
-            placeholder="Short description of this card…"
-            value={description}
-            onValueChange={onDescriptionChange}
-            variant="flat"
-            classNames={inspectorTextareaClassNames}
-          />
-        )}
+        <LoreEditor
+          ref={loreEditorRef}
+          readOnly={readOnly}
+          initialDoc={initialDoc}
+          vaultPath={vaultPath}
+          cardId={cardId}
+          cardsById={cardsById}
+          onChange={(doc, plainText) => onDescriptionChange(plainText, doc)}
+          onNavigateToCard={onNavigateToCard}
+        />
       </section>
 
       <section className="flex flex-col gap-2">

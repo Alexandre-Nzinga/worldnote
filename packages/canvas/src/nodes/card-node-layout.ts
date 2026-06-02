@@ -31,7 +31,8 @@ export function getNodeViewHandlePositions(
   const listTop = headerHeight(options?.hasSubtitle ?? false);
 
   const rowTops = Array.from({ length: socketCount }, (_, index) => {
-    const rowStart = listTop + SOCKET_LIST_PY + index * (SOCKET_ROW_H + SOCKET_ROW_GAP);
+    const rowStart =
+      listTop + SOCKET_LIST_PY + index * (SOCKET_ROW_H + SOCKET_ROW_GAP);
     return rowStart + SOCKET_ROW_H / 2;
   });
 
@@ -49,6 +50,9 @@ export function getNodeViewHandlePositions(
 }
 
 /** Center handle on the anchor point (matches React Flow side-handle default). */
-export function handleStyleAtTop(top: number): { top: number; transform: string } {
+export function handleStyleAtTop(top: number): {
+  top: number;
+  transform: string;
+} {
   return { top, transform: "translate(-50%, -50%)" };
 }

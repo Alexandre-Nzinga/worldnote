@@ -3,6 +3,15 @@ import { invoke } from "@tauri-apps/api/core";
 /** Per card type, which socket handles are shown on the canvas. */
 export type VisibleSocketsByCardType = Record<string, Record<string, boolean>>;
 
+/** Local LLM (Ollama) connection config for the WorldWizard. */
+export type WizardSettings = {
+  host: string;
+  defaultModel: string;
+};
+
+/** User-facing theme preference. "system" follows the OS appearance. */
+export type ThemePreference = "light" | "dark" | "system";
+
 export type AppSettings = {
   username: string;
   worldnoteRoot: string;
@@ -10,6 +19,10 @@ export type AppSettings = {
   visibleSockets?: VisibleSocketsByCardType;
   /** Home-only; world folder paths, max 3. */
   pinnedWorldPaths?: string[];
+  /** Local LLM (Ollama) connection config for the WorldWizard. */
+  wizard?: WizardSettings;
+  /** Appearance preference; defaults to "system" when unset. */
+  theme?: ThemePreference;
 };
 
 export async function getSettings(): Promise<AppSettings | null> {

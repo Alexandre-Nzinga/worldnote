@@ -1,14 +1,14 @@
 /** Shared inspector field styles — borderless edits that match read-only typography. */
 
 export const inspectorSectionLabelClassName =
-  "text-xs font-semibold uppercase tracking-wide text-wn-mono-500";
+  "text-xs font-semibold uppercase tracking-wide text-wn-text-subtle";
 
 /** Field label in read/edit inspector rows (below section headings). */
 export const inspectorFieldLabelClassName =
-  "text-xs font-medium text-wn-mono-500";
+  "text-xs font-medium text-wn-text-subtle";
 
 /** Field value in read-only inspector rows. */
-export const inspectorFieldValueClassName = "text-sm text-wn-mono-50";
+export const inspectorFieldValueClassName = "text-sm text-wn-text";
 
 const inlineInputWrapper =
   "min-h-0 h-auto rounded-none border-0 bg-transparent px-0 shadow-none hover:!bg-transparent data-[hover=true]:!bg-transparent group-data-[focus=true]:!bg-transparent";
@@ -26,14 +26,14 @@ export const inspectorNameFieldClassNames = {
   inputWrapper: inlineInputWrapper,
   innerWrapper: inlineInnerWrapper,
   input:
-    "!text-xl font-bold text-wn-mono-50 placeholder:!text-wn-mono-600 data-[hover=true]:!text-wn-mono-50",
+    "!text-2xl !font-bold !leading-tight !tracking-tight text-wn-mono-50 placeholder:!text-wn-mono-600 data-[hover=true]:!text-wn-mono-50",
 };
 
 export const inspectorSubtitleFieldClassNames = {
   inputWrapper: inlineInputWrapper,
   innerWrapper: inlineInnerWrapper,
   input:
-    "!text-sm text-wn-mono-400 placeholder:!text-wn-mono-600 data-[hover=true]:!text-wn-mono-400",
+    "!text-base !font-medium !leading-snug text-wn-mono-300 placeholder:!text-wn-mono-600 data-[hover=true]:!text-wn-mono-300",
 };
 
 export const inspectorTextareaClassNames = {

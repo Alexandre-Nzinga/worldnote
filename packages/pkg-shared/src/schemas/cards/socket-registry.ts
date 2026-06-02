@@ -16,9 +16,28 @@ export const SOCKET_REGISTRY = {
     father: { accepts: ["character"], cardinality: "single" },
     spouse: { accepts: ["character"], cardinality: "single" },
     issue: { accepts: ["character"], cardinality: "many" },
+    religion: { accepts: ["religion"], cardinality: "single" },
+    culture: { accepts: ["culture"], cardinality: "single" },
+    languages: { accepts: ["language"], cardinality: "many" },
+    spells: { accepts: ["spell"], cardinality: "many" },
+    combat_styles: { accepts: ["combat_style"], cardinality: "many" },
+    afflictions: { accepts: ["disease"], cardinality: "many" },
+    affiliations: {
+      accepts: ["organization", "polity", "group", "family"],
+      cardinality: "many",
+    },
   },
   location: {
-    parent_location: { accepts: ["location", "building", "structure"], cardinality: "single" },
+    parent_location: {
+      accepts: ["location", "building", "structure", "planet", "polity"],
+      cardinality: "single",
+    },
+    planet: { accepts: ["planet"], cardinality: "single" },
+    polity: { accepts: ["polity"], cardinality: "single" },
+    laws: { accepts: ["law"], cardinality: "many" },
+    dominant_religion: { accepts: ["religion"], cardinality: "single" },
+    cultures: { accepts: ["culture"], cardinality: "many" },
+    languages: { accepts: ["language"], cardinality: "many" },
   },
   item: {
     origin_place: {
@@ -28,8 +47,8 @@ export const SOCKET_REGISTRY = {
     creator_id: { accepts: ["character"], cardinality: "single" },
   },
   vehicle: {
-    // TODO: add organization, polity when those card types exist
     manufacturer_id: { accepts: ["character"], cardinality: "single" },
+    operator: { accepts: ["organization", "polity"], cardinality: "single" },
     current_hangar_id: {
       accepts: ["building", "structure"],
       cardinality: "single",
@@ -43,14 +62,70 @@ export const SOCKET_REGISTRY = {
     native_habitat_id: { accepts: ["location"], cardinality: "single" },
   },
   building: {
-    // TODO: architectural_style → culture bond when culture card type exists
     parent_structure_id: { accepts: ["structure"], cardinality: "single" },
+    culture: { accepts: ["culture"], cardinality: "single" },
   },
   structure: {
     parent_location_id: { accepts: ["location"], cardinality: "single" },
   },
   species: {
-    homeworld: { accepts: ["location"], cardinality: "single" },
+    homeworld: { accepts: ["location", "planet"], cardinality: "single" },
+  },
+  planet: {
+    orbits_star: { accepts: ["star"], cardinality: "single" },
+  },
+  moon: {
+    orbits: { accepts: ["planet"], cardinality: "single" },
+  },
+  satellite: {
+    orbits: { accepts: ["planet"], cardinality: "single" },
+  },
+  asteroid: {
+    orbits: { accepts: ["star", "planet"], cardinality: "single" },
+  },
+  star: {
+    galaxy: { accepts: ["location"], cardinality: "single" },
+  },
+  organization: {
+    parent_organization: { accepts: ["organization"], cardinality: "single" },
+    headquarters: {
+      accepts: ["location", "building", "structure"],
+      cardinality: "single",
+    },
+    polity: { accepts: ["polity"], cardinality: "single" },
+  },
+  polity: {
+    parent_polity: { accepts: ["polity"], cardinality: "single" },
+    capital: {
+      accepts: ["location", "building", "structure"],
+      cardinality: "single",
+    },
+    homeworld: { accepts: ["planet"], cardinality: "single" },
+  },
+  family: {
+    seat: {
+      accepts: ["location", "building", "structure"],
+      cardinality: "single",
+    },
+    polity: { accepts: ["polity"], cardinality: "single" },
+  },
+  group: {
+    parent_group: { accepts: ["group"], cardinality: "single" },
+    headquarters: {
+      accepts: ["location", "building", "structure"],
+      cardinality: "single",
+    },
+    members: { accepts: ["character"], cardinality: "many" },
+  },
+  event: {
+    event_location: {
+      accepts: ["location", "building", "structure"],
+      cardinality: "single",
+    },
+    participants: {
+      accepts: ["character", "organization", "polity"],
+      cardinality: "many",
+    },
   },
 } as const satisfies Record<string, Record<string, SocketDescriptor>>;
 

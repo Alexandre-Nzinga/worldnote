@@ -16,6 +16,7 @@ import {
   listWorlds,
   type WorldSummary,
 } from "../../services/worlds/listWorlds.js";
+import { useResolvedTheme } from "../../theme/ThemeProvider.js";
 import { darkFieldInputClassNames } from "../Onboarding/fieldClassNames.js";
 import { VaultCardChip } from "./VaultCardChip.js";
 import { VaultFilterButton } from "./VaultFilterButton.js";
@@ -46,6 +47,7 @@ function VaultWorldEmpty({ message }: { message: string }) {
 
 export function Vault({ onBack, worldnoteRoot, currentWorldPath }: VaultProps) {
   const settings = useSettings((state) => state.settings);
+  const theme = useResolvedTheme();
 
   const [items, setItems] = useState<LibraryCard[]>([]);
   const [worlds, setWorlds] = useState<WorldSummary[]>([]);
@@ -219,7 +221,7 @@ export function Vault({ onBack, worldnoteRoot, currentWorldPath }: VaultProps) {
         >
           <WorldNoteLogo
             variant="icon"
-            tone="white"
+            tone={theme === "dark" ? "white" : "black"}
             className="h-12 w-12 opacity-60"
             alt="Loading"
           />

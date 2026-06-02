@@ -1,6 +1,7 @@
 export * from "./Canvas.js";
 export * from "./CollapsibleMiniMap.js";
 export * from "./ZoomControls.js";
+export * from "./ui/SegmentedControl.js";
 export * from "./edges/floating-edge-utils.js";
 export * from "./edges/LinkEdge.js";
 export * from "./manifest/canvas-manifest.js";
@@ -8,6 +9,7 @@ export * from "./nodes/card-image-display.js";
 export * from "./nodes/CardBrandLogo.js";
 export * from "./nodes/card-node-layout.js";
 export * from "./nodes/card-visual-config.js";
+export * from "./nodes/CardTypePlaceholder.js";
 export * from "./nodes/CardTypePill.js";
 export * from "./nodes/CardVisualPreview.js";
 export * from "./nodes/CardNode.js";

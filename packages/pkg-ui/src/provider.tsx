@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 
 export function WorldNoteUIProvider({ children }: { children: ReactNode }) {
   return (
-    <div className="dark min-h-full text-wn-mono-100">
+    <div className="min-h-full text-wn-text">
       <HeroUIProvider>{children}</HeroUIProvider>
     </div>
   );

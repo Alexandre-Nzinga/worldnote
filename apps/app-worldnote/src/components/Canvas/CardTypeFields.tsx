@@ -312,6 +312,191 @@ export function CardTypeFields({
           />
         </div>
       );
+    case "planet":
+      if (readOnly) {
+        return <ReadOnlyField label="Planet type" value={fields.planetType} />;
+      }
+      return (
+        <div className="flex flex-col gap-1">
+          <label htmlFor="card-planet-type" className={inspectorFieldLabelClassName}>
+            Planet type
+          </label>
+          <Input
+            id="card-planet-type"
+            placeholder="Terrestrial, gas giant…"
+            value={fields.planetType}
+            isDisabled={disabled}
+            onValueChange={(planetType) => patch({ planetType })}
+            classNames={inspectorInlineInputClassNames}
+          />
+        </div>
+      );
+    case "organization":
+      if (readOnly) {
+        return <ReadOnlyField label="Founding date" value={fields.foundingDate} />;
+      }
+      return (
+        <div className="flex flex-col gap-1">
+          <label htmlFor="card-founding-date" className={inspectorFieldLabelClassName}>
+            Founding date
+          </label>
+          <Input
+            id="card-founding-date"
+            value={fields.foundingDate}
+            isDisabled={disabled}
+            onValueChange={(foundingDate) => patch({ foundingDate })}
+            classNames={inspectorInlineInputClassNames}
+          />
+        </div>
+      );
+    case "polity":
+      if (readOnly) {
+        return (
+          <ReadOnlyField label="Government type" value={fields.governmentType} />
+        );
+      }
+      return (
+        <div className="flex flex-col gap-1">
+          <label htmlFor="card-government-type" className={inspectorFieldLabelClassName}>
+            Government type
+          </label>
+          <Input
+            id="card-government-type"
+            value={fields.governmentType}
+            isDisabled={disabled}
+            onValueChange={(governmentType) => patch({ governmentType })}
+            classNames={inspectorInlineInputClassNames}
+          />
+        </div>
+      );
+    case "event":
+      if (readOnly) {
+        return <ReadOnlyField label="Event date" value={fields.eventDate} />;
+      }
+      return (
+        <div className="flex flex-col gap-1">
+          <label htmlFor="card-event-date" className={inspectorFieldLabelClassName}>
+            Event date
+          </label>
+          <Input
+            id="card-event-date"
+            value={fields.eventDate}
+            isDisabled={disabled}
+            onValueChange={(eventDate) => patch({ eventDate })}
+            classNames={inspectorInlineInputClassNames}
+          />
+        </div>
+      );
+    case "family":
+      if (readOnly) {
+        return <ReadOnlyField label="Motto" value={fields.motto} />;
+      }
+      return (
+        <div className="flex flex-col gap-1">
+          <label htmlFor="card-motto" className={inspectorFieldLabelClassName}>
+            Motto
+          </label>
+          <Input
+            id="card-motto"
+            value={fields.motto}
+            isDisabled={disabled}
+            onValueChange={(motto) => patch({ motto })}
+            classNames={inspectorInlineInputClassNames}
+          />
+        </div>
+      );
+    case "group":
+      if (readOnly) {
+        return <ReadOnlyField label="Group type" value={fields.groupType} />;
+      }
+      return (
+        <div className="flex flex-col gap-1">
+          <label htmlFor="card-group-type" className={inspectorFieldLabelClassName}>
+            Group type
+          </label>
+          <Input
+            id="card-group-type"
+            placeholder="Party, squad, crew…"
+            value={fields.groupType}
+            isDisabled={disabled}
+            onValueChange={(groupType) => patch({ groupType })}
+            classNames={inspectorInlineInputClassNames}
+          />
+        </div>
+      );
+    case "star":
+      if (readOnly) {
+        return <ReadOnlyField label="Spectral class" value={fields.spectralClass} />;
+      }
+      return (
+        <div className="flex flex-col gap-1">
+          <label htmlFor="card-spectral-class" className={inspectorFieldLabelClassName}>
+            Spectral class
+          </label>
+          <Input
+            id="card-spectral-class"
+            placeholder="G2V, M-class…"
+            value={fields.spectralClass}
+            isDisabled={disabled}
+            onValueChange={(spectralClass) => patch({ spectralClass })}
+            classNames={inspectorInlineInputClassNames}
+          />
+        </div>
+      );
+    case "moon":
+      if (readOnly) {
+        return <ReadOnlyField label="Orbital period" value={fields.orbitalPeriod} />;
+      }
+      return (
+        <div className="flex flex-col gap-1">
+          <label htmlFor="card-orbital-period" className={inspectorFieldLabelClassName}>
+            Orbital period
+          </label>
+          <Input
+            id="card-orbital-period"
+            value={fields.orbitalPeriod}
+            isDisabled={disabled}
+            onValueChange={(orbitalPeriod) => patch({ orbitalPeriod })}
+            classNames={inspectorInlineInputClassNames}
+          />
+        </div>
+      );
+    case "asteroid":
+      if (readOnly) {
+        return <ReadOnlyField label="Composition" value={fields.composition} />;
+      }
+      return (
+        <div className="flex flex-col gap-1">
+          <label htmlFor="card-composition" className={inspectorFieldLabelClassName}>
+            Composition
+          </label>
+          <Input
+            id="card-composition"
+            value={fields.composition}
+            isDisabled={disabled}
+            onValueChange={(composition) => patch({ composition })}
+            classNames={inspectorInlineInputClassNames}
+          />
+        </div>
+      );
+    case "satellite":
+      if (readOnly) {
+        return <ReadOnlyField label="Orbit type" value={fields.orbitType} />;
+      }
+      return (
+        <div className="flex flex-col gap-1">
+          <label htmlFor="card-orbit-type" className={inspectorFieldLabelClassName}>
+            Orbit type
+          </label>
+          <Input
+            id="card-orbit-type"
+            value={fields.orbitType}
+            isDisabled={disabled}
+            onValueChange={(orbitType) => patch({ orbitType })}
+            classNames={inspectorInlineInputClassNames}
+          />
+        </div>
+      );
     case "building":
       return readOnly ? (
         <p className="text-sm text-wn-mono-500">No type-specific fields.</p>

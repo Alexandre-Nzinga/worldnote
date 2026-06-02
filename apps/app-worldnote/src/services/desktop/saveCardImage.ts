@@ -2,6 +2,16 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
 import { DESKTOP_ONLY_MESSAGE, isTauriRuntime } from "./tauriRuntime.js";
 
+/** File extensions accepted for card cover and lore images. */
+export const CARD_IMAGE_EXTENSIONS = [
+  "png",
+  "jpg",
+  "jpeg",
+  "webp",
+  "gif",
+  "svg",
+] as const;
+
 export async function pickCardImageFile(): Promise<string | null> {
   if (!isTauriRuntime()) {
     throw new Error(DESKTOP_ONLY_MESSAGE);
@@ -12,7 +22,7 @@ export async function pickCardImageFile(): Promise<string | null> {
     filters: [
       {
         name: "Images",
-        extensions: ["png", "jpg", "jpeg", "webp", "gif"],
+        extensions: [...CARD_IMAGE_EXTENSIONS],
       },
     ],
     title: "Choose a card image",
@@ -31,6 +41,18 @@ export async function saveCardImage(
   sourcePath: string,
 ): Promise<string> {
   return invoke<string>("save_card_image", {
+    vault,
+    cardId,
+    sourcePath,
+  });
+}
+
+export async function addCardLoreImage(
+  vault: string,
+  cardId: string,
+  sourcePath: string,
+): Promise<string> {
+  return invoke<string>("add_card_lore_image", {
     vault,
     cardId,
     sourcePath,

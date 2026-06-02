@@ -62,6 +62,42 @@ export function createCardTemplate(
       } satisfies StructureCard;
     case "species":
       return { ...base, card_type: "species" };
+    case "planet":
+      return { ...base, card_type: "planet" };
+    case "organization":
+      return { ...base, card_type: "organization" };
+    case "polity":
+      return { ...base, card_type: "polity" };
+    case "event":
+      return { ...base, card_type: "event" };
+    case "family":
+      return { ...base, card_type: "family" };
+    case "group":
+      return { ...base, card_type: "group" };
+    case "star":
+      return { ...base, card_type: "star" };
+    case "moon":
+      return { ...base, card_type: "moon" };
+    case "asteroid":
+      return { ...base, card_type: "asteroid" };
+    case "satellite":
+      return { ...base, card_type: "satellite" };
+    case "law":
+      return { ...base, card_type: "law" };
+    case "religion":
+      return { ...base, card_type: "religion" };
+    case "language":
+      return { ...base, card_type: "language" };
+    case "culture":
+      return { ...base, card_type: "culture" };
+    case "spell":
+      return { ...base, card_type: "spell" };
+    case "disease":
+      return { ...base, card_type: "disease" };
+    case "disaster":
+      return { ...base, card_type: "disaster" };
+    case "combat_style":
+      return { ...base, card_type: "combat_style" };
     default: {
       const _exhaustive: never = cardType;
       return _exhaustive;

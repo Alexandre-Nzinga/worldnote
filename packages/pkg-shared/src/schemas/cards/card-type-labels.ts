@@ -1,3 +1,4 @@
+import type { CardClass } from "../../types/card-class.js";
 import type { WorldCard } from "./world-card.js";
 
 /** Human-readable labels for canvas UI, settings, and templates. */
@@ -11,6 +12,24 @@ export const CARD_TYPE_LABELS: Record<WorldCard["card_type"], string> = {
   building: "Building",
   structure: "Structure",
   species: "Species",
+  planet: "Planet",
+  organization: "Organization",
+  polity: "Polity",
+  event: "Event",
+  family: "Family",
+  group: "Group",
+  star: "Star",
+  moon: "Moon",
+  asteroid: "Asteroid",
+  satellite: "Satellite",
+  law: "Law",
+  religion: "Religion",
+  language: "Language",
+  culture: "Culture",
+  spell: "Spell",
+  disease: "Disease",
+  disaster: "Disaster",
+  combat_style: "Combat Style",
 };
 
 /** Default display name when creating a new card of each type. */
@@ -24,4 +43,61 @@ export const NEW_CARD_DEFAULT_NAMES: Record<WorldCard["card_type"], string> = {
   building: "New Building",
   structure: "New Structure",
   species: "New Species",
+  planet: "New Planet",
+  organization: "New Organization",
+  polity: "New Polity",
+  event: "New Event",
+  family: "New Family",
+  group: "New Group",
+  star: "New Star",
+  moon: "New Moon",
+  asteroid: "New Asteroid",
+  satellite: "New Satellite",
+  law: "New Law",
+  religion: "New Religion",
+  language: "New Language",
+  culture: "New Culture",
+  spell: "New Spell",
+  disease: "New Disease",
+  disaster: "New Disaster",
+  combat_style: "New Combat Style",
 };
+
+/** Atom / bond / molecule classification per card type (matches schema folders). */
+export const CARD_CLASS_BY_TYPE: Record<WorldCard["card_type"], CardClass> = {
+  character: "atom",
+  item: "atom",
+  vehicle: "atom",
+  flora: "atom",
+  fauna: "atom",
+  building: "atom",
+  structure: "atom",
+  law: "bond",
+  religion: "bond",
+  language: "bond",
+  culture: "bond",
+  spell: "bond",
+  disease: "bond",
+  disaster: "bond",
+  combat_style: "bond",
+  location: "molecule",
+  species: "molecule",
+  planet: "molecule",
+  organization: "molecule",
+  polity: "molecule",
+  event: "molecule",
+  family: "molecule",
+  group: "molecule",
+  star: "molecule",
+  moon: "molecule",
+  asteroid: "molecule",
+  satellite: "molecule",
+};
+
+export const CARD_CLASS_LABELS: Record<CardClass, string> = {
+  atom: "Atoms",
+  bond: "Bonds",
+  molecule: "Molecules",
+};
+
+export const CARD_CLASS_ORDER: CardClass[] = ["atom", "bond", "molecule"];

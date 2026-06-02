@@ -1,7 +1,6 @@
 import { Input } from "@heroui/react";
 import {
   cardImageObjectStyles,
-  CARD_TYPE_LABELS,
   DEFAULT_CARD_IMAGE_POSITION,
   normalizeCardImageDisplay,
   type CardImagePosition,
@@ -9,7 +8,8 @@ import {
   type Link,
   type WorldCard,
 } from "@worldnote/shared";
-import { AnimatedPanel, Button, Pill } from "@worldnote/ui";
+import { CardTypePill, visualConfigFor } from "@worldnote/canvas";
+import { AnimatedModal, AnimatedPanel, Button, MaterialSymbol } from "@worldnote/ui";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   modalPrimaryButtonClassName,
@@ -35,16 +35,29 @@ import {
   type TypeSpecificEditorState,
 } from "./cardEditorTypes.js";
 import { InfoTab } from "./inspector/InfoTab.js";
+import type { LoreEditorHandle } from "./inspector/loreEditor/LoreEditor.js";
 import { InspectorTabs, type InspectorTabId } from "./inspector/InspectorTabs.js";
-import { LoreTab } from "./inspector/LoreTab.js";
+import {
+  isLoreDocEmpty,
+  type LoreDoc,
+} from "./inspector/loreEditor/loreDocTypes.js";
+import {
+  descriptionSummaryFromPlainText,
+  resolveInitialLoreDoc,
+} from "./inspector/loreEditor/seedLoreDoc.js";
 import { PropertiesTab } from "./inspector/PropertiesTab.js";
 
 type PropertyRow = { key: string; value: string };
 
 export type InspectorMode = "read" | "edit";
 
-const inspectorClassName =
+const inspectorSidebarClassName =
   "pointer-events-auto absolute right-4 top-4 z-30 flex max-h-[calc(100vh-7rem)] w-[min(100%,22rem)] flex-col overflow-hidden rounded-2xl border border-wn-mono-800 bg-wn-mono-900 shadow-2xl";
+
+const inspectorModalPanelClassName =
+  "relative z-10 flex max-h-[min(85vh,52rem)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-wn-mono-800 bg-wn-mono-900 text-wn-mono-100 shadow-2xl";
+
+type InspectorLayout = "sidebar" | "modal";
 
 type InspectorProps = {
   isOpen: boolean;
@@ -57,6 +70,7 @@ type InspectorProps = {
   onClose: () => void;
   onSave: (card: WorldCard) => Promise<void>;
   onDelete: (cardId: string) => Promise<void>;
+  onNavigateToCard?: (cardId: string) => void;
 };
 
 function tagsToString(tags: string[]): string {
@@ -123,6 +137,7 @@ export function Inspector({
   onClose,
   onSave,
   onDelete,
+  onNavigateToCard,
 }: InspectorProps) {
   const lastCardRef = useRef<WorldCard | undefined>(undefined);
   if (card) {
@@ -131,11 +146,18 @@ export function Inspector({
   const activeCard = card ?? lastCardRef.current;
   const readOnly = mode === "read";
 
+  const [layout, setLayout] = useState<InspectorLayout>("sidebar");
   const [activeTab, setActiveTab] = useState<InspectorTabId>("info");
   const [name, setName] = useState(activeCard?.name ?? "");
   const [subtitle, setSubtitle] = useState(activeCard?.subtitle ?? "");
-  const [description, setDescription] = useState(activeCard?.description ?? "");
   const [lore, setLore] = useState(activeCard?.lore ?? "");
+  const [loreDoc, setLoreDoc] = useState<LoreDoc>(() =>
+    resolveInitialLoreDoc(
+      activeCard?.lore_doc,
+      activeCard?.lore,
+      activeCard?.description,
+    ),
+  );
   const [tagsInput, setTagsInput] = useState(
     activeCard ? tagsToString(activeCard.tags) : "",
   );
@@ -156,6 +178,7 @@ export function Inspector({
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const loreEditorRef = useRef<LoreEditorHandle>(null);
 
   useEffect(() => {
     if (!card) {
@@ -164,8 +187,8 @@ export function Inspector({
     setActiveTab("info");
     setName(card.name);
     setSubtitle(card.subtitle ?? "");
-    setDescription(card.description ?? "");
     setLore(card.lore ?? "");
+    setLoreDoc(resolveInitialLoreDoc(card.lore_doc, card.lore, card.description));
     setTagsInput(tagsToString(card.tags));
     setTypeFields(typeFieldsFromCard(card));
     setImagePath(card.image_path ?? "");
@@ -190,15 +213,21 @@ export function Inspector({
     if (!activeCard) {
       throw new Error("No card to save");
     }
+    const loreSnapshot = loreEditorRef.current?.getSnapshot();
+    const savedLoreDoc = loreSnapshot?.doc ?? loreDoc;
+    const savedLoreText = loreSnapshot?.plainText ?? lore;
     const base = {
       id: activeCard.id,
       name: name.trim(),
       parent_id: activeCard.parent_id,
       position: activeCard.position,
       tags: parsedTags,
-      description: description.trim() || undefined,
+      description: descriptionSummaryFromPlainText(savedLoreText),
       subtitle: subtitle.trim() || undefined,
-      lore: lore.trim() || undefined,
+      lore: savedLoreText.trim() || undefined,
+      lore_doc: isLoreDocEmpty(savedLoreDoc)
+        ? undefined
+        : (savedLoreDoc as Record<string, unknown>),
       image_path: imagePath.trim() || undefined,
       image_position: imagePath.trim() ? imagePosition : undefined,
       custom_properties: rowsToProperties(propertyRows),
@@ -206,10 +235,10 @@ export function Inspector({
     return buildWorldCard(activeCard, base, typeFields);
   }, [
     activeCard,
-    description,
     imagePath,
     imagePosition,
     lore,
+    loreDoc,
     name,
     parsedTags,
     propertyRows,
@@ -221,6 +250,11 @@ export function Inspector({
     if (!name.trim()) {
       setError("Name is required.");
       return;
+    }
+    const loreSnapshot = loreEditorRef.current?.getSnapshot();
+    if (loreSnapshot) {
+      setLore(loreSnapshot.plainText);
+      setLoreDoc(loreSnapshot.doc);
     }
     setIsSaving(true);
     setError(null);
@@ -281,16 +315,17 @@ export function Inspector({
   }, [activeCard, onClose, onDelete]);
 
   const isBusy = isSaving || isDeleting;
-  const typeLabel = activeCard
-    ? CARD_TYPE_LABELS[activeCard.card_type]
-    : "";
+  const typeVisual = activeCard
+    ? visualConfigFor(activeCard.card_type)
+    : null;
+  const typeLabel = typeVisual?.label ?? "";
 
   if (!activeCard) {
     return null;
   }
 
-  return (
-    <AnimatedPanel isOpen={isOpen} className={inspectorClassName}>
+  const inspectorBody = (
+    <>
       <div className="relative shrink-0">
         {imagePreview ? (
           readOnly ? (
@@ -340,6 +375,28 @@ export function Inspector({
           </div>
         ) : null}
 
+        <div className="absolute left-3 top-3">
+          <button
+            type="button"
+            className="flex h-8 w-8 items-center justify-center rounded-lg bg-wn-mono-950/80 text-wn-mono-300 transition-colors hover:bg-wn-mono-800 hover:text-wn-mono-50"
+            aria-label={
+              layout === "sidebar" ? "Expand inspector" : "Dock inspector"
+            }
+            title={layout === "sidebar" ? "Expand" : "Dock to sidebar"}
+            disabled={isBusy}
+            onClick={() =>
+              setLayout((current) =>
+                current === "sidebar" ? "modal" : "sidebar",
+              )
+            }
+          >
+            <MaterialSymbol
+              name={layout === "sidebar" ? "open_in_full" : "close_fullscreen"}
+              className="text-lg"
+            />
+          </button>
+        </div>
+
         <div className="absolute right-3 top-3 flex gap-1">
           <button
             type="button"
@@ -360,41 +417,52 @@ export function Inspector({
         </div>
       </div>
 
-      <div className="flex flex-col gap-2 px-4 pb-3 pt-4">
-        {readOnly ? (
-          <>
-            <h2 className="text-xl font-bold text-wn-mono-50">{name}</h2>
-            {subtitle.trim() ? (
-              <p className="text-sm text-wn-mono-400">{subtitle}</p>
-            ) : null}
-          </>
-        ) : (
-          <>
-            <Input
-              id="inspector-name"
-              aria-label="Name"
-              placeholder="Name"
-              value={name}
-              variant="flat"
-              onValueChange={setName}
-              classNames={inspectorNameFieldClassNames}
-            />
-            <Input
-              id="inspector-subtitle"
-              aria-label="Subtitle"
-              placeholder="Subtitle or alias"
-              value={subtitle}
-              variant="flat"
-              onValueChange={setSubtitle}
-              classNames={inspectorSubtitleFieldClassNames}
-            />
-          </>
-        )}
-        <div className="flex items-center gap-2">
-          <Pill tone="amber" size="sm">
-            {typeLabel}
-          </Pill>
+      <div className="flex flex-col gap-2.5 px-4 pb-3 pt-4">
+        <div className="flex flex-col gap-0.5">
+          {readOnly ? (
+            <>
+              <h2 className="m-0 text-2xl font-bold leading-tight tracking-tight text-wn-mono-50">
+                {name}
+              </h2>
+              {subtitle.trim() ? (
+                <p className="m-0 text-base font-medium leading-snug text-wn-mono-300">
+                  {subtitle}
+                </p>
+              ) : null}
+            </>
+          ) : (
+            <>
+              <Input
+                id="inspector-name"
+                aria-label="Name"
+                placeholder="Name"
+                value={name}
+                variant="flat"
+                onValueChange={setName}
+                classNames={inspectorNameFieldClassNames}
+              />
+              <Input
+                id="inspector-subtitle"
+                aria-label="Subtitle"
+                placeholder="Subtitle or alias"
+                value={subtitle}
+                variant="flat"
+                onValueChange={setSubtitle}
+                classNames={inspectorSubtitleFieldClassNames}
+              />
+            </>
+          )}
         </div>
+        {typeVisual ? (
+          <div className="flex items-center gap-2">
+            <CardTypePill
+              className={typeVisual.badgeClassName}
+              textClassName={typeVisual.badgeTextColor}
+            >
+              {typeLabel}
+            </CardTypePill>
+          </div>
+        ) : null}
       </div>
 
       <InspectorTabs activeTab={activeTab} onTabChange={setActiveTab} />
@@ -403,11 +471,21 @@ export function Inspector({
         {activeTab === "info" ? (
           <InfoTab
             readOnly={readOnly}
-            description={description}
             tags={parsedTags}
             tagsInput={tagsInput}
-            onDescriptionChange={setDescription}
             onTagsInputChange={setTagsInput}
+            lore={lore}
+            loreDoc={loreDoc as Record<string, unknown>}
+            legacyDescription={activeCard.description}
+            vaultPath={vaultPath}
+            cardId={activeCard.id}
+            cardsById={cardsById}
+            loreEditorRef={loreEditorRef}
+            onDescriptionChange={(plainText, doc) => {
+              setLore(plainText);
+              setLoreDoc(doc);
+            }}
+            onNavigateToCard={onNavigateToCard}
           />
         ) : null}
         {activeTab === "properties" ? (
@@ -425,10 +503,6 @@ export function Inspector({
             isBusy={isBusy}
           />
         ) : null}
-        {activeTab === "lore" ? (
-          <LoreTab readOnly={readOnly} lore={lore} onLoreChange={setLore} />
-        ) : null}
-
         {error ? (
           <p className="mt-4 text-sm text-wn-red-400" role="alert">
             {error}
@@ -461,6 +535,25 @@ export function Inspector({
           </Button>
         </footer>
       ) : null}
+    </>
+  );
+
+  if (layout === "modal") {
+    return (
+      <AnimatedModal
+        isOpen={isOpen}
+        onClose={onClose}
+        closeDisabled={isBusy}
+        panelClassName={inspectorModalPanelClassName}
+      >
+        {inspectorBody}
+      </AnimatedModal>
+    );
+  }
+
+  return (
+    <AnimatedPanel isOpen={isOpen} className={inspectorSidebarClassName}>
+      {inspectorBody}
     </AnimatedPanel>
   );
 }

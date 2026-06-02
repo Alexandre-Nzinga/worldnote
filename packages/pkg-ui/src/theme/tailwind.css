@@ -68,18 +68,29 @@
   /* Stacking — modals portaled to document.body */
   --z-index-modal: 100;
 
-  /* WORLDNOTE-MONO */
-  --color-wn-mono-50: oklch(98.5% 0 0);
-  --color-wn-mono-100: oklch(96.7% 0 0);
-  --color-wn-mono-200: oklch(92% 0 0);
-  --color-wn-mono-300: oklch(87.1% 0 0);
-  --color-wn-mono-400: oklch(70.5% 0 0);
-  --color-wn-mono-500: oklch(55.2% 0 0);
-  --color-wn-mono-600: oklch(44.2% 0 0);
-  --color-wn-mono-700: oklch(37% 0 0);
-  --color-wn-mono-800: oklch(27.4% 0 0);
-  --color-wn-mono-900: oklch(21% 0 0);
-  --color-wn-mono-950: oklch(14% 0 0);
+  /* WORLDNOTE-MONO (theme-aware; values resolved per theme below) */
+  --color-wn-mono-50: var(--wn-mono-50);
+  --color-wn-mono-100: var(--wn-mono-100);
+  --color-wn-mono-200: var(--wn-mono-200);
+  --color-wn-mono-300: var(--wn-mono-300);
+  --color-wn-mono-400: var(--wn-mono-400);
+  --color-wn-mono-500: var(--wn-mono-500);
+  --color-wn-mono-600: var(--wn-mono-600);
+  --color-wn-mono-700: var(--wn-mono-700);
+  --color-wn-mono-800: var(--wn-mono-800);
+  --color-wn-mono-900: var(--wn-mono-900);
+  --color-wn-mono-950: var(--wn-mono-950);
+
+  /* WORLDNOTE-SEMANTIC (theme-aware roles; values resolved per theme below) */
+  --color-wn-bg: var(--wn-bg);
+  --color-wn-surface: var(--wn-surface);
+  --color-wn-surface-raised: var(--wn-surface-raised);
+  --color-wn-surface-sunken: var(--wn-surface-sunken);
+  --color-wn-border: var(--wn-border);
+  --color-wn-border-strong: var(--wn-border-strong);
+  --color-wn-text: var(--wn-text);
+  --color-wn-text-muted: var(--wn-text-muted);
+  --color-wn-text-subtle: var(--wn-text-subtle);
 
   /* WORLDNOTE-ROSE */
   --color-wn-rose-50: oklch(96.9% 0.015 12.422);
@@ -133,6 +144,19 @@
   --color-wn-lime-900: oklch(40.5% 0.101 131.063);
   --color-wn-lime-950: oklch(27.4% 0.072 132.109);
 
+  /* WORLDNOTE-GREEN */
+  --color-wn-green-50: oklch(98.2% 0.018 155.826);
+  --color-wn-green-100: oklch(96.2% 0.044 156.743);
+  --color-wn-green-200: oklch(92.5% 0.084 155.995);
+  --color-wn-green-300: oklch(87.1% 0.15 154.449);
+  --color-wn-green-400: oklch(79.2% 0.209 151.711);
+  --color-wn-green-500: oklch(72.3% 0.219 149.579);
+  --color-wn-green-600: oklch(62.7% 0.194 149.214);
+  --color-wn-green-700: oklch(52.7% 0.154 150.069);
+  --color-wn-green-800: oklch(44.8% 0.119 151.328);
+  --color-wn-green-900: oklch(39.3% 0.095 152.535);
+  --color-wn-green-950: oklch(26.6% 0.065 152.934);
+
   /* WORLDNOTE-AMBER */
   --color-wn-amber-50: oklch(98.7% 0.022 95.277);
   --color-wn-amber-100: oklch(96.2% 0.059 95.617);
@@ -158,6 +182,64 @@
   --color-wn-red-800: oklch(44.4% 0.177 26.899);
   --color-wn-red-900: oklch(39.6% 0.141 25.723);
   --color-wn-red-950: oklch(25.8% 0.092 26.042);
+}
+
+/*
+ * Theme resolution. `:root` defaults to dark (preserves current look and avoids
+ * a flash before the theme class is applied). `.light` overrides the primitive
+ * mono ramp with hand-tuned light values plus the semantic role tokens.
+ */
+:root,
+.dark {
+  /* WORLDNOTE-MONO — dark */
+  --wn-mono-50: oklch(98.5% 0 0);
+  --wn-mono-100: oklch(96.7% 0 0);
+  --wn-mono-200: oklch(92% 0 0);
+  --wn-mono-300: oklch(87.1% 0 0);
+  --wn-mono-400: oklch(70.5% 0 0);
+  --wn-mono-500: oklch(55.2% 0 0);
+  --wn-mono-600: oklch(44.2% 0 0);
+  --wn-mono-700: oklch(37% 0 0);
+  --wn-mono-800: oklch(27.4% 0 0);
+  --wn-mono-900: oklch(21% 0 0);
+  --wn-mono-950: oklch(14% 0 0);
+
+  /* SEMANTIC — dark */
+  --wn-bg: oklch(14% 0 0);
+  --wn-surface: oklch(21% 0 0);
+  --wn-surface-raised: oklch(27.4% 0 0);
+  --wn-surface-sunken: oklch(14% 0 0);
+  --wn-border: oklch(27.4% 0 0);
+  --wn-border-strong: oklch(37% 0 0);
+  --wn-text: oklch(98.5% 0 0);
+  --wn-text-muted: oklch(70.5% 0 0);
+  --wn-text-subtle: oklch(55.2% 0 0);
+}
+
+.light {
+  /* WORLDNOTE-MONO — light (hand-tuned inversion for legible contrast) */
+  --wn-mono-50: oklch(14% 0 0);
+  --wn-mono-100: oklch(21% 0 0);
+  --wn-mono-200: oklch(27.4% 0 0);
+  --wn-mono-300: oklch(37% 0 0);
+  --wn-mono-400: oklch(50% 0 0);
+  --wn-mono-500: oklch(55.2% 0 0);
+  --wn-mono-600: oklch(65% 0 0);
+  --wn-mono-700: oklch(87.1% 0 0);
+  --wn-mono-800: oklch(92% 0 0);
+  --wn-mono-900: oklch(96.7% 0 0);
+  --wn-mono-950: oklch(98.5% 0 0);
+
+  /* SEMANTIC — light */
+  --wn-bg: oklch(96.7% 0 0);
+  --wn-surface: oklch(99% 0 0);
+  --wn-surface-raised: oklch(100% 0 0);
+  --wn-surface-sunken: oklch(94% 0 0);
+  --wn-border: oklch(90% 0 0);
+  --wn-border-strong: oklch(84% 0 0);
+  --wn-text: oklch(20% 0 0);
+  --wn-text-muted: oklch(45% 0 0);
+  --wn-text-subtle: oklch(55.2% 0 0);
 }
 
 @layer components {

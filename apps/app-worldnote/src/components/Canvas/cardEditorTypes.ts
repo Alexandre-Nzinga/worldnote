@@ -1,12 +1,22 @@
 import type {
+  AsteroidCard,
   BuildingCard,
   CardImagePosition,
   CharacterCard,
+  EventCard,
+  FamilyCard,
   FaunaCard,
   FloraCard,
+  GroupCard,
   ItemCard,
   LocationCard,
+  MoonCard,
+  OrganizationCard,
+  PlanetCard,
+  PolityCard,
+  SatelliteCard,
   SpeciesCard,
+  StarCard,
   StructureCard,
   VehicleCard,
   WorldCard,
@@ -21,6 +31,7 @@ type CardBaseFields = {
   description?: string;
   subtitle?: string;
   lore?: string;
+  lore_doc?: Record<string, unknown>;
   image_path?: string;
   image_position?: CardImagePosition;
   custom_properties: Record<string, unknown>;
@@ -37,6 +48,16 @@ export type TypeSpecificEditorState = {
   faunaDiet: FaunaCard["diet"] | "";
   structureCondition: StructureCard["condition"];
   averageLifespan: string;
+  planetType: string;
+  foundingDate: string;
+  governmentType: string;
+  eventDate: string;
+  motto: string;
+  groupType: string;
+  spectralClass: string;
+  orbitalPeriod: string;
+  composition: string;
+  orbitType: string;
 };
 
 export function defaultTypeFields(
@@ -53,6 +74,16 @@ export function defaultTypeFields(
     faunaDiet: "",
     structureCondition: "intact",
     averageLifespan: "",
+    planetType: "",
+    foundingDate: "",
+    governmentType: "",
+    eventDate: "",
+    motto: "",
+    groupType: "",
+    spectralClass: "",
+    orbitalPeriod: "",
+    composition: "",
+    orbitType: "",
   };
 }
 
@@ -83,6 +114,26 @@ export function typeFieldsFromCard(card: WorldCard): TypeSpecificEditorState {
       return { ...defaults, structureCondition: card.condition };
     case "species":
       return { ...defaults, averageLifespan: card.average_lifespan ?? "" };
+    case "planet":
+      return { ...defaults, planetType: card.planet_type ?? "" };
+    case "organization":
+      return { ...defaults, foundingDate: card.founding_date ?? "" };
+    case "polity":
+      return { ...defaults, governmentType: card.government_type ?? "" };
+    case "event":
+      return { ...defaults, eventDate: card.event_date ?? "" };
+    case "family":
+      return { ...defaults, motto: card.motto ?? "" };
+    case "group":
+      return { ...defaults, groupType: card.group_type ?? "" };
+    case "star":
+      return { ...defaults, spectralClass: card.spectral_class ?? "" };
+    case "moon":
+      return { ...defaults, orbitalPeriod: card.orbital_period ?? "" };
+    case "asteroid":
+      return { ...defaults, composition: card.composition ?? "" };
+    case "satellite":
+      return { ...defaults, orbitType: card.orbit_type ?? "" };
     default:
       return defaults;
   }
@@ -151,6 +202,82 @@ export function buildWorldCard(
         card_type: "species",
         average_lifespan: typeFields.averageLifespan.trim() || undefined,
       } satisfies SpeciesCard;
+    case "planet":
+      return {
+        ...base,
+        card_type: "planet",
+        planet_type: typeFields.planetType.trim() || undefined,
+      } satisfies PlanetCard;
+    case "organization":
+      return {
+        ...base,
+        card_type: "organization",
+        founding_date: typeFields.foundingDate.trim() || undefined,
+      } satisfies OrganizationCard;
+    case "polity":
+      return {
+        ...base,
+        card_type: "polity",
+        government_type: typeFields.governmentType.trim() || undefined,
+      } satisfies PolityCard;
+    case "event":
+      return {
+        ...base,
+        card_type: "event",
+        event_date: typeFields.eventDate.trim() || undefined,
+      } satisfies EventCard;
+    case "family":
+      return {
+        ...base,
+        card_type: "family",
+        motto: typeFields.motto.trim() || undefined,
+      } satisfies FamilyCard;
+    case "group":
+      return {
+        ...base,
+        card_type: "group",
+        group_type: typeFields.groupType.trim() || undefined,
+      } satisfies GroupCard;
+    case "star":
+      return {
+        ...base,
+        card_type: "star",
+        spectral_class: typeFields.spectralClass.trim() || undefined,
+      } satisfies StarCard;
+    case "moon":
+      return {
+        ...base,
+        card_type: "moon",
+        orbital_period: typeFields.orbitalPeriod.trim() || undefined,
+      } satisfies MoonCard;
+    case "asteroid":
+      return {
+        ...base,
+        card_type: "asteroid",
+        composition: typeFields.composition.trim() || undefined,
+      } satisfies AsteroidCard;
+    case "satellite":
+      return {
+        ...base,
+        card_type: "satellite",
+        orbit_type: typeFields.orbitType.trim() || undefined,
+      } satisfies SatelliteCard;
+    case "law":
+      return { ...base, card_type: "law" };
+    case "religion":
+      return { ...base, card_type: "religion" };
+    case "language":
+      return { ...base, card_type: "language" };
+    case "culture":
+      return { ...base, card_type: "culture" };
+    case "spell":
+      return { ...base, card_type: "spell" };
+    case "disease":
+      return { ...base, card_type: "disease" };
+    case "disaster":
+      return { ...base, card_type: "disaster" };
+    case "combat_style":
+      return { ...base, card_type: "combat_style" };
     default: {
       const _exhaustive: never = activeCard;
       return _exhaustive;

@@ -25,10 +25,13 @@ pub fn run() {
             cmd::vault::delete_world,
             cmd::library::list_all_cards,
             cmd::library::copy_card_to_world,
+            cmd::card::list_card_index,
             cmd::card::list_cards,
             cmd::card::upsert_card,
+            cmd::card::duplicate_card,
             cmd::card::delete_card,
             cmd::card::save_card_image,
+            cmd::card::add_card_lore_image,
             cmd::link::upsert_link,
             cmd::link::list_links,
             cmd::link::delete_link,
@@ -36,6 +39,9 @@ pub fn run() {
             cmd::manifest::update_canvas_manifest,
             cmd::manifest::update_canvas_manifest_node,
             cmd::manifest::remove_canvas_manifest_node,
+            cmd::wizard::ollama_health,
+            cmd::wizard::ollama_list_models,
+            cmd::wizard::ollama_chat,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

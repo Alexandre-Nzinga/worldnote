@@ -5,6 +5,7 @@ import {
   type CardFlowNode,
 } from "@worldnote/canvas";
 import {
+  applyNodeChanges,
   ReactFlowProvider,
   useEdgesState,
   useNodesState,
@@ -27,11 +28,14 @@ import type { DragEvent } from "react";
 import { useCardCommands } from "../../hooks/useCardCommands.js";
 import { useSettings } from "../../hooks/useSettings.js";
 import { useVault } from "../../hooks/useVault.js";
+import { WIZARD_CARD_MIME } from "../../services/canvas/cardDragOut.js";
 import { worldCardToNodeData } from "../../services/canvas/cardNodeData.js";
+import { updateCanvasManifestNode } from "../../services/canvas/canvasManifest.js";
 import { createCardPositionUpdater } from "../../services/canvas/updateCardPosition.js";
 import { createWorldCard } from "../../services/crudWorldCard/createWorldCard.js";
 import type { NewCardType } from "../../services/crudWorldCard/cardTemplates.js";
 import { deleteWorldCard } from "../../services/crudWorldCard/deleteWorldCard.js";
+import { duplicateWorldCard } from "../../services/crudWorldCard/duplicateWorldCard.js";
 import { updateWorldCard } from "../../services/crudWorldCard/updateWorldCard.js";
 import { createLink } from "../../services/links/createLink.js";
 import { deleteLink } from "../../services/links/deleteLink.js";
@@ -41,7 +45,10 @@ import { LinkEditorPanel } from "./LinkEditorPanel.js";
 import { Inspector, type InspectorMode } from "./Inspector.js";
 import { CanvasFlow } from "./CanvasFlow.js";
 import { CanvasHeader } from "./CanvasHeader.js";
+import { CanvasCommandPalette } from "./CanvasCommandPalette.js";
 import { CanvasToolbar } from "./CanvasToolbar.js";
+import { WorldWizardPanel } from "./wizard/WorldWizardPanel.js";
+import { useCanvasCommandPaletteShortcut } from "./useCanvasCommandPaletteShortcut.js";
 import { useCanvasDeleteShortcut } from "./useCanvasDeleteShortcut.js";
 import {
   isValidEasyConnection,
@@ -53,6 +60,15 @@ import { listWorlds } from "../../services/worlds/listWorlds.js";
 const nodeTypes = {
   worldnoteCard: CardNode,
 };
+
+function selectedCardIdsFromNodes(
+  nodeList: CardFlowNode[],
+  cards: Record<string, WorldCard>,
+): string[] {
+  return nodeList
+    .filter((node) => node.selected && cards[node.id] != null)
+    .map((node) => node.id);
+}
 
 const edgeTypes: EdgeTypes = {
   link: LinkEdge,
@@ -83,17 +99,21 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
   const visibleSocketsSettings = useSettings(
     (state) => state.settings?.visibleSockets,
   );
-  const [resolvedWorldName, setResolvedWorldName] = useState<string | null>(null);
+  const [resolvedWorldName, setResolvedWorldName] = useState<string | null>(
+    null,
+  );
   const { listCards, loadCanvasManifest } = useCardCommands();
   const [nodes, setNodes, onNodesChange] = useNodesState<CardFlowNode>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const [cardsById, setCardsById] = useState<Record<string, WorldCard>>({});
   const [linksById, setLinksById] = useState<Record<string, Link>>({});
-  const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
+  const [selectedCardIds, setSelectedCardIds] = useState<string[]>([]);
   const [selectedLinkId, setSelectedLinkId] = useState<string | null>(null);
   const [inspectorMode, setInspectorMode] = useState<InspectorMode>("read");
   const [isVaultOpen, setIsVaultOpen] = useState(false);
   const [isBulkTogglingView, setIsBulkTogglingView] = useState(false);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const [isWizardOpen, setIsWizardOpen] = useState(false);
 
   const nodesRef = useRef(nodes);
   nodesRef.current = nodes;
@@ -107,30 +127,91 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
   const visibleSocketsSettingsRef = useRef(visibleSocketsSettings);
   visibleSocketsSettingsRef.current = visibleSocketsSettings;
 
+  const focusCardRef = useRef<((cardId: string) => void) | undefined>(
+    undefined,
+  );
+
+  const handleNavigateToCard = useCallback(
+    (cardId: string, options?: { focusOnCanvas?: boolean }) => {
+      setSelectedCardIds([cardId]);
+      setSelectedLinkId(null);
+      setInspectorMode("read");
+      setNodes((nds) =>
+        nds.map((n) => ({
+          ...n,
+          selected: n.id === cardId,
+        })),
+      );
+      if (options?.focusOnCanvas !== false) {
+        focusCardRef.current?.(cardId);
+      }
+    },
+    [setNodes],
+  );
+
+  const syncSelectionFromNodes = useCallback((nodeList: CardFlowNode[]) => {
+    const cardIds = selectedCardIdsFromNodes(
+      nodeList,
+      cardsByIdRef.current,
+    );
+    setSelectedCardIds((prev) => {
+      if (
+        prev.length === cardIds.length &&
+        prev.every((id, index) => id === cardIds[index])
+      ) {
+        return prev;
+      }
+      return cardIds;
+    });
+    if (cardIds.length > 0) {
+      setSelectedLinkId(null);
+      if (cardIds.length === 1) {
+        setInspectorMode("read");
+      }
+    }
+  }, []);
+
   const handleNodesChange: OnNodesChange<Node> = useCallback(
     (changes) => {
       onNodesChange(changes as NodeChange<CardFlowNode>[]);
+      if (changes.some((change) => change.type === "select")) {
+        const nextNodes = applyNodeChanges(
+          changes as NodeChange<CardFlowNode>[],
+          nodesRef.current,
+        );
+        syncSelectionFromNodes(nextNodes);
+      }
     },
-    [onNodesChange],
+    [onNodesChange, syncSelectionFromNodes],
   );
 
   const handleSelectionChange = useCallback(
-    ({ nodes: selectedNodes, edges: selectedEdges }: OnSelectionChangeParams) => {
-      const selectedEdge = selectedEdges[0];
-      if (selectedEdge) {
-        setSelectedLinkId(selectedEdge.id);
-        setSelectedCardId(null);
+    ({
+      nodes: selectedNodes,
+      edges: selectedEdges,
+    }: OnSelectionChangeParams) => {
+      const cardIds = selectedNodes
+        .filter((node) => cardsByIdRef.current[node.id] != null)
+        .map((node) => node.id);
+
+      if (cardIds.length > 0) {
+        setSelectedCardIds(cardIds);
+        setSelectedLinkId(null);
+        if (cardIds.length === 1) {
+          setInspectorMode("read");
+        }
         return;
       }
 
-      const selected = selectedNodes.find(
-        (node) => node.type === "worldnoteCard",
-      );
-      setSelectedCardId(selected?.id ?? null);
-      setSelectedLinkId(null);
-      if (selected) {
-        setInspectorMode("read");
+      const selectedEdge = selectedEdges[0];
+      if (selectedEdge) {
+        setSelectedLinkId(selectedEdge.id);
+        setSelectedCardIds([]);
+        return;
       }
+
+      setSelectedCardIds([]);
+      setSelectedLinkId(null);
     },
     [],
   );
@@ -191,7 +272,9 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
     });
 
     try {
-      await Promise.all(updated.map((card) => updateWorldCard(vaultPath, card)));
+      await Promise.all(
+        updated.map((card) => updateWorldCard(vaultPath, card)),
+      );
     } catch (error) {
       console.error("Failed to toggle card views:", error);
     } finally {
@@ -245,7 +328,7 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
       setEdges([]);
       setCardsById({});
       setLinksById({});
-      setSelectedCardId(null);
+      setSelectedCardIds([]);
       setSelectedLinkId(null);
       return;
     }
@@ -298,10 +381,7 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
     visibleSocketsSettings,
   ]);
 
-  const linksList = useMemo(
-    () => Object.values(linksById),
-    [linksById],
-  );
+  const linksList = useMemo(() => Object.values(linksById), [linksById]);
 
   const isValidConnection = useCallback(
     (connection: Connection | Edge) => {
@@ -359,7 +439,7 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
             prev.map((edge) => (edge.id === tempId ? linkToEdge(link) : edge)),
           );
           setSelectedLinkId(link.id);
-          setSelectedCardId(null);
+          setSelectedCardIds([]);
         })
         .catch((error) => {
           console.error("Failed to create link:", error);
@@ -422,7 +502,7 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
                 : node,
             ),
           );
-          setSelectedCardId(card.id);
+          setSelectedCardIds([card.id]);
           setSelectedLinkId(null);
           setInspectorMode("edit");
         })
@@ -431,7 +511,14 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
           setNodes((prev) => prev.filter((node) => node.id !== tempId));
         });
     },
-    [cardsById, linksById, nodes.length, setNodes, vaultPath, visibleSocketsSettings],
+    [
+      cardsById,
+      linksById,
+      nodes.length,
+      setNodes,
+      vaultPath,
+      visibleSocketsSettings,
+    ],
   );
 
   const handleDeleteCard = useCallback(
@@ -448,10 +535,7 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
       setLinksById((prev) => {
         const next = { ...prev };
         for (const [linkId, link] of Object.entries(prev)) {
-          if (
-            link.source_card === cardId ||
-            link.target_card === cardId
-          ) {
+          if (link.source_card === cardId || link.target_card === cardId) {
             delete next[linkId];
           }
         }
@@ -459,11 +543,9 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
       });
       setNodes((prev) => prev.filter((node) => node.id !== cardId));
       setEdges((prev) =>
-        prev.filter(
-          (edge) => edge.source !== cardId && edge.target !== cardId,
-        ),
+        prev.filter((edge) => edge.source !== cardId && edge.target !== cardId),
       );
-      setSelectedCardId((current) => (current === cardId ? null : current));
+      setSelectedCardIds((current) => current.filter((id) => id !== cardId));
       setSelectedLinkId((current) => {
         const link = current ? linksById[current] : null;
         if (
@@ -476,6 +558,49 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
       });
     },
     [linksById, setEdges, setNodes, vaultPath],
+  );
+
+  const handleSpawnCard = useCallback(
+    async (card: WorldCard) => {
+      if (!vaultPath) {
+        return;
+      }
+      const position = {
+        x: 160 + nodesRef.current.length * 24,
+        y: 120 + nodesRef.current.length * 20,
+      };
+      const placed = { ...card, position } as WorldCard;
+      try {
+        const saved = await updateWorldCard(vaultPath, placed);
+        await updateCanvasManifestNode(vaultPath, {
+          cardId: saved.id,
+          x: position.x,
+          y: position.y,
+        });
+        setCardsById((prev) => ({ ...prev, [saved.id]: saved }));
+        setNodes((prev) => [
+          ...prev,
+          {
+            id: saved.id,
+            type: "worldnoteCard",
+            position,
+            data: {
+              ...worldCardToNodeData(saved, vaultPath, {
+                visibleSocketsSettings,
+                links: Object.values(linksByIdRef.current),
+                cardsById: { ...cardsByIdRef.current, [saved.id]: saved },
+              }),
+              enterAnimation: true,
+            },
+          },
+        ]);
+        setSelectedCardIds([saved.id]);
+        setSelectedLinkId(null);
+      } catch (error) {
+        console.error("Failed to spawn generated card:", error);
+      }
+    },
+    [setNodes, vaultPath, visibleSocketsSettings],
   );
 
   const handleDeleteLink = useCallback(
@@ -495,17 +620,85 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
     [setEdges, vaultPath],
   );
 
-  const onDragOver = useCallback((event: DragEvent) => {
-    const types = event.dataTransfer.types;
-    if (
-      !types.includes("application/worldnote-card-type") &&
-      !types.includes("application/worldnote-card-ref")
-    ) {
+  const clearCardSelection = useCallback(() => {
+    setSelectedCardIds([]);
+    setNodes((nds) => nds.map((node) => ({ ...node, selected: false })));
+  }, [setNodes]);
+
+  const handleDeleteSelectedCards = useCallback(async () => {
+    const ids = [...selectedCardIds];
+    for (const cardId of ids) {
+      await handleDeleteCard(cardId);
+    }
+    clearCardSelection();
+  }, [clearCardSelection, handleDeleteCard, selectedCardIds]);
+
+  const handleDuplicateSelectedCards = useCallback(async () => {
+    if (!vaultPath || selectedCardIds.length === 0) {
       return;
     }
-    event.preventDefault();
-    event.dataTransfer.dropEffect = "copy";
-  }, []);
+
+    const offset = { x: 48, y: 48 };
+    const duplicatedCards: WorldCard[] = [];
+    for (const cardId of selectedCardIds) {
+      duplicatedCards.push(
+        await duplicateWorldCard(vaultPath, cardId, offset),
+      );
+    }
+
+    const links = Object.values(linksById);
+    const nextCardsById = { ...cardsByIdRef.current };
+    for (const card of duplicatedCards) {
+      nextCardsById[card.id] = card;
+    }
+    setCardsById(nextCardsById);
+
+    const newIds = duplicatedCards.map((card) => card.id);
+    setNodes((prev) => [
+      ...prev.map((node) => ({ ...node, selected: false })),
+      ...duplicatedCards.map((card) => ({
+        id: card.id,
+        type: "worldnoteCard" as const,
+        position: card.position,
+        selected: true,
+        data: worldCardToNodeData(card, vaultPath, {
+          visibleSocketsSettings,
+          links,
+          cardsById: nextCardsById,
+          onUpdate: (partial) => {
+            const existing = nextCardsById[card.id];
+            if (!existing) {
+              return;
+            }
+            void handleSaveCardRef.current({
+              ...existing,
+              ...partial,
+            } as WorldCard);
+          },
+        }),
+      })),
+    ]);
+    setSelectedCardIds(newIds);
+    setSelectedLinkId(null);
+    setInspectorMode("read");
+  }, [linksById, selectedCardIds, setNodes, vaultPath, visibleSocketsSettings]);
+
+  const onDragOver = useCallback(
+    (event: DragEvent) => {
+      const types = Array.from(event.dataTransfer.types);
+      if (
+        !types.includes("application/worldnote-card-type") &&
+        !types.includes("application/worldnote-card-ref") &&
+        !types.includes(WIZARD_CARD_MIME) &&
+        !(isWizardOpen && types.includes("text/plain"))
+      ) {
+        return;
+      }
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "copy";
+    },
+    [isWizardOpen],
+  );
 
   const onDrop = useCallback(
     (event: DragEvent) => {
@@ -577,13 +770,16 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
                         data: worldCardToNodeData(card, vaultPath, {
                           visibleSocketsSettings,
                           links,
-                          cardsById: { ...cardsByIdRef.current, [card.id]: card },
+                          cardsById: {
+                            ...cardsByIdRef.current,
+                            [card.id]: card,
+                          },
                         }),
                       }
                     : node,
                 ),
               );
-              setSelectedCardId(card.id);
+              setSelectedCardIds([card.id]);
               setSelectedLinkId(null);
               setInspectorMode("edit");
             })
@@ -610,6 +806,24 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
         "building",
         "structure",
         "species",
+        "planet",
+        "organization",
+        "polity",
+        "event",
+        "family",
+        "group",
+        "star",
+        "moon",
+        "asteroid",
+        "satellite",
+        "law",
+        "religion",
+        "language",
+        "culture",
+        "spell",
+        "disease",
+        "disaster",
+        "combat_style",
       ];
       if (!validTypes.includes(droppedType)) {
         return;
@@ -627,7 +841,11 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
   );
 
   useEffect(() => {
-    if (storedWorldName?.trim() || !vaultPath?.trim() || !worldnoteRoot?.trim()) {
+    if (
+      storedWorldName?.trim() ||
+      !vaultPath?.trim() ||
+      !worldnoteRoot?.trim()
+    ) {
       setResolvedWorldName(null);
       return;
     }
@@ -659,26 +877,36 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
     return "World";
   }, [resolvedWorldName, storedWorldName, vaultPath]);
 
-  const selectedCard = selectedCardId ? cardsById[selectedCardId] : null;
+  const selectedCard =
+    selectedCardIds.length === 1
+      ? (cardsById[selectedCardIds[0] ?? ""] ?? null)
+      : null;
   const selectedLink = selectedLinkId ? linksById[selectedLinkId] : null;
+  const hasBulkCardSelection = selectedCardIds.length > 1;
 
   useCanvasDeleteShortcut({
-    selectedCardId,
+    selectedCardIds,
     selectedLinkId,
     onDeleteCard: handleDeleteCard,
     onDeleteLink: handleDeleteLink,
   });
 
+  useCanvasCommandPaletteShortcut({
+    isOpen: isCommandPaletteOpen,
+    onOpen: () => setIsCommandPaletteOpen(true),
+    onClose: () => setIsCommandPaletteOpen(false),
+  });
+
   return (
     <div className="relative h-screen min-h-0 overflow-hidden bg-wn-mono-950 text-wn-mono-100">
-      <CanvasHeader worldName={worldName} onBackToHome={onBack} />
+      <CanvasHeader
+        worldName={worldName}
+        onBackToHome={onBack}
+        onOpenVault={onOpenVault}
+      />
 
       <ReactFlowProvider>
-        <div
-          className="h-full w-full"
-          onDrop={onDrop}
-          onDragOver={onDragOver}
-        >
+        <div className="h-full w-full" onDrop={onDrop} onDragOver={onDragOver}>
           <CanvasFlow
             nodeTypes={nodeTypes}
             edgeTypes={edgeTypes}
@@ -689,6 +917,7 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
             onSelectionChange={handleSelectionChange}
             onConnect={onConnect}
             isValidConnection={isValidConnection}
+            nodesDraggable={!isWizardOpen}
             vaultPath={vaultPath}
             cardsByIdRef={cardsByIdRef}
             linksByIdRef={linksByIdRef}
@@ -697,7 +926,7 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
             setEdges={setEdges}
             setCardsById={setCardsById}
             setLinksById={setLinksById}
-            setSelectedCardId={setSelectedCardId}
+            setSelectedCardIds={setSelectedCardIds}
             setSelectedLinkId={setSelectedLinkId}
             setInspectorMode={setInspectorMode}
             onNodeDragStop={(_, node) => {
@@ -711,33 +940,52 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
               });
             }}
             onNodeDoubleClick={(_, node) => {
-              setSelectedCardId(node.id);
+              setNodes((nds) =>
+                nds.map((n) => ({
+                  ...n,
+                  selected: n.id === node.id,
+                })),
+              );
+              setSelectedCardIds([node.id]);
               setSelectedLinkId(null);
               setInspectorMode("edit");
             }}
             onEdgeDoubleClick={(_, edge) => {
               setSelectedLinkId(edge.id);
-              setSelectedCardId(null);
+              setSelectedCardIds([]);
             }}
+            selectedCardIds={selectedCardIds}
+            onDuplicateSelectedCards={handleDuplicateSelectedCards}
+            onDeleteSelectedCards={handleDeleteSelectedCards}
+            focusCardRef={focusCardRef}
           />
         </div>
       </ReactFlowProvider>
 
       <Inspector
-        isOpen={Boolean(selectedCard && vaultPath && !selectedLink)}
+        isOpen={Boolean(
+          selectedCard &&
+            vaultPath &&
+            !selectedLink &&
+            !hasBulkCardSelection &&
+            !isWizardOpen,
+        )}
         mode={inspectorMode}
         onModeChange={setInspectorMode}
         card={selectedCard ?? undefined}
         vaultPath={vaultPath ?? ""}
         links={Object.values(linksById)}
         cardsById={cardsById}
-        onClose={() => setSelectedCardId(null)}
+        onClose={clearCardSelection}
         onSave={handleSaveCard}
         onDelete={handleDeleteCard}
+        onNavigateToCard={handleNavigateToCard}
       />
 
       <LinkEditorPanel
-        isOpen={Boolean(selectedLink && vaultPath && !selectedCard)}
+        isOpen={Boolean(
+          selectedLink && vaultPath && selectedCardIds.length === 0,
+        )}
         link={selectedLink ?? undefined}
         sourceCardName={
           selectedLink
@@ -753,6 +1001,18 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
         onDelete={handleDeleteLink}
       />
 
+      <WorldWizardPanel
+        isOpen={isWizardOpen && Boolean(vaultPath)}
+        onClose={() => setIsWizardOpen(false)}
+        worldName={worldName}
+        cardsById={cardsById}
+        links={Object.values(linksById)}
+        vaultPath={vaultPath ?? ""}
+        onSpawnCard={(card) => {
+          void handleSpawnCard(card);
+        }}
+      />
+
       <CanvasToolbar
         onCreate={(type) => {
           void addCard(type);
@@ -761,8 +1021,16 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
         onToggleAllCardViews={() => {
           void toggleAllCardViews();
         }}
+        onToggleWizard={() => setIsWizardOpen((open) => !open)}
+        isWizardOpen={isWizardOpen}
       />
 
+      <CanvasCommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        cardsById={cardsById}
+        onJumpToCard={handleNavigateToCard}
+      />
     </div>
   );
 }

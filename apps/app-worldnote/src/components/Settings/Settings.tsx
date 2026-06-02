@@ -9,7 +9,9 @@ import { motion } from "framer-motion";
 import { useCallback, useEffect, useState } from "react";
 import { useSettings } from "../../hooks/useSettings.js";
 import { normalizeVisibleSocketsSettings } from "../../services/settings/visibleSocketSettings.js";
+import { useResolvedTheme } from "../../theme/ThemeProvider.js";
 import { SocketVisibilitySettings } from "./SocketVisibilitySettings.js";
+import { ThemeSetting } from "./ThemeSetting.js";
 import {
   darkFieldInputClassNames,
   modalFieldLabelClassName,
@@ -23,6 +25,7 @@ type SettingsProps = {
 export function Settings({ onBack }: SettingsProps) {
   const settings = useSettings((state) => state.settings);
   const save = useSettings((state) => state.save);
+  const theme = useResolvedTheme();
 
   const [username, setUsername] = useState("");
   const [visibleSockets, setVisibleSockets] = useState(
@@ -92,7 +95,7 @@ export function Settings({ onBack }: SettingsProps) {
         >
           <WorldNoteLogo
             variant="icon"
-            tone="white"
+            tone={theme === "dark" ? "white" : "black"}
             className="h-12 w-12 opacity-60"
             alt="Loading"
           />
@@ -137,7 +140,7 @@ export function Settings({ onBack }: SettingsProps) {
               <h1 className="text-2xl font-semibold text-wn-mono-50">
                 Profile Settings
               </h1>
-              <p className="text-sm text-wn-mono-400">
+              <p className="text-sm font-semibold text-wn-mono-400">
                 Update your profile and manage your canvas preferences.
               </p>
             </div>
@@ -168,6 +171,10 @@ export function Settings({ onBack }: SettingsProps) {
                 <p className="rounded-xl border border-wn-mono-700 bg-wn-mono-950 px-3 py-2 text-sm text-wn-mono-50">
                   {settings.worldnoteRoot}
                 </p>
+              </div>
+
+              <div className="border-t border-wn-mono-800 pt-6">
+                <ThemeSetting disabled={isSaving} />
               </div>
 
               <div className="border-t border-wn-mono-800 pt-6">

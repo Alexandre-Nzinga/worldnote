@@ -9,6 +9,15 @@ const WORLDNOTE_FOLDER_NAME: &str = "WorldNote";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct WizardSettings {
+    #[serde(default)]
+    pub host: String,
+    #[serde(default)]
+    pub default_model: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct AppSettings {
     pub username: String,
     pub worldnote_root: String,
@@ -18,6 +27,12 @@ pub struct AppSettings {
     /// Home-only; world folder paths (max 3 enforced in the app).
     #[serde(default)]
     pub pinned_world_paths: Vec<String>,
+    /// Local LLM (Ollama) connection config for the WorldWizard.
+    #[serde(default)]
+    pub wizard: Option<WizardSettings>,
+    /// Appearance preference: "light", "dark", or "system". Defaults to "system".
+    #[serde(default)]
+    pub theme: Option<String>,
 }
 
 fn settings_path(app: &tauri::AppHandle) -> Result<PathBuf, String> {

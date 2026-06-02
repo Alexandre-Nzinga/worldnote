@@ -44,7 +44,7 @@ const menuPopoverClassName =
 const menuListClassName = "bg-wn-mono-800";
 
 const menuItemClassName =
-  "text-wn-mono-100 data-[hover=true]:bg-wn-mono-700 data-[focus=true]:bg-wn-mono-700";
+  "text-wn-mono-100 data-[hover=true]:bg-wn-mono-700 data-[hover=true]:!text-wn-mono-50 data-[focus=true]:bg-wn-mono-700 data-[focus=true]:!text-wn-mono-50";
 
 /**
  * HeroUI dropdown menu on `wn-mono-800` surface (WorldNote dark theme).
@@ -72,6 +72,8 @@ export function ActionMenu({
         }}
         itemClasses={{
           base: menuItemClassName,
+          title:
+            "text-wn-mono-100 group-data-[hover=true]:!text-wn-mono-50 group-data-[focus=true]:!text-wn-mono-50",
         }}
       >
         {items.map((item) => (

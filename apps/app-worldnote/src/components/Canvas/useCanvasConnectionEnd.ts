@@ -37,12 +37,15 @@ type UseCanvasConnectionEndOptions = {
   setEdges: React.Dispatch<React.SetStateAction<Edge[]>>;
   setCardsById: React.Dispatch<React.SetStateAction<Record<string, WorldCard>>>;
   setLinksById: React.Dispatch<React.SetStateAction<Record<string, Link>>>;
-  setSelectedCardId: React.Dispatch<React.SetStateAction<string | null>>;
+  setSelectedCardIds: React.Dispatch<React.SetStateAction<string[]>>;
   setSelectedLinkId: React.Dispatch<React.SetStateAction<string | null>>;
   setInspectorMode: React.Dispatch<React.SetStateAction<"read" | "edit">>;
 };
 
-function pointerFromEvent(event: MouseEvent | TouchEvent): { x: number; y: number } {
+function pointerFromEvent(event: MouseEvent | TouchEvent): {
+  x: number;
+  y: number;
+} {
   if ("changedTouches" in event && event.changedTouches.length > 0) {
     return {
       x: event.changedTouches[0].clientX,
@@ -101,7 +104,7 @@ export function useCanvasConnectionEnd({
   setEdges,
   setCardsById,
   setLinksById,
-  setSelectedCardId,
+  setSelectedCardIds,
   setSelectedLinkId,
   setInspectorMode,
 }: UseCanvasConnectionEndOptions) {
@@ -136,20 +139,23 @@ export function useCanvasConnectionEnd({
     [setNodes],
   );
 
-  const onConnectStart: OnConnectStart = useCallback((_, { nodeId, handleId, handleType }) => {
-    dragOriginRef.current = null;
-    isConnectingRef.current = false;
-    clearConnectHover();
-    if (!nodeId || !handleId) {
-      return;
-    }
-    const origin = connectOriginFromHandle(nodeId, handleId, handleType);
-    if (!origin) {
-      return;
-    }
-    dragOriginRef.current = origin;
-    isConnectingRef.current = true;
-  }, [clearConnectHover]);
+  const onConnectStart: OnConnectStart = useCallback(
+    (_, { nodeId, handleId, handleType }) => {
+      dragOriginRef.current = null;
+      isConnectingRef.current = false;
+      clearConnectHover();
+      if (!nodeId || !handleId) {
+        return;
+      }
+      const origin = connectOriginFromHandle(nodeId, handleId, handleType);
+      if (!origin) {
+        return;
+      }
+      dragOriginRef.current = origin;
+      isConnectingRef.current = true;
+    },
+    [clearConnectHover],
+  );
 
   const onNodeMouseEnter: NodeMouseHandler<CardFlowNode> = useCallback(
     (_, node) => {
@@ -283,8 +289,7 @@ export function useCanvasConnectionEnd({
                   type: "worldnoteCard",
                   position: newCard.position,
                   data: worldCardToNodeData(newCard, vaultPath, {
-                    visibleSocketsSettings:
-                      visibleSocketsSettingsRef.current,
+                    visibleSocketsSettings: visibleSocketsSettingsRef.current,
                     links,
                     cardsById: cards,
                   }),
@@ -327,7 +332,7 @@ export function useCanvasConnectionEnd({
             ),
           );
           setSelectedLinkId(link.id);
-          setSelectedCardId(newCard.id);
+          setSelectedCardIds([newCard.id]);
           setInspectorMode("edit");
         })
         .catch((error) => {
@@ -347,7 +352,7 @@ export function useCanvasConnectionEnd({
       setEdges,
       setLinksById,
       setNodes,
-      setSelectedCardId,
+      setSelectedCardIds,
       setSelectedLinkId,
       setInspectorMode,
       vaultPath,

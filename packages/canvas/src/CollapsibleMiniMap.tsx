@@ -2,8 +2,7 @@ import { MiniMap, Panel } from "@xyflow/react";
 import { useState } from "react";
 
 const miniMapProps = {
-  className:
-    "!m-0 !border !border-wn-mono-700 !bg-wn-mono-900 !shadow-sm",
+  className: "!m-0 !border !border-wn-mono-700 !bg-wn-mono-900 !shadow-sm",
   maskColor: "rgba(9, 9, 9, 0.55)",
   nodeColor: "var(--color-wn-mono-600)",
   pannable: true,
@@ -24,7 +23,7 @@ export function CollapsibleMiniMap() {
       ) : null}
       <Panel
         position="bottom-right"
-        className="!m-0 !mr-2 !mb-2 !border-0 !bg-transparent !p-0 !shadow-none"
+        className="!m-0 !mb-2 !mr-2 !border-0 !bg-transparent !p-0 !shadow-none"
       >
         <button
           type="button"

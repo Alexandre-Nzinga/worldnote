@@ -13,11 +13,25 @@ pub struct CanvasNodePlacement {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StickyNotePlacement {
+    pub id: String,
+    pub x: f64,
+    pub y: f64,
+    pub z: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub lore: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub lore_doc: Option<serde_json::Value>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CanvasManifest {
     pub id: String,
     pub name: String,
     pub version: u32,
     pub nodes: Vec<CanvasNodePlacement>,
+    #[serde(rename = "stickyNotes", default, skip_serializing_if = "Vec::is_empty")]
+    pub sticky_notes: Vec<StickyNotePlacement>,
 }
 
 fn manifest_path(vault: &str) -> PathBuf {
@@ -30,6 +44,7 @@ fn default_manifest() -> CanvasManifest {
         name: "Main Canvas".to_string(),
         version: 1,
         nodes: vec![],
+        sticky_notes: vec![],
     }
 }
 

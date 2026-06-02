@@ -1,25 +1,11 @@
-import { Button, ButtonGroup } from "@heroui/react";
-import { MaterialSymbol } from "@worldnote/ui";
 import { Panel, useReactFlow, useViewport } from "@xyflow/react";
+import { SegmentedControl } from "./ui/SegmentedControl.js";
 
 const panelClassName =
   "!m-0 !mb-2 !ml-2 !border-0 !bg-transparent !p-0 !shadow-none";
 
-const groupClassName =
-  "overflow-hidden rounded-full border border-wn-mono-700 bg-wn-mono-900 shadow-sm";
-
-const zoomButtonClassName =
-  "min-w-9 rounded-none border-0 bg-transparent px-2 text-wn-mono-200 hover:bg-wn-mono-800 data-[hover=true]:bg-wn-mono-800";
-
-const zoomPercentClassName =
-  "min-w-[3.25rem] cursor-default rounded-none border-0 bg-transparent px-2 font-semibold tabular-nums text-wn-mono-400 opacity-100 data-[disabled=true]:opacity-100";
-
 function formatZoomPercent(zoom: number): string {
   return `${Math.round(zoom * 100)}%`;
-}
-
-function ZoomDivider() {
-  return <span className="h-5 w-px shrink-0 bg-wn-mono-700" aria-hidden />;
 }
 
 /** Zoom in/out controls with live viewport percentage (must render inside ReactFlow). */
@@ -30,41 +16,28 @@ export function ZoomControls() {
 
   return (
     <Panel position="bottom-left" className={panelClassName}>
-      <ButtonGroup
-        variant="bordered"
-        radius="full"
-        size="sm"
-        className={groupClassName}
-        aria-label="Zoom"
-      >
-        <Button
-          isIconOnly
-          aria-label="Zoom in"
-          className={zoomButtonClassName}
-          onPress={() => zoomIn()}
-        >
-          <MaterialSymbol name="add" className="text-base" />
-        </Button>
-        <ZoomDivider />
-        <Button
-          isDisabled
-          disableRipple
-          className={zoomPercentClassName}
-          aria-live="polite"
-          aria-label={`Zoom level ${percent}`}
-        >
-          {percent}
-        </Button>
-        <ZoomDivider />
-        <Button
-          isIconOnly
-          aria-label="Zoom out"
-          className={zoomButtonClassName}
-          onPress={() => zoomOut()}
-        >
-          <MaterialSymbol name="remove" className="text-base" />
-        </Button>
-      </ButtonGroup>
+      <SegmentedControl
+        ariaLabel="Zoom"
+        segments={[
+          {
+            id: "zoom-in",
+            icon: "add",
+            ariaLabel: "Zoom in",
+            onPress: () => zoomIn(),
+          },
+          {
+            id: "zoom-level",
+            content: percent,
+            ariaLabel: `Zoom level ${percent}`,
+          },
+          {
+            id: "zoom-out",
+            icon: "remove",
+            ariaLabel: "Zoom out",
+            onPress: () => zoomOut(),
+          },
+        ]}
+      />
     </Panel>
   );
 }

@@ -8,7 +8,7 @@ import {
   useUpdateNodeInternals,
 } from "@xyflow/react";
 import { AnimatePresence, motion } from "framer-motion";
-import type { ReactNode } from "react";
+import type { DragEventHandler, ReactNode } from "react";
 import {
   Fragment,
   memo,
@@ -25,7 +25,9 @@ import {
 import type { CardImageFit, CardImagePosition } from "./card-image-display.js";
 import { CardBrandLogo } from "./CardBrandLogo.js";
 import { CardImageView } from "./CardImageView.js";
+import { CardTypePlaceholder } from "./CardTypePlaceholder.js";
 import { socketRightHandleId } from "./handle-ids.js";
+import { useImageLuminance } from "./useImageLuminance.js";
 import {
   entitySourceHandleClassName,
   socketHandleClassName as nodeSocketHandleClassName,
@@ -76,9 +78,85 @@ export type CardNodeData = {
   connectionHover?: boolean;
   /** One-shot enter animation when a card is newly created. */
   enterAnimation?: boolean;
+  /** Starts an HTML5 drag of this card out to external drop targets (WorldWizard). */
+  onDragCardStart?: DragEventHandler<HTMLDivElement>;
 };
 
+/** Six-dot grip used to drag a card out of the canvas. */
+function CardDragGrip({
+  onDragStart,
+}: {
+  onDragStart: DragEventHandler<HTMLDivElement>;
+}) {
+  return (
+    <div
+      className="nodrag nopan absolute -left-2 -top-2 z-20 flex h-7 w-7 cursor-grab items-center justify-center rounded-full border border-wn-mono-600 bg-wn-mono-900 text-wn-mono-300 opacity-80 shadow-md transition-opacity hover:border-wn-azure-500 hover:text-wn-mono-50 group-hover/card:opacity-100 active:cursor-grabbing"
+      draggable
+      onMouseDown={(event) => event.stopPropagation()}
+      onPointerDown={(event) => event.stopPropagation()}
+      onTouchStart={(event) => event.stopPropagation()}
+      onDragStart={onDragStart}
+      title="Drag into WorldWizard"
+      aria-label="Drag card into WorldWizard"
+    >
+      <svg
+        width="10"
+        height="14"
+        viewBox="0 0 10 14"
+        fill="currentColor"
+        role="img"
+      >
+        <title>Drag handle</title>
+        <circle cx="2" cy="2" r="1.4" />
+        <circle cx="8" cy="2" r="1.4" />
+        <circle cx="2" cy="7" r="1.4" />
+        <circle cx="8" cy="7" r="1.4" />
+        <circle cx="2" cy="12" r="1.4" />
+        <circle cx="8" cy="12" r="1.4" />
+      </svg>
+    </div>
+  );
+}
+
 const connectHoverRingClass = "ring-1 ring-inset ring-wn-mono-50/50";
+
+const cardBorderTransitionClass =
+  "transition-[border-color,box-shadow] duration-150";
+const cardSolidBorderBaseClass = `border-[5px] ${cardBorderTransitionClass}`;
+const cardSolidBorderDefaultClass = `${cardSolidBorderBaseClass} border-wn-mono-600`;
+const cardSolidBorderHighlightClass = `${cardSolidBorderBaseClass} border-wn-mono-50`;
+const cardSolidBorderHoverClass = "group-hover/card:border-wn-mono-50";
+const cardImageFrameHighlightClass = "ring-2 ring-inset ring-wn-mono-50";
+const cardImageFrameHoverClass =
+  "group-hover/card:ring-2 group-hover/card:ring-inset group-hover/card:ring-wn-mono-50";
+
+function cardChromeBorderClass({
+  hasSolidBorder,
+  isSelected,
+  connectionHover,
+}: {
+  hasSolidBorder: boolean;
+  isSelected: boolean;
+  connectionHover: boolean;
+}): string {
+  if (!hasSolidBorder) {
+    if (isSelected) {
+      return cardImageFrameHighlightClass;
+    }
+    if (connectionHover) {
+      return connectHoverRingClass;
+    }
+    return cardImageFrameHoverClass;
+  }
+
+  if (isSelected) {
+    return cardSolidBorderHighlightClass;
+  }
+  if (connectionHover) {
+    return `${cardSolidBorderDefaultClass} ${connectHoverRingClass}`;
+  }
+  return `${cardSolidBorderDefaultClass} ${cardSolidBorderHoverClass}`;
+}
 
 const cardEnterVariants = {
   hidden: { opacity: 0, scale: 0.92 },
@@ -198,6 +276,7 @@ type CardImageBorderFrameProps = {
   widthClass?: string;
   className?: string;
   connectionHover?: boolean;
+  isSelected?: boolean;
   children: ReactNode;
 };
 
@@ -206,17 +285,20 @@ function CardImageBorderFrame({
   widthClass,
   className = "",
   connectionHover = false,
+  isSelected = false,
   children,
 }: CardImageBorderFrameProps) {
   const hasImageBorder = Boolean(imageUrl);
-  const hoverRing = connectionHover ? connectHoverRingClass : "";
+  const borderClass = cardChromeBorderClass({
+    hasSolidBorder: !hasImageBorder,
+    isSelected,
+    connectionHover,
+  });
 
   return (
     <div
-      className={`relative shadow-lg ${widthClass ?? ""} ${className} ${hoverRing} ${
-        hasImageBorder
-          ? ""
-          : "overflow-hidden rounded-wn-card border-[5px] border-wn-mono-600"
+      className={`relative shadow-lg ${widthClass ?? ""} ${className} ${borderClass} ${
+        hasImageBorder ? "" : "overflow-hidden rounded-wn-card"
       }`}
       style={
         hasImageBorder
@@ -255,6 +337,7 @@ type OverlayMediaCardProps = {
   badgeClassName: string;
   badgeTextColor?: string;
   titleClassName?: string;
+  isSelected?: boolean;
   onToggleView: () => void;
 };
 
@@ -267,14 +350,21 @@ function OverlayMediaCard({
   badgeClassName,
   badgeTextColor,
   titleClassName = "text-lg font-semibold leading-tight",
+  isSelected = false,
   onToggleView,
 }: OverlayMediaCardProps) {
+  const { isDark } = useImageLuminance(data.imageUrl);
+  const titleColorClass = isDark === false ? "text-black" : "text-white"; // default to white on unknown
+  const subtitleColorClass =
+    isDark === false ? "text-black/70" : "text-white/80";
+
   return (
     <CardImageBorderFrame
       imageUrl={data.imageUrl}
       widthClass={widthClass}
-      className="text-wn-mono-50 shadow-sm"
+      className="shadow-sm"
       connectionHover={data.connectionHover}
+      isSelected={isSelected}
     >
       <div
         className={`relative w-full overflow-hidden bg-wn-mono-800 ${aspectClass}`}
@@ -286,24 +376,32 @@ function OverlayMediaCard({
             position={data.imagePosition}
             className="absolute inset-0 h-full w-full"
           />
-        ) : null}
+        ) : (
+          <CardTypePlaceholder
+            cardType={data.cardType}
+            className="absolute inset-0 h-full w-full"
+          />
+        )}
         <CardBrandLogo onClick={onToggleView} />
         <div
-          className="pointer-events-none absolute inset-0 bg-gradient-to-t from-wn-mono-950 via-wn-mono-950/60 to-wn-mono-950/15"
+          className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-black/35 to-transparent"
           aria-hidden
         />
         <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-4">
           <div className="min-w-0 flex-1">
-            <div className={`truncate text-wn-mono-50 ${titleClassName}`}>
+            <div className={`truncate ${titleColorClass} ${titleClassName}`}>
               {data.title}
             </div>
             {data.subtitle ? (
-              <div className="truncate pt-0.5 text-xs text-wn-mono-300">
+              <div className={`truncate pt-0.5 text-xs ${subtitleColorClass}`}>
                 {data.subtitle}
               </div>
             ) : null}
           </div>
-          <CardTypePill className={badgeClassName} textClassName={badgeTextColor}>
+          <CardTypePill
+            className={badgeClassName}
+            textClassName={badgeTextColor}
+          >
             {badgeLabel}
           </CardTypePill>
         </div>
@@ -338,6 +436,7 @@ type CardNodeViewProps = {
   badgeLabel: string;
   badgeClassName: string;
   badgeTextColor?: string;
+  isSelected?: boolean;
   onToggleView: () => void;
 };
 
@@ -346,6 +445,7 @@ function CardNodeView({
   badgeLabel,
   badgeClassName,
   badgeTextColor,
+  isSelected = false,
   onToggleView,
 }: CardNodeViewProps) {
   const nodeId = useNodeId();
@@ -375,13 +475,17 @@ function CardNodeView({
     void layoutVersion;
   }, [entityTop, nodeId, rowTops, updateNodeInternals]);
 
+  const borderClass = cardChromeBorderClass({
+    hasSolidBorder: true,
+    isSelected,
+    connectionHover: Boolean(data.connectionHover),
+  });
+
   return (
-    <div className={`group relative ${NODE_VIEW_WIDTH} text-wn-mono-50`}>
+    <div className={`relative ${NODE_VIEW_WIDTH} text-wn-mono-50`}>
       <div
         data-card-connect-target
-        className={`overflow-hidden rounded-wn-card border-[5px] border-wn-mono-600 bg-wn-mono-900 shadow-lg ${
-          data.connectionHover ? connectHoverRingClass : ""
-        }`}
+        className={`overflow-hidden rounded-wn-card bg-wn-mono-900 shadow-lg ${borderClass}`}
         style={cardRadiusStyle}
       >
         <div className="relative border-b border-wn-mono-800 px-4 pb-3 pt-12">
@@ -471,10 +575,16 @@ function CardNodeView({
 type CardNodeBodyProps = {
   data: CardNodeData;
   viewMode: CardViewMode;
+  isSelected: boolean;
   onToggleView: () => void;
 };
 
-function CardNodeBody({ data, viewMode, onToggleView }: CardNodeBodyProps) {
+function CardNodeBody({
+  data,
+  viewMode,
+  isSelected,
+  onToggleView,
+}: CardNodeBodyProps) {
   const visual = visualConfigFor(data.cardType);
 
   if (viewMode === "node") {
@@ -484,6 +594,7 @@ function CardNodeBody({ data, viewMode, onToggleView }: CardNodeBodyProps) {
         badgeLabel={visual.label}
         badgeClassName={visual.badgeClassName}
         badgeTextColor={visual.badgeTextColor}
+        isSelected={isSelected}
         onToggleView={onToggleView}
       />
     );
@@ -498,13 +609,16 @@ function CardNodeBody({ data, viewMode, onToggleView }: CardNodeBodyProps) {
       badgeClassName={visual.badgeClassName}
       badgeTextColor={visual.badgeTextColor}
       titleClassName={visual.titleClassName}
+      isSelected={isSelected}
       onToggleView={onToggleView}
     />
   );
 }
 
-function CardNodeInner({ data }: NodeProps<CardFlowNode>) {
-  const [viewMode, setViewMode] = useState<CardViewMode>(data.viewMode ?? "visual");
+function CardNodeInner({ data, selected = false }: NodeProps<CardFlowNode>) {
+  const [viewMode, setViewMode] = useState<CardViewMode>(
+    data.viewMode ?? "visual",
+  );
   const [enterDone, setEnterDone] = useState(!data.enterAnimation);
   const sockets = data.sockets ?? [];
   const visibleSockets = data.visibleSockets ?? {};
@@ -543,7 +657,7 @@ function CardNodeInner({ data }: NodeProps<CardFlowNode>) {
 
   return (
     <motion.div
-      className="group relative"
+      className="group/card relative"
       variants={cardEnterVariants}
       initial={shouldEnter ? "hidden" : false}
       animate="visible"
@@ -555,6 +669,9 @@ function CardNodeInner({ data }: NodeProps<CardFlowNode>) {
       }}
     >
       {handles}
+      {data.onDragCardStart ? (
+        <CardDragGrip onDragStart={data.onDragCardStart} />
+      ) : null}
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
           key={viewMode}
@@ -567,6 +684,7 @@ function CardNodeInner({ data }: NodeProps<CardFlowNode>) {
           <CardNodeBody
             data={data}
             viewMode={viewMode}
+            isSelected={selected}
             onToggleView={onToggleView}
           />
         </motion.div>
