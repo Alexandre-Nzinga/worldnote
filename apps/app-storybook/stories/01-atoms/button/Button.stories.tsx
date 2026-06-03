@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { Button, type ButtonVariant } from "@worldnote/ui";
+import { Button, MaterialSymbol, type ButtonVariant } from "@worldnote/ui";
 
 const variants: ButtonVariant[] = [
   "primary",
@@ -82,4 +82,30 @@ export const AllVariants: Story = {
       ))}
     </div>
   ),
+};
+
+export const WithIconChip: Story = {
+  args: {
+    variant: "white",
+    children: "Discover the Hub",
+    iconChip: <MaterialSymbol name="play_arrow" className="text-base" />,
+    iconChipPlacement: "start",
+  },
+  decorators: [
+    (Story) => (
+      <div className="rounded-xl bg-wn-mono-950 p-12">
+        <Story />
+      </div>
+    ),
+  ],
+};
+
+export const WithStartEndContent: Story = {
+  args: {
+    variant: "primary",
+    children: "More about us",
+    endContent: (
+      <span className="h-1.5 w-1.5 rounded-full bg-wn-azure-500" aria-hidden />
+    ),
+  },
 };

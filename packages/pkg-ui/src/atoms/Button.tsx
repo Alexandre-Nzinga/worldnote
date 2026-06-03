@@ -18,6 +18,8 @@ export type ButtonVariant =
 
 export type ButtonSize = "sm" | "base";
 
+export type ButtonIconChipPlacement = "start" | "end";
+
 export type ButtonProps = Omit<
   ComponentProps<typeof HeroUIButton>,
   "variant" | "color" | "size" | "radius" | "children"
@@ -25,6 +27,13 @@ export type ButtonProps = Omit<
   variant?: ButtonVariant;
   size?: ButtonSize;
   children?: ReactNode;
+  /**
+   * Circular icon badge inside the pill (Alture-style play/arrow affordance).
+   * Rendered before/after label per `iconChipPlacement`. Also supports HeroUI
+   * `startContent` / `endContent` for icons outside the chip.
+   */
+  iconChip?: ReactNode;
+  iconChipPlacement?: ButtonIconChipPlacement;
 };
 
 type VariantConfig = {
@@ -89,6 +98,20 @@ const heroUiSize: Record<ButtonSize, "sm" | "md"> = {
   base: "md",
 };
 
+const iconChipShellClassName =
+  "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-wn-mono-50/15 text-current";
+
+function renderIconChip(
+  chip: ReactNode,
+  placement: ButtonIconChipPlacement,
+): ReactNode {
+  return (
+    <span className={iconChipShellClassName} data-placement={placement}>
+      {chip}
+    </span>
+  );
+}
+
 /** HeroUI button styled with WorldNote design tokens. */
 export function Button({
   variant = "primary",
@@ -98,6 +121,10 @@ export function Button({
   isDisabled,
   isIconOnly,
   fullWidth,
+  iconChip,
+  iconChipPlacement = "start",
+  startContent,
+  endContent,
   ...props
 }: ButtonProps) {
   const config = variantConfig[variant];
@@ -105,6 +132,18 @@ export function Button({
   const reducedMotion = usePrefersReducedMotion();
   const canAnimate = !isDisabled && !isLink && !reducedMotion;
   const isFullWidth = Boolean(fullWidth) && !isLink && !isIconOnly;
+
+  const chipAtStart =
+    iconChip && iconChipPlacement === "start"
+      ? renderIconChip(iconChip, "start")
+      : null;
+  const chipAtEnd =
+    iconChip && iconChipPlacement === "end"
+      ? renderIconChip(iconChip, "end")
+      : null;
+
+  const resolvedStartContent = chipAtStart ?? startContent;
+  const resolvedEndContent = chipAtEnd ?? endContent;
 
   return (
     <motion.span
@@ -124,6 +163,8 @@ export function Button({
         color={config.heroColor}
         size={heroUiSize[size]}
         radius="full"
+        startContent={resolvedStartContent}
+        endContent={resolvedEndContent}
         classNames={{
           base: "gap-2",
         }}

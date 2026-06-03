@@ -1,4 +1,11 @@
-export type HeadingLevel = "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
+export type HeadingLevel =
+  | "display"
+  | "h1"
+  | "h2"
+  | "h3"
+  | "h4"
+  | "h5"
+  | "h6";
 export type BodyTextLevel = "body" | "small" | "xs";
 
 export type HeadingToken = {
@@ -41,6 +48,12 @@ export type BodyTextToken = {
  * - color: CSS variable token for text color
  */
 export const headingTokens: Record<HeadingLevel, HeadingToken> = {
+  display: {
+    size: "--text-wn-display",
+    spacingRem: -0.03,
+    color: "--color-wn-mono-950",
+    fontWeight: "bold",
+  },
   h1: {
     size: "--text-wn-h1",
     spacingRem: -0.02,
@@ -81,6 +94,7 @@ export const headingTokens: Record<HeadingLevel, HeadingToken> = {
 
 /** Semantic heading classes (layout/font weight only). */
 export const headingClass: Record<HeadingLevel, string> = {
+  display: "leading-none tracking-tight",
   h1: "leading-tight",
   h2: "leading-tight",
   h3: "leading-tight",

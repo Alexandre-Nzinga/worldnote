@@ -13,6 +13,7 @@
 
 @theme inline {
   --font-sans: "Urbanist", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
   --font-weight-wn-thin: 100;
   --font-weight-wn-extralight: 200;
@@ -24,6 +25,11 @@
   --font-weight-wn-extrabold: 800;
   --font-weight-wn-black: 900;
 
+  --text-wn-display: clamp(
+    2.5rem,
+    calc(2.5rem + (5 - 2.5) * ((100vw - 20rem) / 70)),
+    5rem
+  );
   --text-wn-h1: clamp(
     2.027rem,
     calc(2.027rem + (3.815 - 2.027) * ((100vw - 20rem) / 70)),

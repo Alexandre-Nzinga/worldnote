@@ -1,5 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { Card } from "@worldnote/ui";
+import {
+  Button,
+  Card,
+  Eyebrow,
+  Tag,
+  TagGroup,
+} from "@worldnote/ui";
 
 const meta = {
   title: "02-Molecules/Card",
@@ -62,6 +68,38 @@ export const ConstrainedWidth: Story = {
   decorators: [
     (Story) => (
       <div className="w-full max-w-2xl">
+        <Story />
+      </div>
+    ),
+  ],
+};
+
+export const AltureContentCard: Story = {
+  args: {
+    tone: "dark",
+    eyebrow: <Eyebrow>Services</Eyebrow>,
+    title: "Web design",
+    subtitle:
+      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim in eros elementum tristique.",
+    tags: (
+      <TagGroup aria-label="Capabilities">
+        <Tag>Website</Tag>
+        <Tag>Wireframe</Tag>
+        <Tag>Landing page</Tag>
+      </TagGroup>
+    ),
+    actions: (
+      <Button variant="white" size="sm">
+        Learn more
+      </Button>
+    ),
+    media: (
+      <div className="aspect-video w-full bg-wn-mono-800" aria-hidden />
+    ),
+  },
+  decorators: [
+    (Story) => (
+      <div className="w-[480px] rounded-2xl bg-wn-mono-950 p-4">
         <Story />
       </div>
     ),

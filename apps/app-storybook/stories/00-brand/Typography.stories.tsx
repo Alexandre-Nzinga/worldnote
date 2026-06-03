@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import {
+  Eyebrow,
   bodyTextTokens,
   getBodyTextStyle,
   getHeadingStyle,
@@ -8,6 +9,12 @@ import {
 } from "@worldnote/ui";
 
 const headingScale = [
+  {
+    label: "Display",
+    tag: "display",
+    token: headingTokens.display,
+    className: headingClass.display,
+  },
   {
     label: "Heading 1",
     tag: "h1",
@@ -81,6 +88,22 @@ export const Typography: Story = {
 
       <section className="space-y-3">
         <h3 className={headingClass.h3} style={getHeadingStyle("h3")}>
+          Eyebrow
+        </h3>
+        <p className="max-w-3xl leading-6" style={getBodyTextStyle("body")}>
+          Monospace uppercase labels for section markers (Alture-style).
+        </p>
+        <div className="flex flex-wrap gap-4 rounded-2xl border border-wn-mono-200 px-4 py-4">
+          <Eyebrow>About us</Eyebrow>
+          <Eyebrow showDot={false}>
+            FAQ
+          </Eyebrow>
+          <Eyebrow tone="mono">Services</Eyebrow>
+        </div>
+      </section>
+
+      <section className="space-y-3">
+        <h3 className={headingClass.h3} style={getHeadingStyle("h3")}>
           Headings
         </h3>
         <p className="max-w-3xl leading-6" style={getBodyTextStyle("body")}>
@@ -132,6 +155,16 @@ export const Typography: Story = {
                   </code>
                 </div>
                 <div className="min-w-0">
+                  {tag === "display" && (
+                    <p
+                      className={className}
+                      style={getHeadingStyle("display")}
+                      role="heading"
+                      aria-level={1}
+                    >
+                      {sample}
+                    </p>
+                  )}
                   {tag === "h1" && (
                     <h1 className={className} style={getHeadingStyle(tag)}>
                       {sample}
