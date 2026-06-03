@@ -28,6 +28,11 @@ body,
   padding: 0;
 }
 
+body.wn-canvas-card-external-drag,
+body.wn-canvas-card-external-drag * {
+  cursor: grabbing !important;
+}
+
 .inspector-markdown :where(p, ul, ol, blockquote, pre) {
   margin-block: 0.75rem;
   font-size: var(--text-wn-body);

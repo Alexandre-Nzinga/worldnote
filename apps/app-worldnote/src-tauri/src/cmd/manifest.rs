@@ -25,6 +25,20 @@ pub struct StickyNotePlacement {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CanvasImagePlacement {
+    pub id: String,
+    pub x: f64,
+    pub y: f64,
+    pub z: Option<f64>,
+    #[serde(rename = "imagePath")]
+    pub image_path: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub width: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub height: Option<f64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CanvasManifest {
     pub id: String,
     pub name: String,
@@ -32,6 +46,8 @@ pub struct CanvasManifest {
     pub nodes: Vec<CanvasNodePlacement>,
     #[serde(rename = "stickyNotes", default, skip_serializing_if = "Vec::is_empty")]
     pub sticky_notes: Vec<StickyNotePlacement>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub images: Vec<CanvasImagePlacement>,
 }
 
 fn manifest_path(vault: &str) -> PathBuf {
@@ -45,6 +61,7 @@ fn default_manifest() -> CanvasManifest {
         version: 1,
         nodes: vec![],
         sticky_notes: vec![],
+        images: vec![],
     }
 }
 
@@ -102,4 +119,34 @@ pub(crate) fn remove_node_from_manifest(vault: &str, card_id: &str) -> Result<()
 #[tauri::command]
 pub fn remove_canvas_manifest_node(vault: String, card_id: String) -> Result<(), String> {
     remove_node_from_manifest(&vault, &card_id)
+}
+
+#[tauri::command]
+pub fn update_canvas_manifest_image(
+    vault: String,
+    placement: CanvasImagePlacement,
+) -> Result<(), String> {
+    let mut manifest = load_or_default(&vault)?;
+    if let Some(image) = manifest
+        .images
+        .iter_mut()
+        .find(|image| image.id == placement.id)
+    {
+        *image = placement;
+    } else {
+        manifest.images.push(placement);
+    }
+
+    write_manifest(&vault, &manifest)
+}
+
+pub(crate) fn remove_image_from_manifest(vault: &str, image_id: &str) -> Result<(), String> {
+    let mut manifest = load_or_default(vault)?;
+    manifest.images.retain(|image| image.id != image_id);
+    write_manifest(vault, &manifest)
+}
+
+#[tauri::command]
+pub fn remove_canvas_manifest_image(vault: String, image_id: String) -> Result<(), String> {
+    remove_image_from_manifest(&vault, &image_id)
 }

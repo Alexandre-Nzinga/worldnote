@@ -1,8 +1,28 @@
 mod cmd;
 
+fn prevent_default_plugin() -> tauri::plugin::TauriPlugin<tauri::Wry> {
+    use tauri_plugin_prevent_default::Flags;
+
+    #[cfg(debug_assertions)]
+    {
+        // Block WebView2/Chromium menus (Back, Refresh, Inspect, …); keep F12 + reload in dev.
+        return tauri_plugin_prevent_default::Builder::new()
+            .with_flags(Flags::all().difference(Flags::debug()))
+            .build();
+    }
+
+    #[cfg(not(debug_assertions))]
+    {
+        tauri_plugin_prevent_default::Builder::new()
+            .with_flags(Flags::all())
+            .build()
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(prevent_default_plugin())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
@@ -32,6 +52,9 @@ pub fn run() {
             cmd::card::delete_card,
             cmd::card::save_card_image,
             cmd::card::add_card_lore_image,
+            cmd::canvas_image::save_canvas_image,
+            cmd::canvas_image::save_canvas_image_bytes,
+            cmd::canvas_image::delete_canvas_image,
             cmd::link::upsert_link,
             cmd::link::list_links,
             cmd::link::delete_link,
@@ -39,6 +62,8 @@ pub fn run() {
             cmd::manifest::update_canvas_manifest,
             cmd::manifest::update_canvas_manifest_node,
             cmd::manifest::remove_canvas_manifest_node,
+            cmd::manifest::update_canvas_manifest_image,
+            cmd::manifest::remove_canvas_manifest_image,
             cmd::wizard::ollama_health,
             cmd::wizard::ollama_list_models,
             cmd::wizard::ollama_chat,

@@ -46,6 +46,7 @@ import {
   resolveInitialLoreDoc,
 } from "./inspector/loreEditor/seedLoreDoc.js";
 import { PropertiesTab } from "./inspector/PropertiesTab.js";
+import { usePanelHotkeys } from "./usePanelHotkeys.js";
 
 type PropertyRow = { key: string; value: string };
 
@@ -179,12 +180,42 @@ export function Inspector({
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const loreEditorRef = useRef<LoreEditorHandle>(null);
+  const loadedInspectorCardIdRef = useRef<string | null>(null);
+  const [isLoreEditorActive, setIsLoreEditorActive] = useState(false);
+
+  useEffect(() => {
+    setIsLoreEditorActive(readOnly);
+  }, [readOnly]);
+
+  const deactivateLoreEditor = useCallback(() => {
+    loreEditorRef.current?.blur();
+    if (!readOnly) {
+      setIsLoreEditorActive(false);
+    }
+  }, [readOnly]);
+
+  const handleInspectorTabChange = useCallback(
+    (tab: InspectorTabId) => {
+      if (tab !== "info" && !readOnly) {
+        setIsLoreEditorActive(false);
+      }
+      setActiveTab(tab);
+    },
+    [readOnly],
+  );
 
   useEffect(() => {
     if (!card) {
+      loadedInspectorCardIdRef.current = null;
       return;
     }
+    const cardChanged = loadedInspectorCardIdRef.current !== card.id;
+    loadedInspectorCardIdRef.current = card.id;
     setActiveTab("info");
+    setIsLoreEditorActive(readOnly);
+    if (!cardChanged) {
+      return;
+    }
     setName(card.name);
     setSubtitle(card.subtitle ?? "");
     setLore(card.lore ?? "");
@@ -197,7 +228,7 @@ export function Inspector({
     );
     setPropertyRows(propertiesToRows(card.custom_properties));
     setError(null);
-  }, [card]);
+  }, [card, readOnly]);
 
   const socketEntries = activeCard
     ? listSocketsForCardType(activeCard.card_type)
@@ -315,6 +346,26 @@ export function Inspector({
   }, [activeCard, onClose, onDelete]);
 
   const isBusy = isSaving || isDeleting;
+
+  usePanelHotkeys({
+    enabled: isOpen && !isBusy,
+    onEscape: () => {
+      if (isLoreEditorActive && !readOnly) {
+        setIsLoreEditorActive(false);
+        return;
+      }
+      onClose();
+    },
+    onSave: readOnly ? undefined : () => {
+      void handleSave();
+    },
+    canSave: !readOnly && Boolean(name.trim()),
+    onDelete: readOnly ? undefined : () => {
+      void handleDelete();
+    },
+    canDelete: !readOnly,
+  });
+
   const typeVisual = activeCard
     ? visualConfigFor(activeCard.card_type)
     : null;
@@ -439,6 +490,8 @@ export function Inspector({
                 value={name}
                 variant="flat"
                 onValueChange={setName}
+                onFocus={deactivateLoreEditor}
+                onMouseDown={deactivateLoreEditor}
                 classNames={inspectorNameFieldClassNames}
               />
               <Input
@@ -448,6 +501,8 @@ export function Inspector({
                 value={subtitle}
                 variant="flat"
                 onValueChange={setSubtitle}
+                onFocus={deactivateLoreEditor}
+                onMouseDown={deactivateLoreEditor}
                 classNames={inspectorSubtitleFieldClassNames}
               />
             </>
@@ -465,7 +520,7 @@ export function Inspector({
         ) : null}
       </div>
 
-      <InspectorTabs activeTab={activeTab} onTabChange={setActiveTab} />
+      <InspectorTabs activeTab={activeTab} onTabChange={handleInspectorTabChange} />
 
       <div className="scrollbar-wn min-h-0 flex-1 overflow-y-auto px-4 py-4">
         {activeTab === "info" ? (
@@ -481,6 +536,9 @@ export function Inspector({
             cardId={activeCard.id}
             cardsById={cardsById}
             loreEditorRef={loreEditorRef}
+            isLoreEditorActive={isLoreEditorActive}
+            onLoreEditorActivate={() => setIsLoreEditorActive(true)}
+            autoFocusLoreEditor={isLoreEditorActive}
             onDescriptionChange={(plainText, doc) => {
               setLore(plainText);
               setLoreDoc(doc);

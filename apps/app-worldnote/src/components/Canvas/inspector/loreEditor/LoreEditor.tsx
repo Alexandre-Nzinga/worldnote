@@ -41,6 +41,7 @@ export type LoreEditorSnapshot = {
 
 export type LoreEditorHandle = {
   getSnapshot: () => LoreEditorSnapshot;
+  blur: () => void;
 };
 
 function snapshotFromEditor(editor: Quill): LoreEditorSnapshot {
@@ -56,6 +57,7 @@ type LoreEditorProps = {
   vaultPath: string;
   cardId: string;
   cardsById: Record<string, WorldCard>;
+  autoFocus?: boolean;
   onChange: (doc: LoreDoc, plainText: string) => void;
   onNavigateToCard?: (cardId: string) => void;
 };
@@ -68,6 +70,7 @@ export const LoreEditor = forwardRef<LoreEditorHandle, LoreEditorProps>(
       vaultPath,
       cardId,
       cardsById,
+      autoFocus = false,
       onChange,
       onNavigateToCard,
     },
@@ -121,6 +124,9 @@ export const LoreEditor = forwardRef<LoreEditorHandle, LoreEditorProps>(
           };
         }
         return snapshotFromEditor(editor);
+      },
+      blur: () => {
+        quillRef.current?.blur();
       },
     }),
     [],
@@ -212,6 +218,7 @@ export const LoreEditor = forwardRef<LoreEditorHandle, LoreEditorProps>(
     };
     editor.on("text-change", handleTextChange);
     editor.on("editor-change", handleEditorChange);
+    editor.blur();
 
     return () => {
       editor.off("text-change", handleTextChange);
@@ -220,12 +227,28 @@ export const LoreEditor = forwardRef<LoreEditorHandle, LoreEditorProps>(
     };
   }, []);
 
-  // Toggle editability.
+  // Toggle editability without stealing focus from title/subtitle fields.
   useEffect(() => {
-    quill?.enable(!readOnly);
+    if (!quill) {
+      return;
+    }
+    quill.enable(!readOnly);
+    const active = document.activeElement;
+    const focusIsInsideEditor =
+      active instanceof Node && quill.root.contains(active);
+    if (!focusIsInsideEditor) {
+      quill.blur();
+    }
   }, [quill, readOnly]);
 
-  // Reload when switching cards or entering read-only with saved content from disk.
+  useEffect(() => {
+    if (!quill || readOnly || !autoFocus) {
+      return;
+    }
+    quill.focus();
+  }, [autoFocus, quill, readOnly]);
+
+  // Reload when switching cards, or when viewing read-only content from disk.
   const loadedCardIdRef = useRef<string | null>(null);
   useEffect(() => {
     if (!quill) {
@@ -237,6 +260,12 @@ export const LoreEditor = forwardRef<LoreEditorHandle, LoreEditorProps>(
     }
     loadedCardIdRef.current = cardId;
     syncEditorFromDoc(initialDoc ?? EMPTY_LORE_DOC);
+    const active = document.activeElement;
+    const focusIsInsideEditor =
+      active instanceof Node && quill.root.contains(active);
+    if (!focusIsInsideEditor) {
+      quill.blur();
+    }
   }, [quill, initialDoc, cardId, readOnly, syncEditorFromDoc]);
 
   // Click delegation: mention navigation (read-only) + gallery controls.
@@ -294,7 +323,7 @@ export const LoreEditor = forwardRef<LoreEditorHandle, LoreEditorProps>(
     if (!src) {
       return;
     }
-    const range = editor.getSelection(true);
+    const range = editor.getSelection();
     const index = range ? range.index : editor.getLength();
     editor.insertEmbed(index, "image", src, "user");
     editor.setSelection(index + 1, 0, "user");
@@ -305,7 +334,7 @@ export const LoreEditor = forwardRef<LoreEditorHandle, LoreEditorProps>(
     if (!editor || readOnly) {
       return;
     }
-    const range = editor.getSelection(true);
+    const range = editor.getSelection();
     const index = range ? range.index : editor.getLength();
     editor.insertEmbed(
       index,

@@ -1,7 +1,7 @@
 import { Input } from "@heroui/react";
 import clsx from "clsx";
 import type { ComponentProps, ReactNode } from "react";
-import { MaterialSymbol } from "../atoms/MaterialSymbol.js";
+import { MaterialSymbol } from "../atoms/MaterialSymbol/MaterialSymbol.js";
 import {
   fieldInputClassName,
   fieldInputClassNames,

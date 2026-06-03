@@ -2,7 +2,12 @@ import { Input } from "@heroui/react";
 import { AnimatedModal, Button } from "@worldnote/ui";
 import { useCallback, useEffect, useState } from "react";
 import { useSettings } from "../../hooks/useSettings.js";
+import {
+  normalizeCanvasKeyboardShortcuts,
+  type CanvasKeyboardShortcuts,
+} from "../../services/settings/keyboardShortcuts.js";
 import { normalizeVisibleSocketsSettings } from "../../services/settings/visibleSocketSettings.js";
+import { KeyboardShortcutsSettings } from "./KeyboardShortcutsSettings.js";
 import { SocketVisibilitySettings } from "./SocketVisibilitySettings.js";
 import {
   darkFieldInputClassNames,
@@ -23,6 +28,10 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [visibleSockets, setVisibleSockets] = useState(
     normalizeVisibleSocketsSettings(undefined),
   );
+  const [canvasShortcuts, setCanvasShortcuts] =
+    useState<CanvasKeyboardShortcuts>(
+      normalizeCanvasKeyboardShortcuts(undefined),
+    );
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,6 +42,9 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     setUsername(settings.username);
     setVisibleSockets(
       normalizeVisibleSocketsSettings(settings.visibleSockets),
+    );
+    setCanvasShortcuts(
+      normalizeCanvasKeyboardShortcuts(settings.canvasShortcuts),
     );
     setError(null);
     setIsSaving(false);
@@ -64,6 +76,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         ...settings,
         username: username.trim(),
         visibleSockets,
+        canvasShortcuts,
       });
       onClose();
     } catch (saveError) {
@@ -73,7 +86,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     } finally {
       setIsSaving(false);
     }
-  }, [onClose, save, settings, username, visibleSockets]);
+  }, [canvasShortcuts, onClose, save, settings, username, visibleSockets]);
 
   const canSave = username.trim().length > 0 && !isSaving;
 
@@ -128,6 +141,12 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             <SocketVisibilitySettings
               value={visibleSockets}
               onChange={setVisibleSockets}
+              disabled={isSaving}
+            />
+
+            <KeyboardShortcutsSettings
+              value={canvasShortcuts}
+              onChange={setCanvasShortcuts}
               disabled={isSaving}
             />
 

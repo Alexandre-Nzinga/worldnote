@@ -9,7 +9,7 @@ import {
   type OnConnectStart,
 } from "@xyflow/react";
 import { useCallback, useRef, type RefObject } from "react";
-import type { CardFlowNode } from "@worldnote/canvas";
+import type { CanvasFlowNode, CardFlowNode } from "@worldnote/canvas";
 import type { Link, WorldCard } from "@worldnote/shared";
 import {
   AUTO_CREATE_CHARACTER_SOCKETS,
@@ -33,7 +33,7 @@ type UseCanvasConnectionEndOptions = {
   linksByIdRef: RefObject<Record<string, Link>>;
   visibleSocketsSettingsRef: RefObject<VisibleSocketsByCardType | undefined>;
   onConnect: OnConnect;
-  setNodes: React.Dispatch<React.SetStateAction<CardFlowNode[]>>;
+  setNodes: React.Dispatch<React.SetStateAction<CanvasFlowNode[]>>;
   setEdges: React.Dispatch<React.SetStateAction<Edge[]>>;
   setCardsById: React.Dispatch<React.SetStateAction<Record<string, WorldCard>>>;
   setLinksById: React.Dispatch<React.SetStateAction<Record<string, Link>>>;
@@ -66,7 +66,7 @@ function findDropTargetCardId(
   getIntersectingNodes: (
     nodeOrRect: { x: number; y: number; width: number; height: number },
     partially?: boolean,
-  ) => CardFlowNode[],
+  ) => CanvasFlowNode[],
 ): string | null {
   const originCardId =
     origin.kind === "socket" ? origin.ownerCardId : origin.cardId;
@@ -109,18 +109,22 @@ export function useCanvasConnectionEnd({
   setInspectorMode,
 }: UseCanvasConnectionEndOptions) {
   const { screenToFlowPosition, getIntersectingNodes } =
-    useReactFlow<CardFlowNode>();
+    useReactFlow<CanvasFlowNode>();
   const dragOriginRef = useRef<ConnectDragOrigin | null>(null);
   const isConnectingRef = useRef(false);
 
   const clearConnectHover = useCallback(() => {
     isConnectingRef.current = false;
     setNodes((prev) =>
-      prev.map((node) =>
-        node.data.connectionHover
-          ? { ...node, data: { ...node.data, connectionHover: false } }
-          : node,
-      ),
+      prev.map((node) => {
+        if (node.type !== "worldnoteCard" || !node.data.connectionHover) {
+          return node;
+        }
+        return {
+          ...node,
+          data: { ...node.data, connectionHover: false },
+        };
+      }),
     );
   }, [setNodes]);
 
@@ -128,6 +132,9 @@ export function useCanvasConnectionEnd({
     (cardId: string | null) => {
       setNodes((prev) =>
         prev.map((node) => {
+          if (node.type !== "worldnoteCard") {
+            return node;
+          }
           const hover = cardId !== null && node.id === cardId;
           if (Boolean(node.data.connectionHover) === hover) {
             return node;
@@ -182,11 +189,16 @@ export function useCanvasConnectionEnd({
         return;
       }
       setNodes((prev) =>
-        prev.map((n) =>
-          n.id === node.id && n.data.connectionHover
-            ? { ...n, data: { ...n.data, connectionHover: false } }
-            : n,
-        ),
+        prev.map((n) => {
+          if (
+            n.id !== node.id ||
+            n.type !== "worldnoteCard" ||
+            !n.data.connectionHover
+          ) {
+            return n;
+          }
+          return { ...n, data: { ...n.data, connectionHover: false } };
+        }),
       );
     },
     [setNodes],

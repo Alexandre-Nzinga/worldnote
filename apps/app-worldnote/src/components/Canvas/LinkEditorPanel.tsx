@@ -2,6 +2,7 @@ import { AnimatedPanel, Button } from "@worldnote/ui";
 import type { Link } from "@worldnote/shared";
 import { useCallback, useRef, useState } from "react";
 import { modalFieldLabelClassName } from "../Onboarding/fieldClassNames.js";
+import { usePanelHotkeys } from "./usePanelHotkeys.js";
 
 function formatSocketId(socketId: string): string {
   return socketId.replace(/_/g, " ");
@@ -60,6 +61,14 @@ export function LinkEditorPanel({
       setIsDeleting(false);
     }
   }, [activeLink, onClose, onDelete, sourceCardName]);
+
+  usePanelHotkeys({
+    enabled: isOpen && !isDeleting,
+    onEscape: onClose,
+    onDelete: () => {
+      void handleDelete();
+    },
+  });
 
   if (!activeLink) {
     return null;

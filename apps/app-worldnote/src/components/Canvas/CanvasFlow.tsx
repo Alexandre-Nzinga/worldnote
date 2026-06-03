@@ -1,4 +1,8 @@
-import { WorldNoteCanvas, type CardFlowNode } from "@worldnote/canvas";
+import {
+  CanvasImageInteractionProvider,
+  WorldNoteCanvas,
+  type CanvasFlowNode,
+} from "@worldnote/canvas";
 import {
   ConnectionMode,
   SelectionMode,
@@ -13,33 +17,56 @@ import {
   type OnNodesChange,
   type OnSelectionChangeParams,
 } from "@xyflow/react";
-import type { MouseEvent, MutableRefObject, RefObject } from "react";
+import type {
+  MouseEvent as ReactMouseEvent,
+  MutableRefObject,
+  RefObject,
+} from "react";
+import type { CanvasImageContextMenuState } from "./CanvasImageContextMenu.js";
+import { CanvasImageContextMenu } from "./CanvasImageContextMenu.js";
 import type { Link, WorldCard } from "@worldnote/shared";
 import type { VisibleSocketsByCardType } from "../../services/settings/settings.js";
-import { BulkSelectionToolbar } from "./BulkSelectionToolbar.js";
+import {
+  BulkSelectionToolbar,
+  type BulkSelectionKind,
+} from "./BulkSelectionToolbar.js";
+import { CanvasExternalImageDropBridge } from "./CanvasExternalImageDropBridge.js";
+import { CanvasFitViewBridge } from "./CanvasFitViewBridge.js";
 import { CanvasFocusBridge } from "./CanvasFocusBridge.js";
+import type {
+  CanvasImageDropPosition,
+  CanvasImageImportOptions,
+} from "./useCanvasExternalImageDrop.js";
 import { useCanvasConnectionEnd } from "./useCanvasConnectionEnd.js";
 import { useResolvedTheme } from "../../theme/ThemeProvider.js";
 
 type CanvasFlowProps = {
   nodeTypes: NodeTypes;
   edgeTypes: EdgeTypes;
-  nodes: CardFlowNode[];
+  nodes: CanvasFlowNode[];
   edges: Edge[];
   onNodesChange: OnNodesChange<Node>;
   onEdgesChange: OnEdgesChange<Edge>;
   onSelectionChange: (params: OnSelectionChangeParams) => void;
   onConnect: OnConnect;
   isValidConnection: (connection: Connection | Edge) => boolean;
-  onNodeDragStop: (event: MouseEvent, node: Node) => void;
-  onNodeDoubleClick: (event: MouseEvent, node: Node) => void;
-  onEdgeDoubleClick: (event: MouseEvent, edge: Edge) => void;
+  onNodeDragStart?: () => void;
+  onNodeDragStop: (event: ReactMouseEvent, node: Node) => void;
+  onNodeDoubleClick: (event: ReactMouseEvent, node: Node) => void;
+  onEdgeDoubleClick: (event: ReactMouseEvent, edge: Edge) => void;
+  onNodeContextMenu: (event: ReactMouseEvent, node: Node) => void;
+  onPaneClick: () => void;
+  imageContextMenu: CanvasImageContextMenuState | null;
+  onCloseImageContextMenu: () => void;
+  onDuplicateCanvasImage: (imageId: string) => void;
+  onDeleteCanvasImage: (imageId: string) => void;
+  onImageResizeEnd: (nodeId: string, size: { width: number; height: number }) => void;
   nodesDraggable?: boolean;
   vaultPath: string | null;
   cardsByIdRef: RefObject<Record<string, WorldCard>>;
   linksByIdRef: RefObject<Record<string, Link>>;
   visibleSocketsSettingsRef: RefObject<VisibleSocketsByCardType | undefined>;
-  setNodes: React.Dispatch<React.SetStateAction<CardFlowNode[]>>;
+  setNodes: React.Dispatch<React.SetStateAction<CanvasFlowNode[]>>;
   setEdges: React.Dispatch<React.SetStateAction<Edge[]>>;
   setCardsById: React.Dispatch<React.SetStateAction<Record<string, WorldCard>>>;
   setLinksById: React.Dispatch<React.SetStateAction<Record<string, Link>>>;
@@ -47,9 +74,16 @@ type CanvasFlowProps = {
   setSelectedLinkId: React.Dispatch<React.SetStateAction<string | null>>;
   setInspectorMode: React.Dispatch<React.SetStateAction<"read" | "edit">>;
   selectedCardIds: string[];
-  onDuplicateSelectedCards: () => Promise<void>;
-  onDeleteSelectedCards: () => Promise<void>;
+  selectedImageIds: string[];
+  onDuplicateSelection: () => Promise<void>;
+  onDeleteSelection: () => Promise<void>;
+  onCreateGroupFromSelection?: () => Promise<void>;
   focusCardRef: MutableRefObject<((cardId: string) => void) | undefined>;
+  onImportCanvasImage: (
+    sourcePath: string,
+    flowPosition: CanvasImageDropPosition,
+    options?: CanvasImageImportOptions,
+  ) => Promise<void>;
 };
 
 export function CanvasFlow({
@@ -62,9 +96,17 @@ export function CanvasFlow({
   onSelectionChange,
   onConnect,
   isValidConnection,
+  onNodeDragStart,
   onNodeDragStop,
   onNodeDoubleClick,
   onEdgeDoubleClick,
+  onNodeContextMenu,
+  onPaneClick,
+  imageContextMenu,
+  onCloseImageContextMenu,
+  onDuplicateCanvasImage,
+  onDeleteCanvasImage,
+  onImageResizeEnd,
   nodesDraggable = true,
   vaultPath,
   cardsByIdRef,
@@ -78,10 +120,19 @@ export function CanvasFlow({
   setSelectedLinkId,
   setInspectorMode,
   selectedCardIds,
-  onDuplicateSelectedCards,
-  onDeleteSelectedCards,
+  selectedImageIds,
+  onDuplicateSelection,
+  onDeleteSelection,
+  onCreateGroupFromSelection,
   focusCardRef,
+  onImportCanvasImage,
 }: CanvasFlowProps) {
+  const bulkSelection =
+    selectedCardIds.length > 1
+      ? { kind: "card" as BulkSelectionKind, ids: selectedCardIds }
+      : selectedImageIds.length > 1
+        ? { kind: "image" as BulkSelectionKind, ids: selectedImageIds }
+        : null;
   const {
     onConnectStart,
     onConnectEnd,
@@ -108,6 +159,7 @@ export function CanvasFlow({
   const resolvedTheme = useResolvedTheme();
 
   return (
+    <CanvasImageInteractionProvider value={{ onResizeEnd: onImageResizeEnd }}>
     <WorldNoteCanvas
       nodeTypes={nodeTypes}
       edgeTypes={edgeTypes}
@@ -142,21 +194,41 @@ export function CanvasFlow({
       selectionMode={SelectionMode.Partial}
       selectionKeyCode={null}
       panActivationKeyCode="Space"
-      minZoom={0.25}
-      maxZoom={2}
+      minZoom={0.15}
+      maxZoom={4}
+      onNodeDragStart={onNodeDragStart}
       onNodeDragStop={onNodeDragStop}
       onNodeDoubleClick={onNodeDoubleClick}
       onEdgeDoubleClick={onEdgeDoubleClick}
-      fitView
+      onNodeContextMenu={onNodeContextMenu}
+      onPaneClick={onPaneClick}
     >
+      <CanvasFitViewBridge
+        vaultPath={vaultPath}
+        nodeCount={nodes.length}
+      />
       <CanvasFocusBridge focusCardRef={focusCardRef} />
-      {selectedCardIds.length > 1 ? (
+      <CanvasExternalImageDropBridge
+        enabled={Boolean(vaultPath)}
+        vaultPath={vaultPath}
+        onImportImage={onImportCanvasImage}
+      />
+      {bulkSelection ? (
         <BulkSelectionToolbar
-          selectedCardIds={selectedCardIds}
-          onDuplicate={onDuplicateSelectedCards}
-          onDelete={onDeleteSelectedCards}
+          selectedIds={bulkSelection.ids}
+          selectionKind={bulkSelection.kind}
+          onDuplicate={onDuplicateSelection}
+          onDelete={onDeleteSelection}
+          onCreateGroup={onCreateGroupFromSelection}
         />
       ) : null}
     </WorldNoteCanvas>
+    <CanvasImageContextMenu
+      menu={imageContextMenu}
+      onClose={onCloseImageContextMenu}
+      onDuplicate={onDuplicateCanvasImage}
+      onDelete={onDeleteCanvasImage}
+    />
+    </CanvasImageInteractionProvider>
   );
 }

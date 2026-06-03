@@ -127,7 +127,7 @@ export function useMentionAutocomplete({
     quill.on("selection-change", handleChange);
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (!triggerStartRef.current && triggerStartRef.current !== 0) {
+      if (triggerStartRef.current === null) {
         return;
       }
       if (!popupOpenRef.current) {

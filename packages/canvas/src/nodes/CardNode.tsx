@@ -8,7 +8,7 @@ import {
   useUpdateNodeInternals,
 } from "@xyflow/react";
 import { AnimatePresence, motion } from "framer-motion";
-import type { DragEventHandler, ReactNode } from "react";
+import type { ReactNode } from "react";
 import {
   Fragment,
   memo,
@@ -16,8 +16,12 @@ import {
   useEffect,
   useLayoutEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
+import {
+  beginCardExternalPointerDrag,
+} from "./cardExternalDrag.js";
 import {
   getNodeViewHandlePositions,
   handleStyleAtTop,
@@ -33,6 +37,11 @@ import {
   socketHandleClassName as nodeSocketHandleClassName,
   socketStyleFor,
 } from "./socket-style.js";
+import {
+  CARD_CHROME_BORDER_WIDTH_PX,
+  cardInnerRadiusStyle,
+  cardOuterRadiusStyle,
+} from "./card-chrome-radius.js";
 import {
   visualConfigFor,
   type WorldNoteCardType,
@@ -78,24 +87,60 @@ export type CardNodeData = {
   connectionHover?: boolean;
   /** One-shot enter animation when a card is newly created. */
   enterAnimation?: boolean;
-  /** Starts an HTML5 drag of this card out to external drop targets (WorldWizard). */
-  onDragCardStart?: DragEventHandler<HTMLDivElement>;
+  /** @deprecated Grip uses pointer drag; kept for node data compatibility. */
+  onDragCardStart?: unknown;
 };
 
-/** Six-dot grip used to drag a card out of the canvas. */
-function CardDragGrip({
-  onDragStart,
-}: {
-  onDragStart: DragEventHandler<HTMLDivElement>;
-}) {
+/** Six-dot grip used to drag a card out of the canvas into the WorldWizard. */
+function CardDragGrip({ cardId }: { cardId: string }) {
+  const gripRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const grip = gripRef.current;
+    if (!grip) {
+      return;
+    }
+
+    const onPointerDownCapture = (event: PointerEvent) => {
+      if (event.button !== 0 || !(event.target instanceof Element)) {
+        return;
+      }
+      if (!grip.contains(event.target)) {
+        return;
+      }
+      beginCardExternalPointerDrag(event, cardId);
+    };
+
+    const onMouseDownCapture = (event: MouseEvent) => {
+      if (event.button !== 0 || !(event.target instanceof Element)) {
+        return;
+      }
+      if (!grip.contains(event.target)) {
+        return;
+      }
+      event.stopPropagation();
+      event.preventDefault();
+    };
+
+    grip.addEventListener("pointerdown", onPointerDownCapture, {
+      capture: true,
+    });
+    grip.addEventListener("mousedown", onMouseDownCapture, { capture: true });
+
+    return () => {
+      grip.removeEventListener("pointerdown", onPointerDownCapture, {
+        capture: true,
+      });
+      grip.removeEventListener("mousedown", onMouseDownCapture, {
+        capture: true,
+      });
+    };
+  }, [cardId]);
+
   return (
     <div
-      className="nodrag nopan absolute -left-2 -top-2 z-20 flex h-7 w-7 cursor-grab items-center justify-center rounded-full border border-wn-mono-600 bg-wn-mono-900 text-wn-mono-300 opacity-80 shadow-md transition-opacity hover:border-wn-azure-500 hover:text-wn-mono-50 group-hover/card:opacity-100 active:cursor-grabbing"
-      draggable
-      onMouseDown={(event) => event.stopPropagation()}
-      onPointerDown={(event) => event.stopPropagation()}
-      onTouchStart={(event) => event.stopPropagation()}
-      onDragStart={onDragStart}
+      ref={gripRef}
+      className="nodrag nopan nowheel absolute -left-2 -top-2 z-30 flex h-7 w-7 cursor-grab touch-none items-center justify-center rounded-full border border-wn-mono-600 bg-wn-mono-900 text-wn-mono-300 opacity-80 shadow-md transition-opacity hover:border-wn-azure-500 hover:text-wn-mono-50 group-hover/card:opacity-100 active:cursor-grabbing"
       title="Drag into WorldWizard"
       aria-label="Drag card into WorldWizard"
     >
@@ -104,6 +149,7 @@ function CardDragGrip({
         height="14"
         viewBox="0 0 10 14"
         fill="currentColor"
+        className="pointer-events-none"
         role="img"
       >
         <title>Drag handle</title>
@@ -182,9 +228,7 @@ export type CardFlowNode = Node<CardNodeData, "worldnoteCard">;
 
 export type CardViewMode = "visual" | "node";
 
-const cardRadiusStyle = { borderRadius: "var(--radius-wn-card)" } as const;
-
-const BORDER_WIDTH_PX = 5;
+const cardRadiusStyle = cardOuterRadiusStyle;
 
 const NODE_VIEW_WIDTH = "w-[260px]";
 
@@ -302,7 +346,7 @@ function CardImageBorderFrame({
       }`}
       style={
         hasImageBorder
-          ? { ...cardRadiusStyle, padding: BORDER_WIDTH_PX }
+          ? { ...cardRadiusStyle, padding: CARD_CHROME_BORDER_WIDTH_PX }
           : cardRadiusStyle
       }
     >
@@ -321,7 +365,7 @@ function CardImageBorderFrame({
       ) : null}
       <div
         className="relative overflow-hidden bg-wn-mono-900"
-        style={cardRadiusStyle}
+        style={cardInnerRadiusStyle}
       >
         {children}
       </div>
@@ -654,42 +698,43 @@ function CardNodeInner({ data, selected = false }: NodeProps<CardFlowNode>) {
     ) : null;
 
   const shouldEnter = Boolean(data.enterAnimation && !enterDone);
+  const wizardDragCardId = data.cardId?.trim();
 
   return (
-    <motion.div
-      className="group/card relative"
-      variants={cardEnterVariants}
-      initial={shouldEnter ? "hidden" : false}
-      animate="visible"
-      onAnimationComplete={() => {
-        if (data.enterAnimation && !enterDone) {
-          setEnterDone(true);
-          data.onUpdate?.({ enterAnimation: false });
-        }
-      }}
-    >
+    <div className="group/card relative">
       {handles}
-      {data.onDragCardStart ? (
-        <CardDragGrip onDragStart={data.onDragCardStart} />
-      ) : null}
-      <AnimatePresence mode="wait" initial={false}>
-        <motion.div
-          key={viewMode}
-          variants={viewCrossfadeVariants}
-          initial="hidden"
-          animate="visible"
-          exit="exit"
-          transition={{ duration: 0.15 }}
-        >
-          <CardNodeBody
-            data={data}
-            viewMode={viewMode}
-            isSelected={selected}
-            onToggleView={onToggleView}
-          />
-        </motion.div>
-      </AnimatePresence>
-    </motion.div>
+      {wizardDragCardId ? <CardDragGrip cardId={wizardDragCardId} /> : null}
+      <motion.div
+        className="relative"
+        variants={cardEnterVariants}
+        initial={shouldEnter ? "hidden" : false}
+        animate="visible"
+        onAnimationComplete={() => {
+          if (data.enterAnimation && !enterDone) {
+            setEnterDone(true);
+            data.onUpdate?.({ enterAnimation: false });
+          }
+        }}
+      >
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={viewMode}
+            variants={viewCrossfadeVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            transition={{ duration: 0.15 }}
+          >
+            <CardNodeBody
+              data={data}
+              viewMode={viewMode}
+              isSelected={selected}
+              onToggleView={onToggleView}
+            />
+          </motion.div>
+        </AnimatePresence>
+      </motion.div>
+    </div>
   );
 }
 

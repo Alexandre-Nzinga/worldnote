@@ -172,17 +172,28 @@ export function WorldSettingsModal({
       closeDisabled={isBusy}
       labelledBy="world-settings-title"
     >
-      <header className="flex flex-col gap-1">
-        <h2
-          id="world-settings-title"
-          className="text-xl font-semibold text-wn-mono-50"
+      <header className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 flex-col gap-1">
+          <h2
+            id="world-settings-title"
+            className="text-xl font-semibold text-wn-mono-50"
+          >
+            World settings
+          </h2>
+          <p className="text-sm text-wn-mono-400">
+            Rename this world, change its cover image, or delete it from your
+            vault.
+          </p>
+        </div>
+        <button
+          type="button"
+          aria-label="Close world settings"
+          className="shrink-0 rounded-lg px-2 py-1 text-sm text-wn-mono-400 transition-colors hover:bg-wn-mono-800 hover:text-wn-mono-50 disabled:opacity-50"
+          disabled={isBusy}
+          onClick={onClose}
         >
-          World settings
-        </h2>
-        <p className="text-sm text-wn-mono-400">
-          Rename this world, change its cover image, or delete it from your
-          vault.
-        </p>
+          <MaterialSymbol name="close" className="text-base" />
+        </button>
       </header>
 
       <div className="flex flex-col gap-4">
@@ -221,51 +232,12 @@ export function WorldSettingsModal({
           </div>
         </div>
 
-        <div className="flex flex-col gap-2 border-t border-wn-mono-800 pt-4">
-          <span className={modalFieldLabelClassName}>Delete world</span>
-          {confirmDelete ? (
-            <div className="flex flex-col gap-2">
-              <p className="text-sm text-wn-mono-400">
-                Delete &ldquo;{world?.name}&rdquo; and all of its cards? This
-                cannot be undone.
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  variant="secondary"
-                  size="base"
-                  isDisabled={isBusy}
-                  onPress={() => setConfirmDelete(false)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="danger"
-                  size="base"
-                  isDisabled={isBusy}
-                  onPress={() => {
-                    void handleDelete();
-                  }}
-                >
-                  Delete permanently
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="self-start">
-              <Button
-                variant="danger"
-                size="base"
-                isDisabled={isBusy}
-                onPress={() => setConfirmDelete(true)}
-                startContent={
-                  <MaterialSymbol name="delete" className="text-base" />
-                }
-              >
-                Delete world
-              </Button>
-            </div>
-          )}
-        </div>
+        {confirmDelete ? (
+          <p className="text-sm text-wn-mono-400">
+            Delete &ldquo;{world?.name}&rdquo; and all of its cards? This cannot
+            be undone.
+          </p>
+        ) : null}
 
         {error ? (
           <p className="text-sm text-wn-red-400" role="alert">
@@ -274,26 +246,52 @@ export function WorldSettingsModal({
         ) : null}
       </div>
 
-      <footer className="flex shrink-0 items-center justify-between gap-3 pt-2">
-        <Button
-          variant="secondary"
-          size="base"
-          isDisabled={isBusy}
-          onPress={onClose}
-        >
-          {nameChanged ? "Cancel" : "Close"}
-        </Button>
-        <Button
-          variant="white"
-          size="base"
-          className={modalPrimaryButtonClassName}
-          isDisabled={!canSaveRename}
-          onPress={() => {
-            void handleSaveRename();
-          }}
-        >
-          Save name
-        </Button>
+      <footer className="flex shrink-0 items-center justify-end gap-2 pt-2">
+          {confirmDelete ? (
+            <>
+              <Button
+                variant="secondary"
+                size="base"
+                isDisabled={isBusy}
+                onPress={() => setConfirmDelete(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="danger"
+                size="base"
+                isDisabled={isBusy}
+                onPress={() => {
+                  void handleDelete();
+                }}
+              >
+                Delete permanently
+              </Button>
+            </>
+          ) : (
+            <Button
+              variant="danger"
+              size="base"
+              isDisabled={isBusy}
+              onPress={() => setConfirmDelete(true)}
+              startContent={
+                <MaterialSymbol name="delete" className="text-base" />
+              }
+            >
+              Delete world
+            </Button>
+          )}
+          <Button
+            variant="white"
+            size="base"
+            className={modalPrimaryButtonClassName}
+            isDisabled={!canSaveRename}
+            onPress={() => {
+              void handleSaveRename();
+            }}
+          >
+            Save name
+          </Button>
       </footer>
     </AnimatedModal>
   );

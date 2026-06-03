@@ -16,7 +16,7 @@ import type { NewCardType } from "../../services/crudWorldCard/cardTemplates.js"
 import { DockTabs, type DockTabItem } from "../ui/DockTabs.js";
 
 export type CreateOption = NewCardType;
-export type CanvasTool = "select" | "text" | "actions";
+export type CanvasTool = "select" | "text" | "image" | "actions";
 
 const creatableTypes: CreateOption[] = [
   "character",
@@ -94,7 +94,10 @@ function matchesCreateQuery(type: CreateOption, normalizedQuery: string): boolea
 
 type CanvasToolbarProps = {
   className?: string;
+  activeTool?: CanvasTool;
   onCreate?: (type: CreateOption) => void;
+  onImageTool?: () => void;
+  imageToolDisabled?: boolean;
   onOpenVault?: () => void;
   onToggleAllCardViews?: () => void;
   onToggleWizard?: () => void;
@@ -103,7 +106,10 @@ type CanvasToolbarProps = {
 
 export function CanvasToolbar({
   className,
+  activeTool = "select",
   onCreate,
+  onImageTool,
+  imageToolDisabled = false,
   onOpenVault,
   onToggleAllCardViews,
   onToggleWizard,
@@ -115,6 +121,10 @@ export function CanvasToolbar({
   const createSearchRef = useRef<HTMLInputElement>(null);
 
   const supportsCreate = useMemo(() => !!onCreate, [onCreate]);
+  const supportsImageTool = useMemo(
+    () => !!onImageTool && !imageToolDisabled,
+    [imageToolDisabled, onImageTool],
+  );
   const supportsVault = useMemo(() => !!onOpenVault, [onOpenVault]);
   const supportsBulkViewToggle = useMemo(
     () => !!onToggleAllCardViews,
@@ -189,8 +199,11 @@ export function CanvasToolbar({
         name: "Select",
         icon: "near_me",
         iconClassName: "-scale-x-100",
-        colorClassName: "bg-wn-mono-50 text-wn-mono-950",
-        isActive: true,
+        colorClassName:
+          activeTool === "select"
+            ? "bg-wn-mono-50 text-wn-mono-950"
+            : "bg-wn-mono-800 text-wn-mono-50",
+        isActive: activeTool === "select",
       },
       {
         id: "text",
@@ -198,6 +211,18 @@ export function CanvasToolbar({
         icon: "title",
         colorClassName: "bg-wn-mono-800 text-wn-mono-50",
         disabled: true,
+      },
+      {
+        id: "image",
+        name: "Image tool",
+        icon: "image",
+        colorClassName:
+          activeTool === "image"
+            ? "bg-wn-mono-50 text-wn-mono-950"
+            : "bg-wn-mono-800 text-wn-mono-50",
+        isActive: activeTool === "image",
+        disabled: !supportsImageTool,
+        onPress: onImageTool,
       },
       {
         id: "wizard",
@@ -228,7 +253,7 @@ export function CanvasToolbar({
       },
       {
         id: "toggle-views",
-        name: "Toggle all card views",
+        name: "Toggle card view",
         icon: "view_quilt",
         colorClassName: "bg-wn-mono-800 text-wn-mono-50",
         disabled: !supportsBulkViewToggle,
@@ -251,14 +276,17 @@ export function CanvasToolbar({
       },
     ],
     [
+      activeTool,
       closeCreateMenu,
       createMenuOpen,
       isWizardOpen,
+      onImageTool,
       onOpenVault,
       onToggleAllCardViews,
       onToggleWizard,
       supportsBulkViewToggle,
       supportsCreate,
+      supportsImageTool,
       supportsVault,
     ],
   );

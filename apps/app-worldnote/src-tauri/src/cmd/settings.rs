@@ -7,6 +7,41 @@ use tauri::Manager;
 const SETTINGS_FILE: &str = "settings.json";
 const WORLDNOTE_FOLDER_NAME: &str = "WorldNote";
 
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct KeyboardShortcut {
+    pub key: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ctrl: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub meta: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub shift: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub alt: Option<bool>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct CanvasKeyboardShortcuts {
+    #[serde(default)]
+    pub copy: KeyboardShortcut,
+    #[serde(default)]
+    pub paste: KeyboardShortcut,
+    #[serde(default)]
+    pub duplicate: KeyboardShortcut,
+    #[serde(default)]
+    pub cut: KeyboardShortcut,
+    #[serde(default)]
+    pub select_all: KeyboardShortcut,
+    #[serde(default)]
+    pub delete: KeyboardShortcut,
+    #[serde(default)]
+    pub undo: KeyboardShortcut,
+    #[serde(default)]
+    pub redo: KeyboardShortcut,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WizardSettings {
@@ -33,6 +68,9 @@ pub struct AppSettings {
     /// Appearance preference: "light", "dark", or "system". Defaults to "system".
     #[serde(default)]
     pub theme: Option<String>,
+    /// Canvas copy / paste / duplicate shortcuts.
+    #[serde(default)]
+    pub canvas_shortcuts: Option<CanvasKeyboardShortcuts>,
 }
 
 fn settings_path(app: &tauri::AppHandle) -> Result<PathBuf, String> {

@@ -10,11 +10,13 @@ import {
   type KeyboardEvent,
 } from "react";
 
+import { CANVAS_CARD_DROP_TARGET_ATTR } from "@worldnote/canvas";
 import { getAvailableActions } from "../../../services/wizard/index.js";
 import { cx } from "./cx.js";
 import { dragHasCard, readDraggedCardId } from "./dnd.js";
+import { useWizardCardDropListener } from "./useWizardCardDropListener.js";
 import { WizardActionChips } from "./WizardActionChips.js";
-import { WizardDropSlot } from "./WizardDropSlot.js";
+import { WizardChatInput } from "./WizardChatInput.js";
 import { WizardMessage } from "./WizardMessage.js";
 import { useWorldWizard } from "./useWorldWizard.js";
 
@@ -78,6 +80,8 @@ export function WorldWizardPanel({
   const busy = wizard.status === "generating";
   const canSend = Boolean(wizard.model) && !busy && input.trim().length > 0;
 
+  useWizardCardDropListener(wizard.addCard, isOpen);
+
   const scrollKey = `${wizard.messages.length}:${wizard.messages.at(-1)?.content.length ?? 0}`;
 
   useEffect(() => {
@@ -125,6 +129,7 @@ export function WorldWizardPanel({
   return (
     <AnimatedPanel isOpen={isOpen} className={panelClassName}>
       <div
+        {...{ [CANVAS_CARD_DROP_TARGET_ATTR]: "" }}
         className="flex min-h-0 flex-1 flex-col"
         onDragOver={handlePanelDragOver}
         onDrop={handlePanelDrop}
@@ -151,49 +156,6 @@ export function WorldWizardPanel({
         </button>
       </header>
 
-      <div className="flex items-center gap-2 border-b border-wn-mono-800 px-4 py-2">
-        <label
-          htmlFor="wizard-model"
-          className="text-xs font-medium text-wn-mono-400"
-        >
-          Model
-        </label>
-        <select
-          id="wizard-model"
-          value={wizard.model}
-          onChange={(event) => wizard.selectModel(event.target.value)}
-          disabled={wizard.models.length === 0}
-          className="min-w-0 flex-1 rounded-lg border border-wn-mono-700 bg-wn-mono-950 px-2 py-1 text-xs text-wn-mono-100 outline-none focus:border-wn-azure-500 disabled:opacity-50"
-        >
-          {wizard.models.length === 0 ? (
-            <option value="">No models found</option>
-          ) : (
-            wizard.models.map((name) => (
-              <option key={name} value={name}>
-                {name}
-              </option>
-            ))
-          )}
-        </select>
-        <button
-          type="button"
-          aria-label="Refresh models"
-          className="rounded-lg p-1 text-wn-mono-400 transition-colors hover:bg-wn-mono-800 hover:text-wn-mono-100"
-          onClick={() => void wizard.refreshConnection(wizard.host)}
-        >
-          <MaterialSymbol name="refresh" className="text-base" />
-        </button>
-      </div>
-
-      <div className="px-4 pt-3">
-        <WizardDropSlot
-          cards={wizard.droppedCards}
-          vaultPath={vaultPath}
-          onAddCard={wizard.addCard}
-          onRemoveCard={wizard.removeCard}
-        />
-      </div>
-
       <div
         ref={scrollRef}
         className="scrollbar-wn flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-3"
@@ -208,8 +170,8 @@ export function WorldWizardPanel({
               alt=""
             />
             <p className="max-w-[16rem]">
-              Drag cards in, then ask the wizard to simulate conversations,
-              events, or breed new cards.
+              Drop cards into the chat box, then ask the wizard to simulate
+              conversations, events, or breed new cards.
             </p>
           </div>
         ) : (
@@ -223,7 +185,7 @@ export function WorldWizardPanel({
         )}
       </div>
 
-      <div className="flex flex-col gap-2 border-t border-wn-mono-800 px-4 py-3">
+      <div className="flex flex-col gap-2 px-4 py-3">
         {actions.length > 0 ? (
           <WizardActionChips
             actions={actions}
@@ -236,43 +198,30 @@ export function WorldWizardPanel({
             Could not reach Ollama at {wizard.host}. Make sure it is running.
           </p>
         ) : null}
-        <div className="flex items-end gap-2">
-          <textarea
-            value={input}
-            onChange={(event) => setInput(event.target.value)}
-            onKeyDown={onKeyDown}
-            onDragOver={handlePanelDragOver}
-            onDrop={handlePanelDrop}
-            rows={2}
-            placeholder={
-              wizard.model
-                ? "Ask the wizard…"
-                : "Connect a local model to begin"
-            }
-            disabled={!wizard.model}
-            className="scrollbar-wn min-h-0 flex-1 resize-none rounded-xl border border-wn-mono-700 bg-wn-mono-950 px-3 py-2 text-sm text-wn-mono-100 outline-none placeholder:text-wn-mono-600 focus:border-wn-azure-500 disabled:opacity-50"
-          />
-          {busy ? (
-            <button
-              type="button"
-              aria-label="Stop"
-              onClick={wizard.stop}
-              className="flex h-10 w-10 items-center justify-center rounded-xl bg-wn-mono-800 text-wn-mono-100 transition-colors hover:bg-wn-mono-700"
-            >
-              <MaterialSymbol name="stop" className="text-lg" />
-            </button>
-          ) : (
-            <button
-              type="button"
-              aria-label="Send"
-              onClick={submit}
-              disabled={!canSend}
-              className="flex h-10 w-10 items-center justify-center rounded-xl bg-wn-azure-500 text-wn-mono-50 transition-colors hover:bg-wn-azure-600 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              <MaterialSymbol name="send" className="text-lg" />
-            </button>
-          )}
-        </div>
+        <WizardChatInput
+          cards={wizard.droppedCards}
+          cardsById={cardsById}
+          vaultPath={vaultPath}
+          value={input}
+          onChange={setInput}
+          onKeyDown={onKeyDown}
+          onAddCard={wizard.addCard}
+          onRemoveCard={wizard.removeCard}
+          disabled={!wizard.model}
+          busy={busy}
+          canSend={canSend}
+          model={wizard.model}
+          models={wizard.models}
+          onModelChange={wizard.selectModel}
+          onRefreshModels={() => void wizard.refreshConnection(wizard.host)}
+          onSubmit={submit}
+          onStop={wizard.stop}
+          placeholder={
+            wizard.model
+              ? "How can I help you today?"
+              : "Connect a local model to begin"
+          }
+        />
       </div>
       </div>
     </AnimatedPanel>

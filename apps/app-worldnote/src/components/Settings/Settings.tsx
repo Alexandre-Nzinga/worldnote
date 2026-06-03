@@ -8,8 +8,13 @@ import {
 import { motion } from "framer-motion";
 import { useCallback, useEffect, useState } from "react";
 import { useSettings } from "../../hooks/useSettings.js";
+import {
+  normalizeCanvasKeyboardShortcuts,
+  type CanvasKeyboardShortcuts,
+} from "../../services/settings/keyboardShortcuts.js";
 import { normalizeVisibleSocketsSettings } from "../../services/settings/visibleSocketSettings.js";
 import { useResolvedTheme } from "../../theme/ThemeProvider.js";
+import { KeyboardShortcutsSettings } from "./KeyboardShortcutsSettings.js";
 import { SocketVisibilitySettings } from "./SocketVisibilitySettings.js";
 import { ThemeSetting } from "./ThemeSetting.js";
 import {
@@ -31,6 +36,10 @@ export function Settings({ onBack }: SettingsProps) {
   const [visibleSockets, setVisibleSockets] = useState(
     normalizeVisibleSocketsSettings(undefined),
   );
+  const [canvasShortcuts, setCanvasShortcuts] =
+    useState<CanvasKeyboardShortcuts>(
+      normalizeCanvasKeyboardShortcuts(undefined),
+    );
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,6 +50,9 @@ export function Settings({ onBack }: SettingsProps) {
     setUsername(settings.username);
     setVisibleSockets(
       normalizeVisibleSocketsSettings(settings.visibleSockets),
+    );
+    setCanvasShortcuts(
+      normalizeCanvasKeyboardShortcuts(settings.canvasShortcuts),
     );
     setError(null);
     setIsSaving(false);
@@ -69,6 +81,7 @@ export function Settings({ onBack }: SettingsProps) {
         ...settings,
         username: username.trim(),
         visibleSockets,
+        canvasShortcuts,
       });
       onBack();
     } catch (saveError) {
@@ -78,7 +91,7 @@ export function Settings({ onBack }: SettingsProps) {
     } finally {
       setIsSaving(false);
     }
-  }, [onBack, save, settings, username, visibleSockets]);
+  }, [canvasShortcuts, onBack, save, settings, username, visibleSockets]);
 
   const canSave = username.trim().length > 0 && !isSaving;
 
@@ -181,6 +194,14 @@ export function Settings({ onBack }: SettingsProps) {
                 <SocketVisibilitySettings
                   value={visibleSockets}
                   onChange={setVisibleSockets}
+                  disabled={isSaving}
+                />
+              </div>
+
+              <div className="border-t border-wn-mono-800 pt-6">
+                <KeyboardShortcutsSettings
+                  value={canvasShortcuts}
+                  onChange={setCanvasShortcuts}
                   disabled={isSaving}
                 />
               </div>

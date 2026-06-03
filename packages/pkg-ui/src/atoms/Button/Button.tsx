@@ -2,9 +2,11 @@ import { Button as HeroUIButton } from "@heroui/react";
 import clsx from "clsx";
 import { motion } from "framer-motion";
 import type { ComponentProps, ReactNode } from "react";
-import { pressableTap } from "../motion/presets.js";
-import { tapTransition } from "../motion/tokens.js";
-import { usePrefersReducedMotion } from "../motion/usePrefersReducedMotion.js";
+
+type HeroUIButtonProps = ComponentProps<typeof import("@heroui/react").Button>;
+import { pressableTap } from "../../motion/presets.js";
+import { tapTransition } from "../../motion/tokens.js";
+import { usePrefersReducedMotion } from "../../motion/usePrefersReducedMotion.js";
 
 export type ButtonVariant =
   | "primary"
@@ -21,7 +23,7 @@ export type ButtonSize = "sm" | "base";
 export type ButtonIconChipPlacement = "start" | "end";
 
 export type ButtonProps = Omit<
-  ComponentProps<typeof HeroUIButton>,
+  HeroUIButtonProps,
   "variant" | "color" | "size" | "radius" | "children"
 > & {
   variant?: ButtonVariant;
@@ -37,8 +39,8 @@ export type ButtonProps = Omit<
 };
 
 type VariantConfig = {
-  heroVariant: ComponentProps<typeof HeroUIButton>["variant"];
-  heroColor?: ComponentProps<typeof HeroUIButton>["color"];
+  heroVariant: HeroUIButtonProps["variant"];
+  heroColor?: HeroUIButtonProps["color"];
   className: string;
 };
 

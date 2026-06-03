@@ -33,7 +33,23 @@ type InfoTabProps = {
   onDescriptionChange: (plainText: string, doc: LoreDoc) => void;
   onNavigateToCard?: (cardId: string) => void;
   loreEditorRef?: Ref<LoreEditorHandle>;
+  /** When false in edit mode, Quill is not mounted so title/subtitle can receive focus. */
+  isLoreEditorActive: boolean;
+  onLoreEditorActivate: () => void;
+  autoFocusLoreEditor?: boolean;
 };
+
+function LoreEditorPlaceholder({ onActivate }: { onActivate: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onActivate}
+      className="min-h-48 w-full rounded-xl border border-wn-mono-800 px-3 py-3 text-left text-sm text-wn-mono-500 transition-colors hover:border-wn-mono-700 hover:bg-wn-mono-950/60"
+    >
+      Write the lore…
+    </button>
+  );
+}
 
 export function InfoTab({
   readOnly,
@@ -49,25 +65,35 @@ export function InfoTab({
   onDescriptionChange,
   onNavigateToCard,
   loreEditorRef,
+  isLoreEditorActive,
+  onLoreEditorActivate,
+  autoFocusLoreEditor = false,
 }: InfoTabProps) {
   const initialDoc = useMemo(
     () => resolveInitialLoreDoc(loreDoc, lore, legacyDescription),
     [loreDoc, lore, legacyDescription],
   );
 
+  const showLoreEditor = readOnly || isLoreEditorActive;
+
   return (
     <div className="flex flex-col gap-5">
       <section className="flex flex-col gap-2">
-        <LoreEditor
-          ref={loreEditorRef}
-          readOnly={readOnly}
-          initialDoc={initialDoc}
-          vaultPath={vaultPath}
-          cardId={cardId}
-          cardsById={cardsById}
-          onChange={(doc, plainText) => onDescriptionChange(plainText, doc)}
-          onNavigateToCard={onNavigateToCard}
-        />
+        {showLoreEditor ? (
+          <LoreEditor
+            ref={loreEditorRef}
+            readOnly={readOnly}
+            initialDoc={initialDoc}
+            vaultPath={vaultPath}
+            cardId={cardId}
+            cardsById={cardsById}
+            autoFocus={autoFocusLoreEditor && !readOnly}
+            onChange={(doc, plainText) => onDescriptionChange(plainText, doc)}
+            onNavigateToCard={onNavigateToCard}
+          />
+        ) : (
+          <LoreEditorPlaceholder onActivate={onLoreEditorActivate} />
+        )}
       </section>
 
       <section className="flex flex-col gap-2">

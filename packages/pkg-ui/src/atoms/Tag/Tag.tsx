@@ -1,7 +1,7 @@
 import clsx from "clsx";
 import type { ComponentProps, ReactNode } from "react";
-import type { PillTone } from "./Pill.js";
-import { Pill } from "./Pill.js";
+import type { PillTone } from "../Pill/Pill.js";
+import { Pill } from "../Pill/Pill.js";
 
 export type TagProps = {
   children: ReactNode;

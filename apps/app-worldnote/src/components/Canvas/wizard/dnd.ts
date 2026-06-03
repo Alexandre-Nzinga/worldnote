@@ -1,3 +1,4 @@
+import { isCardExternalPointerDragActive } from "@worldnote/canvas";
 import {
   WIZARD_CARD_MIME,
   WIZARD_CARD_PLAIN_PREFIX,
@@ -45,6 +46,10 @@ export function readDraggedCardId(dataTransfer: DataTransfer): string | null {
 
 /** True when a drag event carries a card the wizard can accept. */
 export function dragHasCard(dataTransfer: DataTransfer): boolean {
+  if (isCardExternalPointerDragActive()) {
+    return true;
+  }
+
   const types = Array.from(dataTransfer.types).map((type) =>
     type.toLowerCase(),
   );

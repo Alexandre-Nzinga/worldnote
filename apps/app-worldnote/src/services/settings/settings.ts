@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
+import type { CanvasKeyboardShortcuts } from "./keyboardShortcuts.js";
 
 /** Per card type, which socket handles are shown on the canvas. */
 export type VisibleSocketsByCardType = Record<string, Record<string, boolean>>;
@@ -23,6 +24,8 @@ export type AppSettings = {
   wizard?: WizardSettings;
   /** Appearance preference; defaults to "system" when unset. */
   theme?: ThemePreference;
+  /** Canvas copy / paste / duplicate shortcuts. */
+  canvasShortcuts?: CanvasKeyboardShortcuts;
 };
 
 export async function getSettings(): Promise<AppSettings | null> {

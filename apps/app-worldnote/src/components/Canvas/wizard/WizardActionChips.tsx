@@ -22,7 +22,7 @@ export function WizardActionChips({
           type="button"
           disabled={disabled}
           onClick={() => onRun(action)}
-          className="flex items-center gap-1.5 rounded-full border border-wn-mono-700 bg-wn-mono-950 px-3 py-1.5 text-xs font-medium text-wn-mono-200 transition-colors hover:border-wn-azure-500 hover:text-wn-mono-50 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex items-center gap-1.5 rounded-full border border-wn-mono-700 bg-wn-mono-950 px-3 py-1.5 text-xs font-medium text-wn-mono-200 transition-colors hover:border-wn-mono-50 hover:text-wn-mono-50 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <MaterialSymbol name={action.icon} className="text-sm" />
           {action.label}

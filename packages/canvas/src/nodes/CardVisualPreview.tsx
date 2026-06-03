@@ -5,13 +5,17 @@ import { CardImageView } from "./CardImageView.js";
 import { CardTypePlaceholder } from "./CardTypePlaceholder.js";
 import { CardTypePill } from "./CardTypePill.js";
 import {
+  CARD_CHROME_BORDER_WIDTH_PX,
+  cardInnerRadiusStyle,
+  cardOuterRadiusStyle,
+} from "./card-chrome-radius.js";
+import {
   visualConfigFor,
   type WorldNoteCardType,
 } from "./card-visual-config.js";
 import { useImageLuminance } from "./useImageLuminance.js";
 
-const BORDER_WIDTH_PX = 5;
-const cardRadiusStyle = { borderRadius: "var(--radius-wn-card)" } as const;
+const cardRadiusStyle = cardOuterRadiusStyle;
 
 type CardImageBorderFrameProps = {
   imageUrl?: string;
@@ -37,7 +41,7 @@ function CardImageBorderFrame({
       }`}
       style={
         hasImageBorder
-          ? { ...cardRadiusStyle, padding: BORDER_WIDTH_PX }
+          ? { ...cardRadiusStyle, padding: CARD_CHROME_BORDER_WIDTH_PX }
           : cardRadiusStyle
       }
     >
@@ -56,7 +60,7 @@ function CardImageBorderFrame({
       ) : null}
       <div
         className="relative overflow-hidden bg-wn-mono-900"
-        style={cardRadiusStyle}
+        style={cardInnerRadiusStyle}
       >
         {children}
       </div>

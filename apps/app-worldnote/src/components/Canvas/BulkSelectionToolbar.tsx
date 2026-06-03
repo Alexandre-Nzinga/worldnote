@@ -4,32 +4,52 @@ import { useCallback, useMemo, useState, type Key } from "react";
 
 const TOOLBAR_GAP_PX = 6;
 
+export type BulkSelectionKind = "card" | "image";
+
 type BulkSelectionToolbarProps = {
-  selectedCardIds: string[];
+  selectedIds: string[];
+  selectionKind: BulkSelectionKind;
   onDuplicate: () => Promise<void>;
   onDelete: () => Promise<void>;
+  onCreateGroup?: () => Promise<void>;
 };
 
 function countLabel(count: number): string {
   return count === 1 ? "1 selected" : `${count} selected`;
 }
 
+function deleteConfirmMessage(kind: BulkSelectionKind, count: number): string {
+  if (count === 1) {
+    return kind === "image" ? "Delete this image?" : "Delete this card?";
+  }
+  const noun = kind === "image" ? "images" : "cards";
+  return `Delete ${count} selected ${noun}?`;
+}
+
 export function BulkSelectionToolbar({
-  selectedCardIds,
+  selectedIds,
+  selectionKind,
   onDuplicate,
   onDelete,
+  onCreateGroup,
 }: BulkSelectionToolbarProps) {
   const [isBusy, setIsBusy] = useState(false);
   const { getNodesBounds } = useReactFlow();
   const transform = useStore((state) => state.transform);
 
+  const nodeType =
+    selectionKind === "image" ? "worldnoteImage" : "worldnoteCard";
+
   const selectedNodes = useStore(
     useCallback(
       (state) =>
         state.nodes.filter(
-          (node) => node.selected && selectedCardIds.includes(node.id),
+          (node) =>
+            node.selected &&
+            node.type === nodeType &&
+            selectedIds.includes(node.id),
         ),
-      [selectedCardIds],
+      [nodeType, selectedIds],
     ),
   );
 
@@ -55,6 +75,18 @@ export function BulkSelectionToolbar({
       if (isBusy) {
         return;
       }
+      if (key === "create-group") {
+        if (!onCreateGroup) {
+          return;
+        }
+        setIsBusy(true);
+        try {
+          await onCreateGroup();
+        } finally {
+          setIsBusy(false);
+        }
+        return;
+      }
       if (key === "duplicate") {
         setIsBusy(true);
         try {
@@ -65,13 +97,7 @@ export function BulkSelectionToolbar({
         return;
       }
       if (key === "delete") {
-        if (
-          !window.confirm(
-            selectedCardIds.length === 1
-              ? "Delete this card?"
-              : `Delete ${selectedCardIds.length} selected cards?`,
-          )
-        ) {
+        if (!window.confirm(deleteConfirmMessage(selectionKind, selectedIds.length))) {
           return;
         }
         setIsBusy(true);
@@ -82,10 +108,10 @@ export function BulkSelectionToolbar({
         }
       }
     },
-    [isBusy, onDelete, onDuplicate, selectedCardIds.length],
+    [isBusy, onCreateGroup, onDelete, onDuplicate, selectedIds.length, selectionKind],
   );
 
-  if (!anchor || selectedCardIds.length < 2) {
+  if (!anchor || selectedIds.length < 2) {
     return null;
   }
 
@@ -102,6 +128,17 @@ export function BulkSelectionToolbar({
             void handleAction(key);
           }}
           items={[
+            ...(selectionKind === "card" && onCreateGroup
+              ? [
+                  {
+                    id: "create-group",
+                    label: "Create group",
+                    icon: (
+                      <MaterialSymbol name="groups" className="text-base" />
+                    ),
+                  },
+                ]
+              : []),
             {
               id: "duplicate",
               label: "Duplicate",
@@ -118,13 +155,16 @@ export function BulkSelectionToolbar({
           ]}
           trigger={
             <Button
-              variant="white"
+              variant="secondary"
               size="sm"
               isDisabled={isBusy}
-              className="h-8 gap-1.5 rounded-full border border-wn-mono-600 bg-wn-mono-800 px-3 text-sm font-medium text-wn-mono-50 shadow-lg"
+              className="h-8 min-h-0 gap-1.5 px-3 text-sm font-medium text-wn-mono-50 shadow-lg"
             >
-              {countLabel(selectedCardIds.length)}
-              <MaterialSymbol name="expand_more" className="text-base" />
+              {countLabel(selectedIds.length)}
+              <MaterialSymbol
+                name="expand_more"
+                className="text-base text-wn-mono-50"
+              />
             </Button>
           }
         />
