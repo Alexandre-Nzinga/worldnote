@@ -22,14 +22,14 @@ export function CardImageView({
   position = DEFAULT_POSITION,
   className = "h-full w-full",
 }: CardImageViewProps) {
-  const { objectFit, objectPosition } = cardImageObjectStyles(fit, position);
+  const imageStyle = cardImageObjectStyles(fit, position);
 
   return (
     <img
       src={src}
       alt={alt}
       className={className}
-      style={{ objectFit, objectPosition }}
+      style={imageStyle}
       draggable={false}
     />
   );

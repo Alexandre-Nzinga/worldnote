@@ -31,7 +31,6 @@ type CardBaseFields = {
   description?: string;
   subtitle?: string;
   lore?: string;
-  lore_doc?: Record<string, unknown>;
   image_path?: string;
   image_position?: CardImagePosition;
   custom_properties: Record<string, unknown>;

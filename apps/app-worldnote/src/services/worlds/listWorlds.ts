@@ -5,7 +5,7 @@ export type WorldSummary = {
   name: string;
   description: string;
   cardCount: number;
-  lastOpened: number;
+  lastEdited: number;
   coverImage?: string;
 };
 

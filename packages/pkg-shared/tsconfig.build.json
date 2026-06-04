@@ -6,9 +6,24 @@
     "declarationMap": true,
     "outDir": "dist",
     "rootDir": "src",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext"
+    "baseUrl": ".",
+    "jsx": "react-jsx",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "paths": {
+      "@worldnote/shared": ["./src/index.ts"],
+      "@worldnote/shared/*": ["./src/*"]
+    }
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["src/**/*.test.ts", "node_modules", "dist"]
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": [
+    "src/**/*.test.ts",
+    "node_modules",
+    "dist",
+    "src/components/tiptap-templates/simple/simple-editor.tsx",
+    "src/components/tiptap-templates/simple/theme-toggle.tsx",
+    "src/components/tiptap-node/image-upload-node",
+    "src/components/tiptap-node/horizontal-rule-node",
+    "src/components/tiptap-ui/image-upload-button"
+  ]
 }

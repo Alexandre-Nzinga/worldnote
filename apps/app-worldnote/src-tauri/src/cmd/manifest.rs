@@ -19,9 +19,13 @@ pub struct StickyNotePlacement {
     pub y: f64,
     pub z: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub lore: Option<String>,
+    pub heading: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub lore_doc: Option<serde_json::Value>,
+    pub color: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub width: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub height: Option<f64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -36,6 +40,8 @@ pub struct CanvasImagePlacement {
     pub width: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub height: Option<f64>,
+    #[serde(rename = "imagePosition", default, skip_serializing_if = "Option::is_none")]
+    pub image_position: Option<serde_json::Value>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -149,4 +155,42 @@ pub(crate) fn remove_image_from_manifest(vault: &str, image_id: &str) -> Result<
 #[tauri::command]
 pub fn remove_canvas_manifest_image(vault: String, image_id: String) -> Result<(), String> {
     remove_image_from_manifest(&vault, &image_id)
+}
+
+#[tauri::command]
+pub fn update_canvas_manifest_sticky_note(
+    vault: String,
+    placement: StickyNotePlacement,
+) -> Result<(), String> {
+    let mut manifest = load_or_default(&vault)?;
+    if let Some(note) = manifest
+        .sticky_notes
+        .iter_mut()
+        .find(|note| note.id == placement.id)
+    {
+        *note = placement;
+    } else {
+        manifest.sticky_notes.push(placement);
+    }
+
+    write_manifest(&vault, &manifest)
+}
+
+pub(crate) fn remove_sticky_note_from_manifest(
+    vault: &str,
+    sticky_note_id: &str,
+) -> Result<(), String> {
+    let mut manifest = load_or_default(vault)?;
+    manifest
+        .sticky_notes
+        .retain(|note| note.id != sticky_note_id);
+    write_manifest(vault, &manifest)
+}
+
+#[tauri::command]
+pub fn remove_canvas_manifest_sticky_note(
+    vault: String,
+    sticky_note_id: String,
+) -> Result<(), String> {
+    remove_sticky_note_from_manifest(&vault, &sticky_note_id)
 }

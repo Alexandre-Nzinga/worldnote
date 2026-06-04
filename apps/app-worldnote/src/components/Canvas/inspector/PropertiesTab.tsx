@@ -58,7 +58,7 @@ export function PropertiesTab({
   const hasCustomProperties = propertyRows.length > 0;
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-8">
       {hasSockets ? (
         <section className="flex flex-col gap-4">
           <span className={inspectorSectionLabelClassName}>Connections</span>

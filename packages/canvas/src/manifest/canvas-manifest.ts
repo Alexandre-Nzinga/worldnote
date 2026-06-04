@@ -1,3 +1,5 @@
+import type { CardImagePosition } from "../nodes/card-image-display.js";
+
 /**
  * Canvas manifest — maps card UUID → placement per view.
  */
@@ -8,14 +10,16 @@ export type CanvasNodePlacement = {
   z?: number;
 };
 
-/** Canvas sticky note (TipTap lore_doc + placement). */
+/** Canvas sticky note layout (body stored in sticky-notes/{id}.md). */
 export type StickyNotePlacement = {
   id: string;
   x: number;
   y: number;
   z?: number;
-  lore?: string;
-  lore_doc?: Record<string, unknown>;
+  heading?: string;
+  color?: string;
+  width?: number;
+  height?: number;
 };
 
 /** Freestanding image on the canvas (not tied to a card). */
@@ -27,6 +31,8 @@ export type CanvasImagePlacement = {
   imagePath: string;
   width?: number;
   height?: number;
+  /** Pan, zoom, rotation, and flip inside the image frame. */
+  imagePosition?: CardImagePosition;
 };
 
 export type CanvasManifest = {

@@ -6,11 +6,19 @@ import { defineConfig } from "vite";
 import packageJson from "./package.json" with { type: "json" };
 
 const rootDir = fileURLToPath(new URL(".", import.meta.url));
+const sharedSrcDir = path.join(rootDir, "../../packages/pkg-shared/src");
 
 const host = process.env.TAURI_DEV_HOST;
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  css: {
+    preprocessorOptions: {
+      scss: {
+        api: "modern-compiler",
+      },
+    },
+  },
   clearScreen: false,
   define: {
     __APP_VERSION__: JSON.stringify(packageJson.version),
@@ -33,6 +41,10 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.join(rootDir, "src"),
+      "@worldnote/shared/components": path.join(sharedSrcDir, "components"),
+      "@worldnote/shared/hooks": path.join(sharedSrcDir, "hooks"),
+      "@worldnote/shared/lib": path.join(sharedSrcDir, "lib"),
+      "@worldnote/shared/styles": path.join(sharedSrcDir, "styles"),
     },
   },
   envPrefix: ["VITE_", "TAURI_"],

@@ -46,6 +46,10 @@ import {
   visualConfigFor,
   type WorldNoteCardType,
 } from "./card-visual-config.js";
+import { GroupMembersVisual } from "./GroupMembersVisual.js";
+import type { GroupMemberPreview } from "./group-member-preview.js";
+
+export type { GroupMemberPreview } from "./group-member-preview.js";
 
 export type { WorldNoteCardType } from "./card-visual-config.js";
 
@@ -87,6 +91,8 @@ export type CardNodeData = {
   connectionHover?: boolean;
   /** One-shot enter animation when a card is newly created. */
   enterAnimation?: boolean;
+  /** Member cards when this node is a group (`cardType` group). */
+  groupMembers?: GroupMemberPreview[];
   /** @deprecated Grip uses pointer drag; kept for node data compatibility. */
   onDragCardStart?: unknown;
 };
@@ -413,7 +419,11 @@ function OverlayMediaCard({
       <div
         className={`relative w-full overflow-hidden bg-wn-mono-800 ${aspectClass}`}
       >
-        {data.imageUrl ? (
+        {data.cardType === "group" &&
+        data.groupMembers &&
+        data.groupMembers.length > 0 ? (
+          <GroupMembersVisual members={data.groupMembers} />
+        ) : data.imageUrl ? (
           <CardImageView
             src={data.imageUrl}
             fit={data.imageFit}

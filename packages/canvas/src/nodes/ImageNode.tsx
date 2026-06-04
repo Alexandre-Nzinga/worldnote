@@ -1,9 +1,11 @@
 import type { Node, NodeProps } from "@xyflow/react";
 import { NodeResizer, useInternalNode } from "@xyflow/react";
+import { DEFAULT_CARD_IMAGE_POSITION } from "@worldnote/shared";
 import { motion } from "framer-motion";
 import { memo, useEffect, useRef, useState } from "react";
 import { useCanvasImageInteraction } from "./CanvasImageInteractionContext.js";
 import { CardImageView } from "./CardImageView.js";
+import type { CardImagePosition } from "./card-image-display.js";
 import {
   CANVAS_IMAGE_MAX_HEIGHT,
   CANVAS_IMAGE_MAX_WIDTH,
@@ -15,6 +17,7 @@ import {
 export type ImageNodeData = {
   imageSrc: string;
   imagePath: string;
+  imagePosition?: CardImagePosition;
   enterAnimation?: boolean;
 };
 
@@ -32,6 +35,10 @@ function ImageNodeInner({
   const { onResizeEnd } = useCanvasImageInteraction();
   const internalNode = useInternalNode<ImageFlowNode>(id);
   const [naturalSize, setNaturalSize] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
+  const [resizeSize, setResizeSize] = useState<{
     width: number;
     height: number;
   } | null>(null);
@@ -110,7 +117,11 @@ function ImageNodeInner({
         keepAspectRatio
         handleClassName="!h-2.5 !w-2.5 !rounded-sm !border !border-wn-mono-50 !bg-wn-mono-800"
         lineClassName="!border-wn-mono-400"
+        onResize={(_, params) => {
+          setResizeSize({ width: params.width, height: params.height });
+        }}
         onResizeEnd={(_, params) => {
+          setResizeSize(null);
           onResizeEnd?.(id, {
             width: params.width,
             height: params.height,
@@ -121,8 +132,14 @@ function ImageNodeInner({
         src={data.imageSrc}
         alt=""
         fit="fill"
+        position={data.imagePosition ?? DEFAULT_CARD_IMAGE_POSITION}
         className="block h-full w-full"
       />
+      {resizeSize ? (
+        <div className="pointer-events-none absolute bottom-1.5 right-1.5 rounded-md bg-wn-mono-950/80 px-1.5 py-0.5 font-mono text-[10px] leading-none text-wn-mono-50 shadow-sm backdrop-blur-sm">
+          {Math.round(resizeSize.width)} × {Math.round(resizeSize.height)}
+        </div>
+      ) : null}
     </motion.div>
   );
 }

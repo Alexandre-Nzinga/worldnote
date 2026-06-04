@@ -14,17 +14,27 @@ export function CanvasFitViewBridge({
 }: CanvasFitViewBridgeProps) {
   const { fitView } = useReactFlow();
   const lastVaultRef = useRef<string | null>(null);
+  const lastNodeCountRef = useRef(0);
   const hasFittedRef = useRef(false);
 
   useEffect(() => {
     if (vaultPath !== lastVaultRef.current) {
       lastVaultRef.current = vaultPath;
       hasFittedRef.current = false;
+      lastNodeCountRef.current = 0;
     }
   }, [vaultPath]);
 
   useEffect(() => {
-    if (!vaultPath || nodeCount === 0 || hasFittedRef.current) {
+    if (!vaultPath || nodeCount === 0) {
+      lastNodeCountRef.current = nodeCount;
+      return;
+    }
+
+    const nodesJustLoaded = lastNodeCountRef.current === 0 && nodeCount > 0;
+    lastNodeCountRef.current = nodeCount;
+
+    if (hasFittedRef.current && !nodesJustLoaded) {
       return;
     }
 

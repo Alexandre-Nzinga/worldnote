@@ -4,6 +4,7 @@ import {
   type ImageFlowNode,
   type ImageNodeData,
 } from "@worldnote/canvas";
+import { normalizeCardImageDisplay } from "@worldnote/shared";
 import { cardImageSrc } from "./cardNodeData.js";
 
 export function vaultAbsoluteImagePath(
@@ -28,6 +29,10 @@ export function imagePlacementToFlowNode(
   const data: ImageNodeData = {
     imageSrc,
     imagePath: placement.imagePath,
+    imagePosition: normalizeCardImageDisplay(
+      undefined,
+      placement.imagePosition,
+    ).position,
     enterAnimation: options?.enterAnimation,
   };
 

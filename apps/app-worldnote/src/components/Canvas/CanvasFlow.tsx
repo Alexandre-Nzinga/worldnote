@@ -1,5 +1,6 @@
 import {
   CanvasImageInteractionProvider,
+  CanvasStickyNoteInteractionProvider,
   WorldNoteCanvas,
   type CanvasFlowNode,
 } from "@worldnote/canvas";
@@ -23,8 +24,17 @@ import type {
   RefObject,
 } from "react";
 import type { CanvasImageContextMenuState } from "./CanvasImageContextMenu.js";
+import {
+  CanvasCardContextMenu,
+  type CanvasCardContextMenuState,
+} from "./CanvasCardContextMenu.js";
 import { CanvasImageContextMenu } from "./CanvasImageContextMenu.js";
+import {
+  CanvasStickyNoteContextMenu,
+  type CanvasStickyNoteContextMenuState,
+} from "./CanvasStickyNoteContextMenu.js";
 import type { Link, WorldCard } from "@worldnote/shared";
+import type { NewCardType } from "../../services/crudWorldCard/cardTemplates.js";
 import type { VisibleSocketsByCardType } from "../../services/settings/settings.js";
 import {
   BulkSelectionToolbar,
@@ -38,6 +48,9 @@ import type {
   CanvasImageImportOptions,
 } from "./useCanvasExternalImageDrop.js";
 import { useCanvasConnectionEnd } from "./useCanvasConnectionEnd.js";
+import { useCanvasPointerTracking } from "./useCanvasPointerTracking.js";
+import type { CanvasPointerApi } from "./useCanvasPointerTracking.js";
+import type { CanvasFlowPointer } from "../../services/canvas/canvasSpawnPosition.js";
 import { useResolvedTheme } from "../../theme/ThemeProvider.js";
 
 type CanvasFlowProps = {
@@ -58,9 +71,26 @@ type CanvasFlowProps = {
   onPaneClick: () => void;
   imageContextMenu: CanvasImageContextMenuState | null;
   onCloseImageContextMenu: () => void;
+  cardContextMenu: CanvasCardContextMenuState | null;
+  onCloseCardContextMenu: () => void;
+  onCardContextDuplicate: (cardId: string) => void;
+  onCardContextCopy: (cardId: string) => void;
+  onCardContextShowChangeType: (cardId: string) => void;
+  onCardContextBackToActions: () => void;
+  onCardChangeType: (cardId: string, newType: NewCardType) => void;
+  onCardContextDelete: (cardId: string) => void;
   onDuplicateCanvasImage: (imageId: string) => void;
   onDeleteCanvasImage: (imageId: string) => void;
+  onFlipCanvasImageHorizontal: (imageId: string) => void;
+  onFlipCanvasImageVertical: (imageId: string) => void;
+  onRotateCanvasImageClockwise: (imageId: string) => void;
   onImageResizeEnd: (nodeId: string, size: { width: number; height: number }) => void;
+  stickyNoteContextMenu: CanvasStickyNoteContextMenuState | null;
+  onCloseStickyNoteContextMenu: () => void;
+  onDuplicateStickyNote: (noteId: string) => void;
+  onCopyStickyNote: (noteId: string) => void;
+  onDeleteStickyNote: (noteId: string) => void;
+  onStickyNoteResizeEnd: (nodeId: string, size: { width: number; height: number }) => void;
   nodesDraggable?: boolean;
   vaultPath: string | null;
   cardsByIdRef: RefObject<Record<string, WorldCard>>;
@@ -79,6 +109,8 @@ type CanvasFlowProps = {
   onDeleteSelection: () => Promise<void>;
   onCreateGroupFromSelection?: () => Promise<void>;
   focusCardRef: MutableRefObject<((cardId: string) => void) | undefined>;
+  lastCanvasPointerRef: MutableRefObject<CanvasFlowPointer | null>;
+  canvasPointerApiRef: MutableRefObject<CanvasPointerApi | null>;
   onImportCanvasImage: (
     sourcePath: string,
     flowPosition: CanvasImageDropPosition,
@@ -104,9 +136,26 @@ export function CanvasFlow({
   onPaneClick,
   imageContextMenu,
   onCloseImageContextMenu,
+  cardContextMenu,
+  onCloseCardContextMenu,
+  onCardContextDuplicate,
+  onCardContextCopy,
+  onCardContextShowChangeType,
+  onCardContextBackToActions,
+  onCardChangeType,
+  onCardContextDelete,
   onDuplicateCanvasImage,
   onDeleteCanvasImage,
+  onFlipCanvasImageHorizontal,
+  onFlipCanvasImageVertical,
+  onRotateCanvasImageClockwise,
   onImageResizeEnd,
+  stickyNoteContextMenu,
+  onCloseStickyNoteContextMenu,
+  onDuplicateStickyNote,
+  onCopyStickyNote,
+  onDeleteStickyNote,
+  onStickyNoteResizeEnd,
   nodesDraggable = true,
   vaultPath,
   cardsByIdRef,
@@ -125,8 +174,15 @@ export function CanvasFlow({
   onDeleteSelection,
   onCreateGroupFromSelection,
   focusCardRef,
+  lastCanvasPointerRef,
+  canvasPointerApiRef,
   onImportCanvasImage,
 }: CanvasFlowProps) {
+  useCanvasPointerTracking({
+    lastPointerRef: lastCanvasPointerRef,
+    pointerApiRef: canvasPointerApiRef,
+  });
+
   const bulkSelection =
     selectedCardIds.length > 1
       ? { kind: "card" as BulkSelectionKind, ids: selectedCardIds }
@@ -159,6 +215,7 @@ export function CanvasFlow({
   const resolvedTheme = useResolvedTheme();
 
   return (
+    <CanvasStickyNoteInteractionProvider value={{ onResizeEnd: onStickyNoteResizeEnd }}>
     <CanvasImageInteractionProvider value={{ onResizeEnd: onImageResizeEnd }}>
     <WorldNoteCanvas
       nodeTypes={nodeTypes}
@@ -228,7 +285,33 @@ export function CanvasFlow({
       onClose={onCloseImageContextMenu}
       onDuplicate={onDuplicateCanvasImage}
       onDelete={onDeleteCanvasImage}
+      onFlipHorizontal={onFlipCanvasImageHorizontal}
+      onFlipVertical={onFlipCanvasImageVertical}
+      onRotateClockwise={onRotateCanvasImageClockwise}
+    />
+    <CanvasCardContextMenu
+      menu={cardContextMenu}
+      currentCardType={
+        cardContextMenu
+          ? cardsByIdRef.current[cardContextMenu.cardId]?.card_type
+          : undefined
+      }
+      onClose={onCloseCardContextMenu}
+      onDuplicate={onCardContextDuplicate}
+      onCopy={onCardContextCopy}
+      onShowChangeType={onCardContextShowChangeType}
+      onBackToActions={onCardContextBackToActions}
+      onChangeType={onCardChangeType}
+      onDelete={onCardContextDelete}
+    />
+    <CanvasStickyNoteContextMenu
+      menu={stickyNoteContextMenu}
+      onClose={onCloseStickyNoteContextMenu}
+      onDuplicate={onDuplicateStickyNote}
+      onCopy={onCopyStickyNote}
+      onDelete={onDeleteStickyNote}
     />
     </CanvasImageInteractionProvider>
+    </CanvasStickyNoteInteractionProvider>
   );
 }

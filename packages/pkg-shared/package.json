@@ -6,7 +6,8 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./components/tiptap-templates/simple/lore-simple-editor": "./src/components/tiptap-templates/simple/lore-simple-editor.tsx"
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
@@ -16,9 +17,37 @@
     "dev": "tsc -p tsconfig.build.json --watch"
   },
   "dependencies": {
+    "@base-ui/react": "^1.5.0",
+    "@floating-ui/react": "^0.27.19",
+    "class-variance-authority": "^0.7.1",
+    "@radix-ui/react-dropdown-menu": "^2.1.16",
+    "@radix-ui/react-popover": "^1.1.15",
+    "@tiptap/core": "^3.25.0",
+    "@tiptap/extension-highlight": "^3.25.0",
+    "@tiptap/extension-list": "^3.25.0",
+    "@tiptap/extension-subscript": "^3.25.0",
+    "@tiptap/extension-superscript": "^3.25.0",
+    "@tiptap/extension-text-align": "^3.25.0",
+    "@tiptap/extension-typography": "^3.25.0",
+    "@tiptap/extensions": "^3.25.0",
+    "@tiptap/markdown": "^3.25.0",
+    "@tiptap/pm": "^3.25.0",
+    "@tiptap/react": "^3.25.0",
+    "@tiptap/starter-kit": "^3.25.0",
+    "lodash.throttle": "^4.1.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-hotkeys-hook": "^5.3.2",
     "zod": "^3.24.1"
   },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
   "devDependencies": {
+    "@types/lodash.throttle": "^4.1.9",
+    "@types/react": "^19.0.2",
+    "@types/react-dom": "^19.0.2",
     "typescript": "^5.7.2",
     "vitest": "^3.0.5"
   }

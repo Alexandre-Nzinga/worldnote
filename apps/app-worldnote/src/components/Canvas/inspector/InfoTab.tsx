@@ -1,23 +1,13 @@
-import { Input } from "@heroui/react";
 import type { WorldCard } from "@worldnote/shared";
-import { Pill, type PillTone } from "@worldnote/ui";
-import { useMemo, type Ref } from "react";
-import { LoreEditor, type LoreEditorHandle } from "./loreEditor/LoreEditor.js";
-import type { LoreDoc } from "./loreEditor/loreDocTypes.js";
-import { resolveInitialLoreDoc } from "./loreEditor/seedLoreDoc.js";
 import {
-  inspectorInlineInputClassNames,
-  inspectorSectionLabelClassName,
-} from "./inspectorFieldStyles.js";
-
-const TAG_TONES: PillTone[] = [
-  "azure",
-  "indigo",
-  "amber",
-  "lime",
-  "rose",
-  "mono",
-];
+  LoreSimpleEditor,
+  type LoreSimpleEditorHandle,
+} from "../../editor/LoreSimpleEditor.js";
+import type { Ref } from "react";
+import { inspectorSectionLabelClassName } from "./inspectorFieldStyles.js";
+import { GroupMembersSection } from "./GroupMembersSection.js";
+import { MarkdownView } from "./MarkdownView.js";
+import { TagsSection } from "./TagsSection.js";
 
 type InfoTabProps = {
   readOnly: boolean;
@@ -25,31 +15,12 @@ type InfoTabProps = {
   tagsInput: string;
   onTagsInputChange: (value: string) => void;
   lore: string;
-  loreDoc?: Record<string, unknown>;
-  legacyDescription?: string;
   vaultPath: string;
-  cardId: string;
-  cardsById: Record<string, WorldCard>;
-  onDescriptionChange: (plainText: string, doc: LoreDoc) => void;
+  loreEditorRef?: Ref<LoreSimpleEditorHandle>;
+  onLoreChange: (markdown: string) => void;
   onNavigateToCard?: (cardId: string) => void;
-  loreEditorRef?: Ref<LoreEditorHandle>;
-  /** When false in edit mode, Quill is not mounted so title/subtitle can receive focus. */
-  isLoreEditorActive: boolean;
-  onLoreEditorActivate: () => void;
-  autoFocusLoreEditor?: boolean;
+  groupMembers?: WorldCard[];
 };
-
-function LoreEditorPlaceholder({ onActivate }: { onActivate: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onActivate}
-      className="min-h-48 w-full rounded-xl border border-wn-mono-800 px-3 py-3 text-left text-sm text-wn-mono-500 transition-colors hover:border-wn-mono-700 hover:bg-wn-mono-950/60"
-    >
-      Write the lore…
-    </button>
-  );
-}
 
 export function InfoTab({
   readOnly,
@@ -57,89 +28,57 @@ export function InfoTab({
   tagsInput,
   onTagsInputChange,
   lore,
-  loreDoc,
-  legacyDescription,
   vaultPath,
-  cardId,
-  cardsById,
-  onDescriptionChange,
-  onNavigateToCard,
   loreEditorRef,
-  isLoreEditorActive,
-  onLoreEditorActivate,
-  autoFocusLoreEditor = false,
+  onLoreChange,
+  onNavigateToCard,
+  groupMembers = [],
 }: InfoTabProps) {
-  const initialDoc = useMemo(
-    () => resolveInitialLoreDoc(loreDoc, lore, legacyDescription),
-    [loreDoc, lore, legacyDescription],
-  );
-
-  const showLoreEditor = readOnly || isLoreEditorActive;
-
   return (
-    <div className="flex flex-col gap-5">
-      <section className="flex flex-col gap-2">
-        {showLoreEditor ? (
-          <LoreEditor
-            ref={loreEditorRef}
-            readOnly={readOnly}
-            initialDoc={initialDoc}
-            vaultPath={vaultPath}
-            cardId={cardId}
-            cardsById={cardsById}
-            autoFocus={autoFocusLoreEditor && !readOnly}
-            onChange={(doc, plainText) => onDescriptionChange(plainText, doc)}
-            onNavigateToCard={onNavigateToCard}
-          />
+    <div
+      className={
+        readOnly
+          ? "flex min-h-full flex-1 flex-col gap-8"
+          : "flex flex-col gap-8"
+      }
+    >
+      <section
+        className={
+          readOnly
+            ? "flex min-h-0 flex-1 flex-col gap-3"
+            : "flex flex-col gap-3"
+        }
+      >
+        <span className={inspectorSectionLabelClassName}>Lore</span>
+        {readOnly ? (
+          <div className="min-h-0 flex-1">
+            <MarkdownView content={lore} emptyMessage="No lore yet." />
+          </div>
         ) : (
-          <LoreEditorPlaceholder onActivate={onLoreEditorActivate} />
+          <LoreSimpleEditor
+            ref={loreEditorRef}
+            value={lore}
+            editable
+            placeholder="Write the lore…"
+            onChange={onLoreChange}
+          />
         )}
       </section>
 
-      <section className="flex flex-col gap-2">
-        <span className={inspectorSectionLabelClassName}>Tags</span>
-        {readOnly ? (
-          tags.length > 0 ? (
-            <div className="flex flex-wrap gap-2">
-              {tags.map((tag, index) => (
-                <Pill
-                  key={tag}
-                  tone={TAG_TONES[index % TAG_TONES.length]}
-                  size="sm"
-                >
-                  {tag}
-                </Pill>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-wn-mono-500">No tags yet.</p>
-          )
-        ) : (
-          <>
-            {tags.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {tags.map((tag, index) => (
-                  <Pill
-                    key={tag}
-                    tone={TAG_TONES[index % TAG_TONES.length]}
-                    size="sm"
-                  >
-                    {tag}
-                  </Pill>
-                ))}
-              </div>
-            ) : null}
-            <Input
-              id="inspector-tags"
-              placeholder="hero, faction"
-              value={tagsInput}
-              onValueChange={onTagsInputChange}
-              variant="flat"
-              classNames={inspectorInlineInputClassNames}
-            />
-          </>
-        )}
-      </section>
+      {groupMembers.length > 0 ? (
+        <GroupMembersSection
+          members={groupMembers}
+          vaultPath={vaultPath}
+          onNavigateToCard={onNavigateToCard}
+        />
+      ) : null}
+
+      <TagsSection
+        readOnly={readOnly}
+        tags={tags}
+        tagsInput={tagsInput}
+        onTagsInputChange={onTagsInputChange}
+      />
     </div>
   );
 }

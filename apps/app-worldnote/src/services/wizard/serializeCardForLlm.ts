@@ -19,7 +19,6 @@ const SKIP_KEYS = new Set<string>([
   "image_path",
   "image_fit",
   "image_position",
-  "lore_doc",
   "custom_properties",
 ]);
 

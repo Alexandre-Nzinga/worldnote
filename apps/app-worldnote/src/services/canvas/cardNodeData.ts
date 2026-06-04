@@ -1,6 +1,6 @@
 import { convertFileSrc } from "@tauri-apps/api/core";
 
-import type { CardNodeData, CardNodeScalars } from "@worldnote/canvas";
+import type { CardNodeData, CardNodeScalars, GroupMemberPreview } from "@worldnote/canvas";
 
 import {
   CARD_TYPE_LABELS,
@@ -10,6 +10,7 @@ import {
   type WorldCard,
 } from "@worldnote/shared";
 
+import { cardsInGroup } from "./groupMemberCards.js";
 import { makeCardDragStartHandler } from "./cardDragOut.js";
 import { getSocketLinkLabels } from "../links/socketLinks.js";
 import type { VisibleSocketsByCardType } from "../settings/settings.js";
@@ -151,6 +152,24 @@ export function worldCardToNodeData(
   const viewMode =
     viewModeRaw === "visual" || viewModeRaw === "node" ? viewModeRaw : undefined;
 
+  const groupMembers: GroupMemberPreview[] | undefined =
+    card.card_type === "group"
+      ? cardsInGroup(card.id, cardsById).map((member) => {
+          const imageDisplay = normalizeCardImageDisplay(
+            member.image_fit,
+            member.image_position,
+          );
+          return {
+            cardId: member.id,
+            title: member.name,
+            cardType: member.card_type,
+            imageUrl: cardImageSrc(vaultPath, member.image_path),
+            imageFit: imageDisplay.fit,
+            imagePosition: imageDisplay.position,
+          };
+        })
+      : undefined;
+
   return {
     cardId: card.id,
     title: card.name,
@@ -175,5 +194,7 @@ export function worldCardToNodeData(
     customProperties: card.custom_properties,
     onUpdate,
     onDragCardStart: makeCardDragStartHandler(card.id, card.name),
+    groupMembers:
+      groupMembers && groupMembers.length > 0 ? groupMembers : undefined,
   };
 }

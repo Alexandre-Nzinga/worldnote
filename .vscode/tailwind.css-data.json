@@ -1,0 +1,33 @@
+{
+  "version": 1.1,
+  "atDirectives": [
+    {
+      "name": "source",
+      "description": "Tailwind CSS v4: additional content paths to scan for class names."
+    },
+    {
+      "name": "theme",
+      "description": "Tailwind CSS v4: define design tokens and theme variables."
+    },
+    {
+      "name": "plugin",
+      "description": "Tailwind CSS v4: load a Tailwind plugin."
+    },
+    {
+      "name": "utility",
+      "description": "Tailwind CSS v4: add a custom utility class."
+    },
+    {
+      "name": "variant",
+      "description": "Tailwind CSS v4: add a custom variant."
+    },
+    {
+      "name": "custom-variant",
+      "description": "Tailwind CSS v4: register a custom variant selector."
+    },
+    {
+      "name": "apply",
+      "description": "Tailwind CSS: inline utility classes into a rule."
+    }
+  ]
+}

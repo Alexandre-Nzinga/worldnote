@@ -43,15 +43,23 @@ export function removePinnedWorldPath(paths: string[], path: string): string[] {
   return paths.filter((p) => p !== path);
 }
 
+function sortWorldsByLastEdited(worlds: WorldSummary[]): WorldSummary[] {
+  return [...worlds].sort((left, right) => right.lastEdited - left.lastEdited);
+}
+
 export function partitionWorldsByPinned(
   worlds: WorldSummary[],
   pinnedPaths: string[],
 ): { pinned: WorldSummary[]; unpinned: WorldSummary[] } {
   const byPath = new Map(worlds.map((world) => [world.path, world]));
-  const pinned = pinnedPaths
-    .map((path) => byPath.get(path))
-    .filter((world): world is WorldSummary => world != null);
+  const pinned = sortWorldsByLastEdited(
+    pinnedPaths
+      .map((path) => byPath.get(path))
+      .filter((world): world is WorldSummary => world != null),
+  );
   const pinnedSet = new Set(pinnedPaths);
-  const unpinned = worlds.filter((world) => !pinnedSet.has(world.path));
+  const unpinned = sortWorldsByLastEdited(
+    worlds.filter((world) => !pinnedSet.has(world.path)),
+  );
   return { pinned, unpinned };
 }

@@ -24,8 +24,8 @@ function matchKindLabel(
   if (kind === "tag" && detail) {
     return `Tag · ${detail}`;
   }
-  if (kind === "mention" && detail) {
-    return `[[${detail}]]`;
+  if (kind === "lore") {
+    return "Lore";
   }
   return "Name";
 }
@@ -133,15 +133,14 @@ export function CanvasCommandPalette({
           Jump to card
         </h2>
         <p className="text-sm text-wn-mono-400">
-          Search by name, tag, or{" "}
-          <span className="font-mono text-wn-mono-300">[[mention]]</span>
+          Search by name, tag, or lore body
         </p>
       </header>
 
       <Input
         ref={inputRef}
         aria-label="Search cards"
-        placeholder="Name, tag, or [[mention]]…"
+        placeholder="Name, tag, or lore…"
         value={query}
         onValueChange={(value) => {
           setQuery(value);

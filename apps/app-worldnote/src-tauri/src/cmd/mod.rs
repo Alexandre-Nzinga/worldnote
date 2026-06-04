@@ -4,5 +4,6 @@ pub mod library;
 pub mod link;
 pub mod manifest;
 pub mod settings;
+pub mod sticky_note;
 pub mod vault;
 pub mod wizard;

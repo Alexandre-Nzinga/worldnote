@@ -12,6 +12,9 @@ type CanvasImageContextMenuProps = {
   onClose: () => void;
   onDuplicate: (imageId: string) => void;
   onDelete: (imageId: string) => void;
+  onFlipHorizontal: (imageId: string) => void;
+  onFlipVertical: (imageId: string) => void;
+  onRotateClockwise: (imageId: string) => void;
 };
 
 const menuClassName =
@@ -25,6 +28,9 @@ export function CanvasImageContextMenu({
   onClose,
   onDuplicate,
   onDelete,
+  onFlipHorizontal,
+  onFlipVertical,
+  onRotateClockwise,
 }: CanvasImageContextMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -70,6 +76,42 @@ export function CanvasImageContextMenu({
       className={`pointer-events-auto fixed z-[100] ${menuClassName}`}
       style={{ left: menu.x, top: menu.y }}
     >
+      <button
+        type="button"
+        role="menuitem"
+        className={itemClassName}
+        onClick={() => {
+          onFlipHorizontal(menu.imageId);
+          onClose();
+        }}
+      >
+        <MaterialSymbol name="flip" className="text-base" />
+        Flip horizontal
+      </button>
+      <button
+        type="button"
+        role="menuitem"
+        className={itemClassName}
+        onClick={() => {
+          onFlipVertical(menu.imageId);
+          onClose();
+        }}
+      >
+        <MaterialSymbol name="swap_vert" className="text-base" />
+        Flip vertical
+      </button>
+      <button
+        type="button"
+        role="menuitem"
+        className={itemClassName}
+        onClick={() => {
+          onRotateClockwise(menu.imageId);
+          onClose();
+        }}
+      >
+        <MaterialSymbol name="rotate_90_degrees_cw" className="text-base" />
+        Rotate 90°
+      </button>
       <button
         type="button"
         role="menuitem"

@@ -102,88 +102,147 @@ body.wn-canvas-card-external-drag * {
   padding: 0;
 }
 
-/* Quill lore editor — transparent so the inspector panel background shows through */
-.lore-editor-prose .ql-container,
-.lore-editor-prose .ql-editor {
-  background: transparent;
+/* Inspector card lore editor (Tiptap) */
+.inspector-lore-editor-scroll .inspector-lore-editor-body,
+.inspector-lore-editor-scroll .inspector-lore-editor-body .ProseMirror,
+.inspector-lore-editor-scroll .inspector-lore-editor-body .inspector-lore-editor-prose {
+  min-height: 100%;
 }
 
-.lore-editor-prose .ql-container {
-  font-family: inherit;
-  font-size: inherit;
-  box-sizing: border-box;
-  border: none;
+.inspector-lore-editor-body .ProseMirror,
+.inspector-lore-editor-body .inspector-lore-editor-prose {
+  min-height: 10rem;
+  max-height: min(36vh, 18rem);
+  overflow-y: visible;
+  padding: 0.75rem 1rem;
+  color: var(--color-wn-mono-100);
+  font-size: var(--text-wn-body);
+  line-height: 1.65;
 }
 
-.lore-editor-prose .ql-editor {
+.inspector-lore-editor--fill .inspector-lore-editor-body .ProseMirror,
+.inspector-lore-editor--fill .inspector-lore-editor-body .inspector-lore-editor-prose {
+  min-height: 100%;
+  max-height: none;
+}
+
+.inspector-outline-item--active {
+  background: color-mix(in srgb, var(--color-wn-mono-800) 80%, transparent);
+}
+
+.inspector-outline-item {
+  min-width: 0;
+}
+
+.inspector-lore-editor-body .inspector-lore-editor-prose:focus {
+  outline: none;
+}
+
+.inspector-lore-editor-body .inspector-lore-editor-prose p {
+  margin: 0 0 0.65em;
+}
+
+.inspector-lore-editor-body .inspector-lore-editor-prose p:last-child {
+  margin-bottom: 0;
+}
+
+.inspector-lore-editor-body .inspector-lore-editor-prose h1,
+.inspector-lore-editor-body .inspector-lore-editor-prose h2,
+.inspector-lore-editor-body .inspector-lore-editor-prose h3 {
+  margin: 1em 0 0.4em;
+  font-weight: 600;
+  color: var(--color-wn-mono-50);
+}
+
+.inspector-lore-editor-body .inspector-lore-editor-prose h1 {
+  font-size: var(--text-wn-h5);
+}
+
+.inspector-lore-editor-body .inspector-lore-editor-prose h2 {
+  font-size: var(--text-wn-h6);
+}
+
+.inspector-lore-editor-body .inspector-lore-editor-prose ul,
+.inspector-lore-editor-body .inspector-lore-editor-prose ol {
+  margin: 0.5em 0;
+  padding-left: 1.25rem;
+}
+
+.inspector-lore-editor-body .inspector-lore-editor-prose blockquote {
+  margin: 0.5em 0;
+  padding-left: 0.75rem;
+  border-left: 3px solid var(--color-wn-mono-700);
+  color: var(--color-wn-mono-400);
+}
+
+.inspector-lore-editor-body .inspector-lore-editor-prose code {
+  border-radius: 0.25rem;
+  background: var(--color-wn-mono-900);
+  padding: 0.1em 0.35em;
+  font-size: 0.9em;
+}
+
+.inspector-lore-editor-body
+  .inspector-lore-editor-prose
+  p.is-editor-empty:first-child::before {
+  color: var(--color-wn-mono-500);
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+/* Headless Tiptap markdown editor */
+.markdown-editor-prose .ProseMirror {
   min-height: 12rem;
   padding: 0;
   outline: none;
+  background: transparent;
   color: var(--color-wn-mono-100);
   line-height: 1.6;
+  font-family: inherit;
+  font-size: inherit;
 }
 
-.lore-editor-editable .lore-editor-prose .ql-editor {
+.markdown-editor-prose .ProseMirror p.is-editor-empty:first-child::before {
+  color: var(--color-wn-mono-500);
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+.markdown-editor-editable .markdown-editor-prose .ProseMirror {
   padding: 0.75rem;
 }
 
-.lore-editor-prose .ql-editor.ql-blank::before {
-  color: var(--color-wn-mono-500);
-  font-style: normal;
-  left: 0;
-  right: 0;
-  content: attr(data-placeholder);
-}
-
-.lore-editor-editable .lore-editor-prose .ql-editor.ql-blank::before {
-  left: 0.75rem;
-  right: 0.75rem;
-}
-
-.lore-editor-prose .ql-editor img {
-  max-width: 100%;
-  height: auto;
-  border-radius: 0.75rem;
-  border: 1px solid var(--color-wn-mono-800);
-  margin-block: 0.75rem;
-}
-
-.lore-editor-readonly .ql-editor {
+.markdown-editor-readonly .markdown-editor-prose .ProseMirror {
   min-height: 0;
 }
 
-.lore-editor-readonly .lore-card-mention {
-  cursor: pointer;
+/* Sticky note Tiptap — paper-toned text on wn-*-200 backgrounds */
+.sticky-note-editor-prose .ProseMirror {
+  min-height: 3rem;
+  padding: 0;
+  outline: none;
+  line-height: 1.5;
+  color: inherit;
+  background: transparent;
+  font-family: inherit;
+  font-size: inherit;
 }
 
-.lore-card-mention {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.125rem;
-  border-radius: 0.375rem;
-  background-color: var(--color-wn-azure-950);
-  color: var(--color-wn-azure-300);
-  padding: 0.125rem 0.375rem;
-  font-size: 0.875em;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.15s, color 0.15s;
+.sticky-note-editor-prose .ProseMirror p,
+.sticky-note-editor-prose .ProseMirror li,
+.sticky-note-editor-prose .ProseMirror span {
+  color: inherit;
 }
 
-.lore-editor-prose:not(:has(:focus)) .lore-card-mention:hover,
-.lore-card-mention:hover {
-  background-color: var(--color-wn-azure-900);
-  color: var(--color-wn-azure-200);
-}
-
-.lore-gallery-block {
-  user-select: none;
-}
-
-.lore-gallery-grid img {
-  display: block;
-}
-
-.lore-mention-suggestion {
-  pointer-events: auto;
+.sticky-note-editor-prose .ProseMirror p.is-editor-empty:first-child::before {
+  color: inherit;
+  opacity: 0.45;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
 }

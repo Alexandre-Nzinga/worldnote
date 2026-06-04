@@ -11,7 +11,7 @@ function formatZoomPercent(zoom: number): string {
 /** Zoom in/out controls with live viewport percentage (must render inside ReactFlow). */
 export function ZoomControls() {
   const { zoom } = useViewport();
-  const { zoomIn, zoomOut } = useReactFlow();
+  const { zoomIn, zoomOut, fitView } = useReactFlow();
   const percent = formatZoomPercent(zoom);
 
   return (
@@ -28,7 +28,10 @@ export function ZoomControls() {
           {
             id: "zoom-level",
             content: percent,
-            ariaLabel: `Zoom level ${percent}`,
+            ariaLabel: `Zoom level ${percent}. Click to frame all cards.`,
+            onPress: () => {
+              void fitView({ padding: 0.18, maxZoom: 1, duration: 200 });
+            },
           },
           {
             id: "zoom-out",

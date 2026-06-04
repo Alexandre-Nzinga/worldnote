@@ -21,6 +21,8 @@ export type CanvasImageImportOptions = {
   imageId?: string;
   /** Image already copied into the vault; skip saveCanvasImage. */
   storedImagePath?: string;
+  /** Place at the center of the visible canvas (e.g. toolbar image tool). */
+  preferViewportCenter?: boolean;
 };
 
 type UseCanvasExternalImageDropOptions = {

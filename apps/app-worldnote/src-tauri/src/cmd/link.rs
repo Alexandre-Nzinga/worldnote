@@ -1,3 +1,4 @@
+use std::fs;
 use std::path::PathBuf;
 use worldnote_persistence::repository::{CardRepository, JsonCardRepository};
 
@@ -7,6 +8,50 @@ fn links_root(vault: &str) -> PathBuf {
 
 fn bonds_root(vault: &str) -> PathBuf {
     PathBuf::from(vault).join("bonds")
+}
+
+/// Move any `{id}.json` from legacy `bonds/` into `links/`, then remove `bonds/`.
+fn migrate_legacy_bonds(vault: &str) -> Result<(), String> {
+    let bonds_dir = bonds_root(vault);
+    if !bonds_dir.is_dir() {
+        return Ok(());
+    }
+
+    let links_dir = links_root(vault);
+    fs::create_dir_all(&links_dir).map_err(|error| error.to_string())?;
+
+    for entry in fs::read_dir(&bonds_dir).map_err(|error| error.to_string())? {
+        let entry = entry.map_err(|error| error.to_string())?;
+        let path = entry.path();
+        if path.extension().and_then(|ext| ext.to_str()) != Some("json") {
+            continue;
+        }
+        let Some(file_name) = path.file_name() else {
+            continue;
+        };
+        let dest = links_dir.join(file_name);
+        if dest.exists() {
+            fs::remove_file(&path).map_err(|error| error.to_string())?;
+            continue;
+        }
+        match fs::rename(&path, &dest) {
+            Ok(()) => {}
+            Err(_) => {
+                fs::copy(&path, &dest).map_err(|error| error.to_string())?;
+                fs::remove_file(&path).map_err(|error| error.to_string())?;
+            }
+        }
+    }
+
+    if bonds_dir
+        .read_dir()
+        .map(|mut entries| entries.next().is_none())
+        .unwrap_or(false)
+    {
+        let _ = fs::remove_dir(&bonds_dir);
+    }
+
+    Ok(())
 }
 
 /// Remove all links whose source or target card matches `card_id`.
@@ -61,12 +106,7 @@ pub fn upsert_link(vault: String, link: serde_json::Value) -> Result<(), String>
 
 #[tauri::command]
 pub fn list_links(vault: String) -> Result<Vec<serde_json::Value>, String> {
-    let bonds_dir = bonds_root(&vault);
-    if bonds_dir.exists() {
-        eprintln!(
-            "Warning: legacy bonds/ folder detected in vault; migrate or remove it. Using links/ only."
-        );
-    }
+    migrate_legacy_bonds(&vault)?;
 
     let repo = JsonCardRepository::new(links_root(&vault));
 

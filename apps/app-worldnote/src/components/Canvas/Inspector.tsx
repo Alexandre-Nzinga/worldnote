@@ -9,18 +9,25 @@ import {
   type WorldCard,
 } from "@worldnote/shared";
 import { CardTypePill, visualConfigFor } from "@worldnote/canvas";
-import { AnimatedModal, AnimatedPanel, Button, MaterialSymbol } from "@worldnote/ui";
-import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  modalPrimaryButtonClassName,
-} from "../Onboarding/fieldClassNames.js";
+  AnimatedModal,
+  AnimatedPanel,
+  MaterialSymbol,
+  type StepDirection,
+  stepTransition,
+  stepTransitionVariants,
+  usePrefersReducedMotion,
+} from "@worldnote/ui";
+import type { Editor } from "@tiptap/core";
+import { AnimatePresence, motion } from "framer-motion";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useResolvedTheme } from "../../theme/ThemeProvider.js";
 import {
-  inspectorImageOverlayChipClassName,
-  inspectorImageOverlayLabelClassName,
   inspectorNameFieldClassNames,
   inspectorSubtitleFieldClassNames,
 } from "./inspector/inspectorFieldStyles.js";
 import { cardImageSrc } from "../../services/canvas/cardNodeData.js";
+import { cardsInGroup } from "../../services/canvas/groupMemberCards.js";
 import { pickCardImageFile, saveCardImage } from "../../services/desktop/saveCardImage.js";
 import {
   formatSocketLinkValue,
@@ -28,23 +35,21 @@ import {
 } from "../../services/links/socketLinks.js";
 import { formatSocketId } from "../../services/settings/visibleSocketSettings.js";
 import { CardImageEditorPreview } from "./CardImageEditorPreview.js";
+import { InspectorImageToolbar } from "./InspectorImageToolbar.js";
 import {
   buildWorldCard,
   defaultTypeFields,
   typeFieldsFromCard,
   type TypeSpecificEditorState,
 } from "./cardEditorTypes.js";
+import { DocumentOutline } from "./inspector/DocumentOutline.js";
+import { InspectorDeleteButton } from "./inspector/InspectorDeleteButton.js";
+import { InfoColumn } from "./inspector/InfoColumn.js";
 import { InfoTab } from "./inspector/InfoTab.js";
-import type { LoreEditorHandle } from "./inspector/loreEditor/LoreEditor.js";
+import type { LoreSimpleEditorHandle } from "../editor/LoreSimpleEditor.js";
 import { InspectorTabs, type InspectorTabId } from "./inspector/InspectorTabs.js";
-import {
-  isLoreDocEmpty,
-  type LoreDoc,
-} from "./inspector/loreEditor/loreDocTypes.js";
-import {
-  descriptionSummaryFromPlainText,
-  resolveInitialLoreDoc,
-} from "./inspector/loreEditor/seedLoreDoc.js";
+import { descriptionSummaryFromMarkdown } from "../../services/canvas/stickyNoteMarkdown.js";
+import { PropertiesColumn } from "./inspector/PropertiesColumn.js";
 import { PropertiesTab } from "./inspector/PropertiesTab.js";
 import { usePanelHotkeys } from "./usePanelHotkeys.js";
 
@@ -53,10 +58,43 @@ type PropertyRow = { key: string; value: string };
 export type InspectorMode = "read" | "edit";
 
 const inspectorSidebarClassName =
-  "pointer-events-auto absolute right-4 top-4 z-30 flex max-h-[calc(100vh-7rem)] w-[min(100%,22rem)] flex-col overflow-hidden rounded-2xl border border-wn-mono-800 bg-wn-mono-900 shadow-2xl";
+  "pointer-events-auto absolute bottom-4 right-4 top-4 z-30 flex w-[min(100%,26rem)] flex-col overflow-hidden rounded-2xl border border-wn-mono-800 bg-wn-mono-900 shadow-2xl";
 
 const inspectorModalPanelClassName =
-  "relative z-10 flex max-h-[min(85vh,52rem)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-wn-mono-800 bg-wn-mono-900 text-wn-mono-100 shadow-2xl";
+  "relative z-10 flex h-[88vh] w-full max-w-7xl flex-col overflow-hidden bg-transparent text-wn-mono-100 shadow-none";
+
+const inspectorModalColumnClassName =
+  "flex min-h-0 flex-col overflow-hidden rounded-2xl border border-transparent bg-wn-mono-900";
+
+const inspectorModalColumnsClassName =
+  "flex min-h-0 flex-1 items-stretch gap-3 overflow-hidden px-4 pb-4 pt-2";
+
+const inspectorModalOutlineClassName =
+  "flex h-full min-h-0 w-[min(100%,12rem)] shrink-0 self-stretch flex-col overflow-hidden bg-transparent";
+
+const inspectorModalInfoClassName = [
+  inspectorModalColumnClassName,
+  "flex h-full min-h-0 min-w-0 flex-[2] self-stretch",
+].join(" ");
+
+const inspectorModalPropertiesClassName = [
+  inspectorModalColumnClassName,
+  "flex h-full min-h-0 w-[min(100%,15rem)] shrink-0 self-stretch",
+].join(" ");
+
+const inspectorImageStripClassName =
+  "group/image relative h-64 shrink-0 overflow-hidden bg-wn-mono-950";
+
+const inspectorHeaderActionClassName =
+  "flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-sm font-medium text-wn-mono-300 transition-colors hover:bg-wn-mono-800 hover:text-wn-mono-50 disabled:opacity-50";
+
+const INSPECTOR_TAB_ORDER: InspectorTabId[] = ["info", "properties"];
+
+const inspectorTabFadeVariants = {
+  enter: { opacity: 0 },
+  center: { opacity: 1 },
+  exit: { opacity: 0 },
+};
 
 type InspectorLayout = "sidebar" | "modal";
 
@@ -113,17 +151,15 @@ function InspectorImageReadOnly({
   src: string;
   position: CardImagePosition;
 }) {
-  const { objectFit, objectPosition } = cardImageObjectStyles("fill", position);
+  const imageStyle = cardImageObjectStyles("fill", position);
   return (
-    <div className="relative overflow-hidden bg-wn-mono-950">
-      <img
-        src={src}
-        alt=""
-        className="aspect-video w-full select-none object-cover"
-        style={{ objectFit, objectPosition }}
-        draggable={false}
-      />
-    </div>
+    <img
+      src={src}
+      alt=""
+      className="h-full w-full select-none object-cover"
+      style={imageStyle}
+      draggable={false}
+    />
   );
 }
 
@@ -147,18 +183,20 @@ export function Inspector({
   const activeCard = card ?? lastCardRef.current;
   const readOnly = mode === "read";
 
+  const reducedMotion = usePrefersReducedMotion();
+  const theme = useResolvedTheme();
+  const logoTone = theme === "dark" ? "white" : "black";
   const [layout, setLayout] = useState<InspectorLayout>("sidebar");
+  const [loreEditor, setLoreEditor] = useState<Editor | null>(null);
+  const [loreScrollElement, setLoreScrollElement] = useState<HTMLElement | null>(
+    null,
+  );
   const [activeTab, setActiveTab] = useState<InspectorTabId>("info");
+  const [tabDirection, setTabDirection] = useState<StepDirection>(1);
+  const tabIndexRef = useRef(0);
   const [name, setName] = useState(activeCard?.name ?? "");
   const [subtitle, setSubtitle] = useState(activeCard?.subtitle ?? "");
   const [lore, setLore] = useState(activeCard?.lore ?? "");
-  const [loreDoc, setLoreDoc] = useState<LoreDoc>(() =>
-    resolveInitialLoreDoc(
-      activeCard?.lore_doc,
-      activeCard?.lore,
-      activeCard?.description,
-    ),
-  );
   const [tagsInput, setTagsInput] = useState(
     activeCard ? tagsToString(activeCard.tags) : "",
   );
@@ -179,30 +217,29 @@ export function Inspector({
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const loreEditorRef = useRef<LoreEditorHandle>(null);
+  const loreEditorRef = useRef<LoreSimpleEditorHandle>(null);
   const loadedInspectorCardIdRef = useRef<string | null>(null);
-  const [isLoreEditorActive, setIsLoreEditorActive] = useState(false);
+
+  const handleLoreEditorReady = useCallback((editor: Editor | null) => {
+    setLoreEditor(editor);
+    requestAnimationFrame(() => {
+      setLoreScrollElement(loreEditorRef.current?.getScrollElement() ?? null);
+    });
+  }, []);
 
   useEffect(() => {
-    setIsLoreEditorActive(readOnly);
-  }, [readOnly]);
-
-  const deactivateLoreEditor = useCallback(() => {
-    loreEditorRef.current?.blur();
-    if (!readOnly) {
-      setIsLoreEditorActive(false);
+    if (layout !== "modal") {
+      setLoreEditor(null);
+      setLoreScrollElement(null);
     }
-  }, [readOnly]);
+  }, [layout]);
 
-  const handleInspectorTabChange = useCallback(
-    (tab: InspectorTabId) => {
-      if (tab !== "info" && !readOnly) {
-        setIsLoreEditorActive(false);
-      }
-      setActiveTab(tab);
-    },
-    [readOnly],
-  );
+  const handleInspectorTabChange = useCallback((tab: InspectorTabId) => {
+    const nextIndex = INSPECTOR_TAB_ORDER.indexOf(tab);
+    setTabDirection(nextIndex >= tabIndexRef.current ? 1 : -1);
+    tabIndexRef.current = nextIndex;
+    setActiveTab(tab);
+  }, []);
 
   useEffect(() => {
     if (!card) {
@@ -212,14 +249,13 @@ export function Inspector({
     const cardChanged = loadedInspectorCardIdRef.current !== card.id;
     loadedInspectorCardIdRef.current = card.id;
     setActiveTab("info");
-    setIsLoreEditorActive(readOnly);
+    tabIndexRef.current = 0;
     if (!cardChanged) {
       return;
     }
     setName(card.name);
     setSubtitle(card.subtitle ?? "");
     setLore(card.lore ?? "");
-    setLoreDoc(resolveInitialLoreDoc(card.lore_doc, card.lore, card.description));
     setTagsInput(tagsToString(card.tags));
     setTypeFields(typeFieldsFromCard(card));
     setImagePath(card.image_path ?? "");
@@ -228,7 +264,7 @@ export function Inspector({
     );
     setPropertyRows(propertiesToRows(card.custom_properties));
     setError(null);
-  }, [card, readOnly]);
+  }, [card]);
 
   const socketEntries = activeCard
     ? listSocketsForCardType(activeCard.card_type)
@@ -239,26 +275,28 @@ export function Inspector({
 
   const imagePreview = cardImageSrc(vaultPath, imagePath);
   const parsedTags = stringToTags(tagsInput);
+  const groupMembers = useMemo(() => {
+    if (!activeCard || activeCard.card_type !== "group") {
+      return [];
+    }
+    return cardsInGroup(activeCard.id, cardsById);
+  }, [activeCard, cardsById]);
 
   const buildCard = useCallback((): WorldCard => {
     if (!activeCard) {
       throw new Error("No card to save");
     }
-    const loreSnapshot = loreEditorRef.current?.getSnapshot();
-    const savedLoreDoc = loreSnapshot?.doc ?? loreDoc;
-    const savedLoreText = loreSnapshot?.plainText ?? lore;
+    const savedLoreMarkdown =
+      loreEditorRef.current?.getMarkdown() ?? lore;
     const base = {
       id: activeCard.id,
       name: name.trim(),
       parent_id: activeCard.parent_id,
       position: activeCard.position,
       tags: parsedTags,
-      description: descriptionSummaryFromPlainText(savedLoreText),
+      description: descriptionSummaryFromMarkdown(savedLoreMarkdown),
       subtitle: subtitle.trim() || undefined,
-      lore: savedLoreText.trim() || undefined,
-      lore_doc: isLoreDocEmpty(savedLoreDoc)
-        ? undefined
-        : (savedLoreDoc as Record<string, unknown>),
+      lore: savedLoreMarkdown.trim() || undefined,
       image_path: imagePath.trim() || undefined,
       image_position: imagePath.trim() ? imagePosition : undefined,
       custom_properties: rowsToProperties(propertyRows),
@@ -269,7 +307,6 @@ export function Inspector({
     imagePath,
     imagePosition,
     lore,
-    loreDoc,
     name,
     parsedTags,
     propertyRows,
@@ -282,10 +319,9 @@ export function Inspector({
       setError("Name is required.");
       return;
     }
-    const loreSnapshot = loreEditorRef.current?.getSnapshot();
-    if (loreSnapshot) {
-      setLore(loreSnapshot.plainText);
-      setLoreDoc(loreSnapshot.doc);
+    const loreMarkdown = loreEditorRef.current?.getMarkdown();
+    if (loreMarkdown !== undefined) {
+      setLore(loreMarkdown);
     }
     setIsSaving(true);
     setError(null);
@@ -350,10 +386,6 @@ export function Inspector({
   usePanelHotkeys({
     enabled: isOpen && !isBusy,
     onEscape: () => {
-      if (isLoreEditorActive && !readOnly) {
-        setIsLoreEditorActive(false);
-        return;
-      }
       onClose();
     },
     onSave: readOnly ? undefined : () => {
@@ -375,9 +407,141 @@ export function Inspector({
     return null;
   }
 
-  const inspectorBody = (
+  const inspectorHeader = (
+    <header
+      className={
+        layout === "modal"
+          ? "flex shrink-0 items-center justify-end gap-0.5 px-4 pb-2 pt-3"
+          : "flex shrink-0 items-center justify-end gap-0.5 border-b border-wn-mono-800 px-4 py-3"
+      }
+    >
+      <button
+        type="button"
+        className={inspectorHeaderActionClassName}
+        aria-label={
+          layout === "sidebar" ? "Expand inspector" : "Dock inspector"
+        }
+        title={layout === "sidebar" ? "Expand" : "Dock to sidebar"}
+        disabled={isBusy}
+        onClick={() =>
+          setLayout((current) =>
+            current === "sidebar" ? "modal" : "sidebar",
+          )
+        }
+      >
+        <MaterialSymbol
+          name={layout === "sidebar" ? "open_in_full" : "close_fullscreen"}
+          className="text-[18px]"
+        />
+        {layout === "sidebar" ? "Expand" : "Dock"}
+      </button>
+      <button
+        type="button"
+        className={inspectorHeaderActionClassName}
+        disabled={isBusy || (!readOnly && !name.trim())}
+        onClick={() => {
+          if (readOnly) {
+            onModeChange("edit");
+          } else {
+            void handleSave();
+          }
+        }}
+      >
+        <MaterialSymbol
+          name={readOnly ? "edit" : "save"}
+          className="text-[18px]"
+        />
+        {readOnly ? "Edit" : isSaving ? "Saving…" : "Save"}
+      </button>
+      <button
+        type="button"
+        className={inspectorHeaderActionClassName}
+        onClick={onClose}
+        disabled={isBusy}
+        aria-label="Close inspector"
+      >
+        <MaterialSymbol name="close" className="text-[18px]" />
+        Close
+      </button>
+    </header>
+  );
+
+  const modalInspectorBody = (
     <>
-      <div className="relative shrink-0">
+      {inspectorHeader}
+      <div className={inspectorModalColumnsClassName}>
+        <div className={inspectorModalOutlineClassName}>
+          <DocumentOutline
+            editor={loreEditor}
+            scrollElement={loreScrollElement}
+          />
+        </div>
+        <div className={inspectorModalInfoClassName}>
+          <InfoColumn
+            readOnly={readOnly}
+            cardType={activeCard.card_type}
+            name={name}
+            subtitle={subtitle}
+            lore={lore}
+            logoTone={logoTone}
+            loreEditorRef={loreEditorRef}
+            onNameChange={setName}
+            onSubtitleChange={setSubtitle}
+            onLoreChange={setLore}
+            onEditorReady={handleLoreEditorReady}
+          />
+        </div>
+        <div className={inspectorModalPropertiesClassName}>
+          <PropertiesColumn
+          readOnly={readOnly}
+          card={activeCard}
+          vaultPath={vaultPath}
+          imagePreview={imagePreview ?? null}
+          imagePath={imagePath}
+          imagePosition={imagePosition}
+          isBusy={isBusy}
+          tags={parsedTags}
+          tagsInput={tagsInput}
+          onTagsInputChange={setTagsInput}
+          typeFields={typeFields}
+          onTypeFieldsChange={setTypeFields}
+          socketEntries={socketEntries}
+          socketLinkLabels={socketLinkLabels}
+          formatSocketId={formatSocketId}
+          formatSocketLinkValue={formatSocketLinkValue}
+          propertyRows={propertyRows}
+          onPropertyRowsChange={setPropertyRows}
+          onPickImage={() => {
+            void handlePickImage();
+          }}
+          onRemoveImage={() => setImagePath("")}
+          onPositionChange={setImagePosition}
+          groupMembers={groupMembers}
+          onNavigateToCard={onNavigateToCard}
+          isDeleting={isDeleting}
+          onDelete={() => {
+            void handleDelete();
+          }}
+          />
+        </div>
+      </div>
+      {error ? (
+        <p className="shrink-0 px-5 pb-2 text-sm text-wn-red-400" role="alert">
+          {error}
+        </p>
+      ) : null}
+    </>
+  );
+
+  const sidebarInspectorBody = (
+    <>
+      {inspectorHeader}
+
+      <div className="shrink-0 border-b border-wn-mono-800 py-3">
+        <InspectorTabs activeTab={activeTab} onTabChange={handleInspectorTabChange} />
+      </div>
+
+      <div className={inspectorImageStripClassName}>
         {imagePreview ? (
           readOnly ? (
             <InspectorImageReadOnly src={imagePreview} position={imagePosition} />
@@ -390,86 +554,41 @@ export function Inspector({
               onPositionChange={setImagePosition}
             />
           )
-        ) : (
-          <div className="flex aspect-video items-center justify-center bg-wn-mono-950 text-sm text-wn-mono-500">
+        ) : readOnly ? (
+          <div className="flex h-full items-center justify-center text-sm text-wn-mono-500">
             No image
           </div>
+        ) : (
+          <button
+            type="button"
+            className="flex h-full w-full cursor-pointer flex-col items-center justify-center gap-1 text-sm text-wn-mono-500 transition-colors hover:bg-wn-mono-900 hover:text-wn-mono-400 disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={isBusy}
+            aria-label="Choose image"
+            onClick={() => {
+              void handlePickImage();
+            }}
+          >
+            <MaterialSymbol name="add_photo_alternate" className="text-2xl" />
+            Add image
+          </button>
         )}
 
-        {!readOnly ? (
-          <div className="absolute bottom-3 left-3 flex flex-wrap items-center gap-1.5">
-            <button
-              type="button"
-              className={inspectorImageOverlayChipClassName}
-              disabled={isBusy}
-              onClick={() => {
-                void handlePickImage();
-              }}
-            >
-              Choose image
-            </button>
-            {imagePath ? (
-              <button
-                type="button"
-                className={inspectorImageOverlayChipClassName}
-                disabled={isBusy}
-                onClick={() => setImagePath("")}
-              >
-                Remove
-              </button>
-            ) : null}
-            {imagePreview ? (
-              <span className={inspectorImageOverlayLabelClassName}>
-                Drag to reposition
-              </span>
-            ) : null}
-          </div>
+        {!readOnly && imagePreview ? (
+          <InspectorImageToolbar
+            imagePath={imagePath}
+            imagePosition={imagePosition}
+            isBusy={isBusy}
+            onPickImage={() => {
+              void handlePickImage();
+            }}
+            onRemoveImage={() => setImagePath("")}
+            onPositionChange={setImagePosition}
+          />
         ) : null}
-
-        <div className="absolute left-3 top-3">
-          <button
-            type="button"
-            className="flex h-8 w-8 items-center justify-center rounded-lg bg-wn-mono-950/80 text-wn-mono-300 transition-colors hover:bg-wn-mono-800 hover:text-wn-mono-50"
-            aria-label={
-              layout === "sidebar" ? "Expand inspector" : "Dock inspector"
-            }
-            title={layout === "sidebar" ? "Expand" : "Dock to sidebar"}
-            disabled={isBusy}
-            onClick={() =>
-              setLayout((current) =>
-                current === "sidebar" ? "modal" : "sidebar",
-              )
-            }
-          >
-            <MaterialSymbol
-              name={layout === "sidebar" ? "open_in_full" : "close_fullscreen"}
-              className="text-lg"
-            />
-          </button>
-        </div>
-
-        <div className="absolute right-3 top-3 flex gap-1">
-          <button
-            type="button"
-            className="rounded-lg bg-wn-mono-950/80 px-2 py-1 text-sm text-wn-mono-300 transition-colors hover:bg-wn-mono-800 hover:text-wn-mono-50"
-            onClick={() => onModeChange(readOnly ? "edit" : "read")}
-            disabled={isBusy}
-          >
-            {readOnly ? "Edit" : "Done"}
-          </button>
-          <button
-            type="button"
-            className="rounded-lg bg-wn-mono-950/80 px-2 py-1 text-sm text-wn-mono-300 transition-colors hover:bg-wn-mono-800 hover:text-wn-mono-50"
-            onClick={onClose}
-            disabled={isBusy}
-          >
-            Close
-          </button>
-        </div>
       </div>
 
-      <div className="flex flex-col gap-2.5 px-4 pb-3 pt-4">
-        <div className="flex flex-col gap-0.5">
+      <div className="flex flex-col gap-3 px-5 pb-5 pt-5">
+        <div className="flex flex-col gap-1">
           {readOnly ? (
             <>
               <h2 className="m-0 text-2xl font-bold leading-tight tracking-tight text-wn-mono-50">
@@ -490,8 +609,6 @@ export function Inspector({
                 value={name}
                 variant="flat"
                 onValueChange={setName}
-                onFocus={deactivateLoreEditor}
-                onMouseDown={deactivateLoreEditor}
                 classNames={inspectorNameFieldClassNames}
               />
               <Input
@@ -501,8 +618,6 @@ export function Inspector({
                 value={subtitle}
                 variant="flat"
                 onValueChange={setSubtitle}
-                onFocus={deactivateLoreEditor}
-                onMouseDown={deactivateLoreEditor}
                 classNames={inspectorSubtitleFieldClassNames}
               />
             </>
@@ -520,79 +635,77 @@ export function Inspector({
         ) : null}
       </div>
 
-      <InspectorTabs activeTab={activeTab} onTabChange={handleInspectorTabChange} />
-
-      <div className="scrollbar-wn min-h-0 flex-1 overflow-y-auto px-4 py-4">
-        {activeTab === "info" ? (
-          <InfoTab
-            readOnly={readOnly}
-            tags={parsedTags}
-            tagsInput={tagsInput}
-            onTagsInputChange={setTagsInput}
-            lore={lore}
-            loreDoc={loreDoc as Record<string, unknown>}
-            legacyDescription={activeCard.description}
-            vaultPath={vaultPath}
-            cardId={activeCard.id}
-            cardsById={cardsById}
-            loreEditorRef={loreEditorRef}
-            isLoreEditorActive={isLoreEditorActive}
-            onLoreEditorActivate={() => setIsLoreEditorActive(true)}
-            autoFocusLoreEditor={isLoreEditorActive}
-            onDescriptionChange={(plainText, doc) => {
-              setLore(plainText);
-              setLoreDoc(doc);
-            }}
-            onNavigateToCard={onNavigateToCard}
-          />
-        ) : null}
-        {activeTab === "properties" ? (
-          <PropertiesTab
-            readOnly={readOnly}
-            cardType={activeCard.card_type}
-            typeFields={typeFields}
-            onTypeFieldsChange={setTypeFields}
-            socketEntries={socketEntries}
-            socketLinkLabels={socketLinkLabels}
-            formatSocketId={formatSocketId}
-            formatSocketLinkValue={formatSocketLinkValue}
-            propertyRows={propertyRows}
-            onPropertyRowsChange={setPropertyRows}
-            isBusy={isBusy}
-          />
-        ) : null}
-        {error ? (
-          <p className="mt-4 text-sm text-wn-red-400" role="alert">
-            {error}
-          </p>
+      <div className="flex min-h-0 flex-1 flex-col">
+        <div className="scrollbar-wn flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto px-5 pb-6 pt-2">
+          <AnimatePresence mode="wait" custom={tabDirection}>
+            <motion.div
+              key={activeTab}
+              custom={tabDirection}
+              className={
+                readOnly && activeTab === "info"
+                  ? "flex min-h-0 flex-1 flex-col"
+                  : "flex flex-col"
+              }
+              variants={
+                reducedMotion
+                  ? inspectorTabFadeVariants
+                  : stepTransitionVariants
+              }
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={
+                reducedMotion ? { duration: 0.15 } : stepTransition
+              }
+            >
+              {activeTab === "info" ? (
+                <InfoTab
+                  readOnly={readOnly}
+                  tags={parsedTags}
+                  tagsInput={tagsInput}
+                  onTagsInputChange={setTagsInput}
+                  lore={lore}
+                  vaultPath={vaultPath}
+                  loreEditorRef={loreEditorRef}
+                  onLoreChange={setLore}
+                  onNavigateToCard={onNavigateToCard}
+                  groupMembers={groupMembers}
+                />
+              ) : (
+                <PropertiesTab
+                  readOnly={readOnly}
+                  cardType={activeCard.card_type}
+                  typeFields={typeFields}
+                  onTypeFieldsChange={setTypeFields}
+                  socketEntries={socketEntries}
+                  socketLinkLabels={socketLinkLabels}
+                  formatSocketId={formatSocketId}
+                  formatSocketLinkValue={formatSocketLinkValue}
+                  propertyRows={propertyRows}
+                  onPropertyRowsChange={setPropertyRows}
+                  isBusy={isBusy}
+                />
+              )}
+            </motion.div>
+          </AnimatePresence>
+          {error ? (
+            <p className="mt-4 text-sm text-wn-red-400" role="alert">
+              {error}
+            </p>
+          ) : null}
+        </div>
+        {!readOnly ? (
+          <div className="shrink-0 border-t border-wn-mono-800 px-5 py-4">
+            <InspectorDeleteButton
+              isBusy={isBusy}
+              isDeleting={isDeleting}
+              onDelete={() => {
+                void handleDelete();
+              }}
+            />
+          </div>
         ) : null}
       </div>
-
-      {!readOnly ? (
-        <footer className="flex gap-2 border-t border-wn-mono-800 px-4 py-3">
-          <Button
-            variant="white"
-            size="base"
-            className={modalPrimaryButtonClassName}
-            isDisabled={isBusy || !name.trim()}
-            onPress={() => {
-              void handleSave();
-            }}
-          >
-          {isSaving ? "Saving…" : "Save"}
-        </Button>
-        <Button
-          variant="danger"
-          size="base"
-          isDisabled={isBusy}
-          onPress={() => {
-            void handleDelete();
-          }}
-        >
-          {isDeleting ? "Deleting…" : "Delete"}
-          </Button>
-        </footer>
-      ) : null}
     </>
   );
 
@@ -604,14 +717,14 @@ export function Inspector({
         closeDisabled={isBusy}
         panelClassName={inspectorModalPanelClassName}
       >
-        {inspectorBody}
+        {modalInspectorBody}
       </AnimatedModal>
     );
   }
 
   return (
     <AnimatedPanel isOpen={isOpen} className={inspectorSidebarClassName}>
-      {inspectorBody}
+      {sidebarInspectorBody}
     </AnimatedPanel>
   );
 }

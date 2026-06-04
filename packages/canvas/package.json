@@ -23,6 +23,7 @@
     "react-dom": "^19.0.0"
   },
   "dependencies": {
+    "@worldnote/shared": "workspace:*",
     "@worldnote/ui": "workspace:*",
     "@heroui/react": "^2.8.10",
     "@react-three/fiber": "^9.0.0",

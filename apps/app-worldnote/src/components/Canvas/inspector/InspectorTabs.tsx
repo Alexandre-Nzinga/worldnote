@@ -1,3 +1,6 @@
+import { stepTransition } from "@worldnote/ui";
+import { motion } from "framer-motion";
+
 export type InspectorTabId = "info" | "properties";
 
 const TABS: Array<{ id: InspectorTabId; label: string }> = [
@@ -13,7 +16,7 @@ type InspectorTabsProps = {
 export function InspectorTabs({ activeTab, onTabChange }: InspectorTabsProps) {
   return (
     <div
-      className="flex border-b border-wn-mono-800"
+      className="mx-4 flex gap-1 rounded-lg bg-wn-mono-950 p-1"
       role="tablist"
       aria-label="Inspector sections"
     >
@@ -27,12 +30,19 @@ export function InspectorTabs({ activeTab, onTabChange }: InspectorTabsProps) {
             aria-selected={isActive}
             className={
               isActive
-                ? "flex-1 border-b-2 border-wn-mono-50 px-3 py-2.5 text-sm font-semibold text-wn-mono-50 transition-colors"
-                : "flex-1 border-b-2 border-transparent px-3 py-2.5 text-sm font-semibold text-wn-mono-500 transition-colors hover:text-wn-mono-300"
+                ? "relative flex-1 rounded-md px-3 py-2 text-sm font-medium text-wn-mono-50"
+                : "relative flex-1 rounded-md px-3 py-2 text-sm font-medium text-wn-mono-500 transition-colors hover:text-wn-mono-300"
             }
             onClick={() => onTabChange(tab.id)}
           >
-            {tab.label}
+            {isActive ? (
+              <motion.span
+                layoutId="inspector-tab-pill"
+                className="absolute inset-0 rounded-md bg-wn-mono-800 shadow-sm"
+                transition={stepTransition}
+              />
+            ) : null}
+            <span className="relative z-10">{tab.label}</span>
           </button>
         );
       })}

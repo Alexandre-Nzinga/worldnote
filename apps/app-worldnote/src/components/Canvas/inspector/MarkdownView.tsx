@@ -3,6 +3,7 @@ import remarkGfm from "remark-gfm";
 
 type MarkdownViewProps = {
   content: string;
+  emptyMessage?: string;
 };
 
 /** CommonMark requires a space after # for ATX headings (e.g. `# Title`). */
@@ -10,13 +11,14 @@ function normalizeMarkdown(content: string): string {
   return content.replace(/^(#{1,6})([^\s#\n])/gm, "$1 $2");
 }
 
-export function MarkdownView({ content }: MarkdownViewProps) {
+export function MarkdownView({
+  content,
+  emptyMessage = "No description yet.",
+}: MarkdownViewProps) {
   const normalized = normalizeMarkdown(content);
 
   if (!normalized.trim()) {
-    return (
-      <p className="text-sm text-wn-mono-500">No description yet.</p>
-    );
+    return <p className="text-sm text-wn-mono-500">{emptyMessage}</p>;
   }
 
   return (

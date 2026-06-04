@@ -11,7 +11,7 @@ import {
   MotionPressable,
   WorldNoteLogo,
 } from "@worldnote/ui";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { NewCardType } from "../../services/crudWorldCard/cardTemplates.js";
 import { DockTabs, type DockTabItem } from "../ui/DockTabs.js";
 
@@ -96,24 +96,33 @@ type CanvasToolbarProps = {
   className?: string;
   activeTool?: CanvasTool;
   onCreate?: (type: CreateOption) => void;
+  onTextTool?: () => void;
+  textToolDisabled?: boolean;
   onImageTool?: () => void;
   imageToolDisabled?: boolean;
   onOpenVault?: () => void;
   onToggleAllCardViews?: () => void;
   onToggleWizard?: () => void;
   isWizardOpen?: boolean;
+  /** Renders above the dock (e.g. sticky note controls). */
+  noteToolbar?: ReactNode;
+  imageToolbar?: ReactNode;
 };
 
 export function CanvasToolbar({
   className,
   activeTool = "select",
   onCreate,
+  onTextTool,
+  textToolDisabled = false,
   onImageTool,
   imageToolDisabled = false,
   onOpenVault,
   onToggleAllCardViews,
   onToggleWizard,
   isWizardOpen = false,
+  noteToolbar,
+  imageToolbar,
 }: CanvasToolbarProps) {
   const [createMenuOpen, setCreateMenuOpen] = useState(false);
   const [createQuery, setCreateQuery] = useState("");
@@ -121,6 +130,10 @@ export function CanvasToolbar({
   const createSearchRef = useRef<HTMLInputElement>(null);
 
   const supportsCreate = useMemo(() => !!onCreate, [onCreate]);
+  const supportsTextTool = useMemo(
+    () => !!onTextTool && !textToolDisabled,
+    [onTextTool, textToolDisabled],
+  );
   const supportsImageTool = useMemo(
     () => !!onImageTool && !imageToolDisabled,
     [imageToolDisabled, onImageTool],
@@ -209,8 +222,13 @@ export function CanvasToolbar({
         id: "text",
         name: "Text",
         icon: "title",
-        colorClassName: "bg-wn-mono-800 text-wn-mono-50",
-        disabled: true,
+        colorClassName:
+          activeTool === "text"
+            ? "bg-wn-mono-50 text-wn-mono-950"
+            : "bg-wn-mono-800 text-wn-mono-50",
+        isActive: activeTool === "text",
+        disabled: !supportsTextTool,
+        onPress: onTextTool,
       },
       {
         id: "image",
@@ -281,7 +299,9 @@ export function CanvasToolbar({
       createMenuOpen,
       isWizardOpen,
       onImageTool,
+      onTextTool,
       onOpenVault,
+      supportsTextTool,
       onToggleAllCardViews,
       onToggleWizard,
       supportsBulkViewToggle,
@@ -293,8 +313,14 @@ export function CanvasToolbar({
 
   return (
     <footer
-      className={`pointer-events-none absolute inset-x-0 bottom-4 z-20 flex flex-col items-center gap-3 px-4 ${className ?? ""}`}
+      className={`pointer-events-none absolute inset-x-0 bottom-4 z-20 flex flex-col items-center gap-2 px-4 ${className ?? ""}`}
     >
+      {noteToolbar || imageToolbar ? (
+        <div className="pointer-events-auto flex flex-col items-center gap-2">
+          {noteToolbar ? <div className="flex justify-center">{noteToolbar}</div> : null}
+          {imageToolbar ? <div className="flex justify-center">{imageToolbar}</div> : null}
+        </div>
+      ) : null}
       <div
         ref={createMenuRef}
         className="pointer-events-auto relative flex justify-center"

@@ -3,18 +3,22 @@ mod cmd;
 fn prevent_default_plugin() -> tauri::plugin::TauriPlugin<tauri::Wry> {
     use tauri_plugin_prevent_default::Flags;
 
+    // Block browser chrome (context menu, print, navigation, …) but not keyboard
+    // shortcuts — canvas copy/paste/undo are handled in the webview.
+    let flags = Flags::all().difference(Flags::keyboard());
+
     #[cfg(debug_assertions)]
     {
-        // Block WebView2/Chromium menus (Back, Refresh, Inspect, …); keep F12 + reload in dev.
+        // Keep F12 devtools and reload in dev.
         return tauri_plugin_prevent_default::Builder::new()
-            .with_flags(Flags::all().difference(Flags::debug()))
+            .with_flags(flags.difference(Flags::debug()))
             .build();
     }
 
     #[cfg(not(debug_assertions))]
     {
         tauri_plugin_prevent_default::Builder::new()
-            .with_flags(Flags::all())
+            .with_flags(flags)
             .build()
     }
 }
@@ -64,6 +68,11 @@ pub fn run() {
             cmd::manifest::remove_canvas_manifest_node,
             cmd::manifest::update_canvas_manifest_image,
             cmd::manifest::remove_canvas_manifest_image,
+            cmd::manifest::update_canvas_manifest_sticky_note,
+            cmd::manifest::remove_canvas_manifest_sticky_note,
+            cmd::sticky_note::write_sticky_note_markdown,
+            cmd::sticky_note::list_sticky_note_markdown,
+            cmd::sticky_note::delete_sticky_note_markdown,
             cmd::wizard::ollama_health,
             cmd::wizard::ollama_list_models,
             cmd::wizard::ollama_chat,

@@ -10,6 +10,7 @@ export const CARD_IMAGE_EXTENSIONS = [
   "webp",
   "gif",
   "svg",
+  "avif",
 ] as const;
 
 export async function pickCardImageFile(): Promise<string | null> {

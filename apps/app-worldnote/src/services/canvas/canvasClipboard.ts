@@ -1,3 +1,4 @@
+import type { CardImagePosition } from "@worldnote/shared";
 import { create } from "zustand";
 
 export type CanvasClipboardCard = {
@@ -15,9 +16,25 @@ export type CanvasClipboardImage = {
   imagePath: string;
   width?: number;
   height?: number;
+  imagePosition?: CardImagePosition;
 };
 
-export type CanvasClipboardItem = CanvasClipboardCard | CanvasClipboardImage;
+export type CanvasClipboardStickyNote = {
+  kind: "stickyNote";
+  noteId: string;
+  x: number;
+  y: number;
+  heading?: string;
+  color?: string;
+  content?: string;
+  width?: number;
+  height?: number;
+};
+
+export type CanvasClipboardItem =
+  | CanvasClipboardCard
+  | CanvasClipboardImage
+  | CanvasClipboardStickyNote;
 
 export type CanvasClipboardPayload = {
   vaultPath: string;

@@ -20,10 +20,8 @@ export const BaseCardSchema = z.object({
   description: z.string().optional(),
   /** Epithet, alias, or secondary name (e.g. "Muad'Dib"). */
   subtitle: z.string().optional(),
-  /** Long-form markdown body for the Lore tab (plain-text fallback / legacy). */
+  /** Long-form markdown body for the Lore tab. */
   lore: z.string().optional(),
-  /** TipTap ProseMirror JSON document for the Lore rich editor. */
-  lore_doc: z.record(z.string(), z.unknown()).optional(),
   custom_properties: z.record(z.string(), z.any()),
 });
 

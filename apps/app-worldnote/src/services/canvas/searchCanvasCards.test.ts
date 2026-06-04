@@ -34,20 +34,7 @@ describe("searchCanvasCards", () => {
     tags: ["kwisatz-haderach"],
   });
   const jessica = card("00000000-0000-4000-8000-000000000002", "Lady Jessica", {
-    lore_doc: {
-      type: "doc",
-      content: [
-        {
-          type: "paragraph",
-          content: [
-            {
-              type: "cardMention",
-              attrs: { id: paul.id, label: "Duke Paul" },
-            },
-          ],
-        },
-      ],
-    },
+    lore: "Mentor on Caladan.",
   });
 
   it("matches by name", () => {
@@ -63,25 +50,10 @@ describe("searchCanvasCards", () => {
     expect(hits[0]?.matchKind).toBe("tag");
   });
 
-  it("matches by mention label in lore", () => {
-    const hits = searchCanvasCards([paul, jessica], "duke paul");
-    expect(hits[0]?.cardId).toBe(paul.id);
-    expect(hits[0]?.matchKind).toBe("mention");
-  });
-
-  it("matches mention labels in Quill Delta lore docs", () => {
-    const chani = card("00000000-0000-4000-8000-000000000003", "Chani", {
-      lore_doc: {
-        ops: [
-          { insert: "Beloved of " },
-          { insert: { "card-mention": { id: paul.id, label: "Usul" } } },
-          { insert: "\n" },
-        ],
-      },
-    });
-    const hits = searchCanvasCards([paul, chani], "usul");
-    expect(hits[0]?.cardId).toBe(paul.id);
-    expect(hits[0]?.matchKind).toBe("mention");
+  it("matches by lore markdown body", () => {
+    const hits = searchCanvasCards([paul, jessica], "caladan");
+    expect(hits[0]?.cardId).toBe(jessica.id);
+    expect(hits[0]?.matchKind).toBe("lore");
   });
 
   it("matches wikilink-style name queries", () => {

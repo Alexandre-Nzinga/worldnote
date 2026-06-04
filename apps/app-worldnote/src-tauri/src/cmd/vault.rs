@@ -38,7 +38,7 @@ pub struct WorldSummary {
     pub name: String,
     pub description: String,
     pub card_count: u32,
-    pub last_opened: u64,
+    pub last_edited: u64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cover_image: Option<String>,
 }
@@ -168,6 +168,42 @@ fn file_modified_secs(path: &Path) -> u64 {
         .unwrap_or(0)
 }
 
+fn latest_modified_in_tree(dir: &Path) -> u64 {
+    if !dir.is_dir() {
+        return 0;
+    }
+
+    let entries = match fs::read_dir(dir) {
+        Ok(entries) => entries,
+        Err(_) => return 0,
+    };
+
+    let mut latest = 0u64;
+    for entry in entries.filter_map(Result::ok) {
+        let path = entry.path();
+        if path.is_dir() {
+            latest = latest.max(latest_modified_in_tree(&path));
+        } else if path.is_file() {
+            latest = latest.max(file_modified_secs(&path));
+        }
+    }
+    latest
+}
+
+/// Latest modification time across vault content (cards, canvas, links, metadata).
+fn world_last_edited_secs(world_path: &Path) -> u64 {
+    let (worldnote_dir, lore_dir, manifest_path, _) = world_paths(world_path);
+    let metadata_path = worldnote_dir.join("world.json");
+    let links_dir = world_path.join("links");
+
+    let mut latest = file_modified_secs(&metadata_path);
+    latest = latest.max(file_modified_secs(&manifest_path));
+    latest = latest.max(latest_modified_in_tree(&lore_dir));
+    latest = latest.max(latest_modified_in_tree(&links_dir));
+    latest = latest.max(latest_modified_in_tree(&worldnote_dir));
+    latest
+}
+
 #[tauri::command]
 pub fn list_worlds(root: String) -> Result<Vec<WorldSummary>, String> {
     let root_path = PathBuf::from(root.trim());
@@ -197,12 +233,12 @@ pub fn list_worlds(root: String) -> Result<Vec<WorldSummary>, String> {
             name: metadata.name,
             description: metadata.description,
             card_count: count_lore_cards(&lore_dir),
-            last_opened: file_modified_secs(&metadata_path),
+            last_edited: world_last_edited_secs(&world_path),
             cover_image: metadata.cover_image,
         });
     }
 
-    worlds.sort_by(|left, right| right.last_opened.cmp(&left.last_opened));
+    worlds.sort_by(|left, right| right.last_edited.cmp(&left.last_edited));
     Ok(worlds)
 }
 

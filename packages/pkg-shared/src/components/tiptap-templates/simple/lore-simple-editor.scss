@@ -1,0 +1,33 @@
+.lore-simple-editor-wrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  border-radius: 0.75rem;
+  border: 1px solid var(--color-wn-mono-800);
+  background-color: var(--color-wn-mono-950);
+  overflow: hidden;
+}
+
+.lore-simple-editor-wrapper .lore-simple-editor-toolbar {
+  position: relative;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--color-wn-mono-800);
+  background-color: var(--color-wn-mono-900);
+}
+
+.lore-simple-editor-wrapper .simple-editor-content,
+.lore-simple-editor-wrapper .lore-simple-editor-content-area {
+  min-height: 12rem;
+  max-height: min(40vh, 20rem);
+  overflow-y: auto;
+}
+
+.lore-simple-editor-wrapper .ProseMirror {
+  min-height: 12rem;
+  padding: 0.75rem;
+  color: var(--color-wn-mono-100);
+}
+
+.lore-simple-editor-loading {
+  min-height: 12rem;
+}

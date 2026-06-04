@@ -8,6 +8,8 @@ import {
   type CanvasFlowNode,
   type CardFlowNode,
   type ImageFlowNode,
+  type NoteFlowNode,
+  stickyNoteSurfaceClass,
 } from "@worldnote/canvas";
 import {
   applyNodeChanges,
@@ -24,7 +26,13 @@ import {
 } from "@xyflow/react";
 import {
   CARD_TYPE_LABELS,
+  DEFAULT_STICKY_NOTE_COLOR,
+  flipCardImageHorizontal,
+  flipCardImageVertical,
   NEW_CARD_DEFAULT_NAMES,
+  rotateCardImageClockwise,
+  StickyNotePlacementSchema,
+  type CardImagePosition,
   type Link,
   type WorldCard,
 } from "@worldnote/shared";
@@ -37,15 +45,45 @@ import { WIZARD_CARD_MIME } from "../../services/canvas/cardDragOut.js";
 import { canvasNodePosition } from "./canvasNodePosition.js";
 import { cardImageSrc, worldCardToNodeData } from "../../services/canvas/cardNodeData.js";
 import {
+  removeCanvasManifestStickyNote,
   updateCanvasManifestImage,
   updateCanvasManifestNode,
+  updateCanvasManifestStickyNote,
 } from "../../services/canvas/canvasManifest.js";
 import {
   imagePlacementToFlowNode,
   vaultAbsoluteImagePath,
 } from "../../services/canvas/canvasImageNode.js";
+import {
+  canvasImageNodeWithPosition,
+  canvasImagePlacementFromFlowNode,
+  defaultCanvasImageNodePosition,
+} from "../../services/canvas/canvasImagePlacement.js";
 import { loadImageNaturalSize } from "../../services/canvas/loadImageNaturalSize.js";
+import {
+  CANVAS_IMAGE_SPAWN_ANCHOR_OFFSET,
+  type CanvasFlowPointer,
+} from "../../services/canvas/canvasSpawnPosition.js";
+import {
+  stickyNoteDimensionsFromNode,
+  stickyNoteFromFlowNode,
+  stickyNotePlacementFromFlowNode,
+  stickyNotePlacementToFlowNode,
+  type StickyNoteNodeCallbacks,
+} from "../../services/canvas/stickyNoteNode.js";
+import {
+  listStickyNoteMarkdownSafe,
+  parseStickyNoteMarkdown,
+  deleteStickyNoteMarkdown,
+  serializeStickyNoteMarkdown,
+  writeStickyNoteMarkdown,
+} from "../../services/canvas/stickyNoteMarkdown.js";
 import { createCanvasImagePositionUpdater } from "../../services/canvas/updateCanvasImagePosition.js";
+import {
+  createStickyNoteManifestUpdater,
+  createStickyNoteMarkdownUpdater,
+  createStickyNotePositionUpdater,
+} from "../../services/canvas/updateStickyNotePosition.js";
 import { createCardPositionUpdater } from "../../services/canvas/updateCardPosition.js";
 import {
   deleteCanvasImage,
@@ -55,6 +93,7 @@ import {
 import { isTauriRuntime } from "../../services/desktop/tauriRuntime.js";
 import { createWorldCard } from "../../services/crudWorldCard/createWorldCard.js";
 import { groupSelectedWorldCards } from "../../services/crudWorldCard/groupSelectedWorldCards.js";
+import { changeWorldCardType } from "../../services/crudWorldCard/changeWorldCardType.js";
 import type { NewCardType } from "../../services/crudWorldCard/cardTemplates.js";
 import { deleteWorldCard } from "../../services/crudWorldCard/deleteWorldCard.js";
 import { duplicateWorldCard } from "../../services/crudWorldCard/duplicateWorldCard.js";
@@ -66,13 +105,19 @@ import { listLinks } from "../../services/links/listLinks.js";
 import { LinkEditorPanel } from "./LinkEditorPanel.js";
 import { Inspector, type InspectorMode } from "./Inspector.js";
 import { CanvasFlow } from "./CanvasFlow.js";
+import type { CanvasPointerApi } from "./useCanvasPointerTracking.js";
 import type {
   CanvasImageDropPosition,
   CanvasImageImportOptions,
 } from "./useCanvasExternalImageDrop.js";
+import type { CanvasCardContextMenuState } from "./CanvasCardContextMenu.js";
 import type { CanvasImageContextMenuState } from "./CanvasImageContextMenu.js";
+import type { CanvasStickyNoteContextMenuState } from "./CanvasStickyNoteContextMenu.js";
 import { CanvasHeader } from "./CanvasHeader.js";
 import { CanvasCommandPalette } from "./CanvasCommandPalette.js";
+import { StickyNoteNode } from "./StickyNoteNode.js";
+import { StickyNoteToolbar } from "./StickyNoteToolbar.js";
+import { CanvasImageToolbar } from "./CanvasImageToolbar.js";
 import { CanvasToolbar, type CanvasTool } from "./CanvasToolbar.js";
 import { WorldWizardPanel } from "./wizard/WorldWizardPanel.js";
 import { useCanvasCommandPaletteShortcut } from "./useCanvasCommandPaletteShortcut.js";
@@ -97,6 +142,7 @@ import { listWorlds } from "../../services/worlds/listWorlds.js";
 const nodeTypes = {
   worldnoteCard: CardNode,
   worldnoteImage: ImageNode,
+  worldnoteNote: StickyNoteNode,
 };
 
 function selectedCardIdsFromNodes(
@@ -174,6 +220,10 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
   const [isWizardOpen, setIsWizardOpen] = useState(false);
   const [imageContextMenu, setImageContextMenu] =
     useState<CanvasImageContextMenuState | null>(null);
+  const [cardContextMenu, setCardContextMenu] =
+    useState<CanvasCardContextMenuState | null>(null);
+  const [stickyNoteContextMenu, setStickyNoteContextMenu] =
+    useState<CanvasStickyNoteContextMenuState | null>(null);
 
   const nodesRef = useRef(nodes);
   nodesRef.current = nodes;
@@ -197,6 +247,8 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
   const focusCardRef = useRef<((cardId: string) => void) | undefined>(
     undefined,
   );
+  const lastCanvasPointerRef = useRef<CanvasFlowPointer | null>(null);
+  const canvasPointerApiRef = useRef<CanvasPointerApi | null>(null);
 
   const captureHistorySnapshot = useCallback((): CanvasHistorySnapshot | null => {
     if (!vaultPath) {
@@ -416,6 +468,34 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
         return;
       }
 
+      const noteIds = selectedNodes
+        .filter((node) => node.type === "worldnoteNote")
+        .map((node) => node.id);
+
+      if (noteIds.length > 0) {
+        setSelectedCardIds([]);
+        setSelectedImageIds([]);
+        setSelectedLinkId(null);
+        setNodes((prev) =>
+          prev.map((node) => {
+            if (node.type !== "worldnoteNote") {
+              return node;
+            }
+            const isSelected = noteIds.includes(node.id);
+            const editing = node.data.editing ?? false;
+            return {
+              ...node,
+              draggable: isSelected ? !editing : true,
+              data: {
+                ...node.data,
+                ...(isSelected ? {} : { editing: false }),
+              },
+            };
+          }),
+        );
+        return;
+      }
+
       const selectedEdge = selectedEdges[0];
       if (selectedEdge) {
         setSelectedLinkId(selectedEdge.id);
@@ -428,7 +508,7 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
       setSelectedImageIds([]);
       setSelectedLinkId(null);
     },
-    [],
+    [setNodes],
   );
 
   const updateCardPosition = useMemo(() => {
@@ -444,6 +524,176 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
     }
     return createCanvasImagePositionUpdater(vaultPath);
   }, [vaultPath]);
+
+  const updateStickyNotePosition = useMemo(() => {
+    if (!vaultPath) {
+      return null;
+    }
+    return createStickyNotePositionUpdater(vaultPath);
+  }, [vaultPath]);
+
+  const updateStickyNoteManifest = useMemo(() => {
+    if (!vaultPath) {
+      return null;
+    }
+    return createStickyNoteManifestUpdater(vaultPath);
+  }, [vaultPath]);
+
+  const updateStickyNoteMarkdown = useMemo(() => {
+    if (!vaultPath) {
+      return null;
+    }
+    return createStickyNoteMarkdownUpdater(vaultPath);
+  }, [vaultPath]);
+
+  const handleDeleteStickyNote = useCallback(
+    async (noteId: string) => {
+      if (!vaultPath) {
+        return;
+      }
+      pushCanvasHistory();
+      await deleteStickyNoteMarkdown(vaultPath, noteId);
+      await removeCanvasManifestStickyNote(vaultPath, noteId);
+      setNodes((prev) => prev.filter((node) => node.id !== noteId));
+      setStickyNoteContextMenu((current) =>
+        current?.noteId === noteId ? null : current,
+      );
+    },
+    [pushCanvasHistory, setNodes, vaultPath],
+  );
+
+  const buildStickyNoteCallbacks = useCallback(
+    (noteId: string): StickyNoteNodeCallbacks => ({
+      onChange: (payload) => {
+        setNodes((prev) =>
+          prev.map((node) => {
+            if (node.id !== noteId || node.type !== "worldnoteNote") {
+              return node;
+            }
+            const updated: NoteFlowNode = {
+              ...node,
+              data: {
+                ...node.data,
+                content: payload.content,
+              },
+            };
+            if (updateStickyNoteMarkdown) {
+              void updateStickyNoteMarkdown(stickyNoteFromFlowNode(updated));
+            }
+            return updated;
+          }),
+        );
+      },
+      onChangeHeading: (heading) => {
+        setNodes((prev) =>
+          prev.map((node) => {
+            if (node.id !== noteId || node.type !== "worldnoteNote") {
+              return node;
+            }
+            const updated: NoteFlowNode = {
+              ...node,
+              data: { ...node.data, heading },
+            };
+            if (updateStickyNoteManifest) {
+              void updateStickyNoteManifest(
+                StickyNotePlacementSchema.parse(
+                  stickyNotePlacementFromFlowNode(updated),
+                ),
+              );
+            }
+            if (updateStickyNoteMarkdown) {
+              void updateStickyNoteMarkdown(stickyNoteFromFlowNode(updated));
+            }
+            return updated;
+          }),
+        );
+      },
+      onChangeColor: (color) => {
+        setNodes((prev) =>
+          prev.map((node) => {
+            if (node.id !== noteId || node.type !== "worldnoteNote") {
+              return node;
+            }
+            const updated: NoteFlowNode = {
+              ...node,
+              data: { ...node.data, color },
+              className: stickyNoteSurfaceClass(color),
+            };
+            if (updateStickyNoteManifest) {
+              void updateStickyNoteManifest(
+                StickyNotePlacementSchema.parse(
+                  stickyNotePlacementFromFlowNode(updated),
+                ),
+              );
+            }
+            return updated;
+          }),
+        );
+      },
+      onDelete: () => {
+        void handleDeleteStickyNote(noteId);
+      },
+      onRequestEdit: () => {
+        setNodes((prev) =>
+          prev.map((node) => {
+            if (node.type !== "worldnoteNote") {
+              return node;
+            }
+            const isTarget = node.id === noteId;
+            return {
+              ...node,
+              selected: isTarget,
+              draggable: !isTarget,
+              data: {
+                ...node.data,
+                editing: isTarget,
+              },
+            };
+          }),
+        );
+        setSelectedCardIds([]);
+        setSelectedImageIds([]);
+        setSelectedLinkId(null);
+      },
+      onEndEdit: () => {
+        setNodes((prev) =>
+          prev.map((node) => {
+            if (node.id !== noteId || node.type !== "worldnoteNote") {
+              return node;
+            }
+            return {
+              ...node,
+              draggable: true,
+              data: { ...node.data, editing: false },
+            };
+          }),
+        );
+      },
+    }),
+    [
+      handleDeleteStickyNote,
+      setNodes,
+      updateStickyNoteManifest,
+      updateStickyNoteMarkdown,
+    ],
+  );
+
+  useEffect(() => {
+    setNodes((prev) =>
+      prev.map((node) => {
+        if (node.type !== "worldnoteNote") {
+          return node;
+        }
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            ...buildStickyNoteCallbacks(node.id),
+          },
+        };
+      }),
+    );
+  }, [buildStickyNoteCallbacks, setNodes]);
 
   const handleSaveCard = useCallback(
     async (card: WorldCard) => {
@@ -559,12 +809,27 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
     }
 
     let isDisposed = false;
-    void Promise.all([
-      listCards(vaultPath),
-      loadCanvasManifest(vaultPath),
-      listLinks(vaultPath),
-    ])
-      .then(([cards, manifest, links]) => {
+    void (async () => {
+      try {
+        const [cards, manifest] = await Promise.all([
+          listCards(vaultPath),
+          loadCanvasManifest(vaultPath),
+        ]);
+        if (isDisposed) {
+          return;
+        }
+
+        let links: Link[] = [];
+        try {
+          links = await listLinks(vaultPath);
+        } catch (linkError) {
+          console.warn(
+            "Could not load canvas links; cards will still appear:",
+            linkError,
+          );
+        }
+
+        const markdownEntries = await listStickyNoteMarkdownSafe(vaultPath);
         if (isDisposed) {
           return;
         }
@@ -587,7 +852,7 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
                   card.position,
                 ),
                 data: worldCardToNodeData(card, vaultPath, {
-                  visibleSocketsSettings,
+                  visibleSocketsSettings: visibleSocketsSettingsRef.current,
                   links,
                   cardsById: record,
                 }),
@@ -604,24 +869,53 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
             return node ? [node] : [];
           },
         );
-        setNodes([...cardNodes, ...imageNodes]);
+        const markdownById = new Map(
+          markdownEntries.map((entry) => {
+            const parsed = parseStickyNoteMarkdown(entry.content);
+            return [
+              entry.id,
+              {
+                heading: parsed.heading ?? undefined,
+                content: parsed.content,
+              },
+            ] as const;
+          }),
+        );
+        const noteNodes: CanvasFlowNode[] = (manifest.stickyNotes ?? []).flatMap(
+          (note) => {
+            try {
+              const markdown = markdownById.get(note.id);
+              const placement = StickyNotePlacementSchema.parse({
+                ...note,
+                heading: note.heading ?? markdown?.heading,
+              });
+              return [
+                stickyNotePlacementToFlowNode(
+                  placement,
+                  markdown?.content ?? "",
+                  {},
+                ),
+              ];
+            } catch (error) {
+              console.error(
+                `Skipping sticky note ${note.id} on canvas load:`,
+                error,
+              );
+              return [];
+            }
+          },
+        );
+        setNodes([...cardNodes, ...imageNodes, ...noteNodes]);
         setEdges(links.map(linkToEdge));
-      })
-      .catch((error) => {
+      } catch (error) {
         console.error("Failed to load canvas:", error);
-      });
+      }
+    })();
 
     return () => {
       isDisposed = true;
     };
-  }, [
-    listCards,
-    loadCanvasManifest,
-    setEdges,
-    setNodes,
-    vaultPath,
-    visibleSocketsSettings,
-  ]);
+  }, [listCards, loadCanvasManifest, setEdges, setNodes, vaultPath]);
 
   const linksList = useMemo(() => Object.values(linksById), [linksById]);
 
@@ -692,16 +986,22 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
   );
 
   const addCard = useCallback(
-    (cardType: NewCardType, position?: { x: number; y: number }) => {
+    (
+      cardType: NewCardType,
+      position?: { x: number; y: number },
+      spawnOptions?: { preferViewportCenter?: boolean },
+    ) => {
       if (!vaultPath) {
         console.warn("Cannot create card: no vault selected");
         return Promise.resolve();
       }
 
-      const nextPosition = position ?? {
-        x: 120 + nodes.length * 24,
-        y: 90 + nodes.length * 20,
-      };
+      const nextPosition =
+        position ??
+        canvasPointerApiRef.current?.resolveSpawnPosition({
+          preferViewportCenter: spawnOptions?.preferViewportCenter,
+        }) ??
+        ({ x: 0, y: 0 } satisfies CanvasFlowPointer);
       const tempId = crypto.randomUUID();
       const fallbackTitle = NEW_CARD_DEFAULT_NAMES[cardType];
       const typeLabel = CARD_TYPE_LABELS[cardType];
@@ -747,20 +1047,16 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
           setSelectedCardIds([card.id]);
           setSelectedLinkId(null);
           setInspectorMode("edit");
+          if (spawnOptions?.preferViewportCenter) {
+            queueMicrotask(() => focusCardRef.current?.(card.id));
+          }
         })
         .catch((error) => {
           console.error("Failed to persist card:", error);
           setNodes((prev) => prev.filter((node) => node.id !== tempId));
         });
     },
-    [
-      cardsById,
-      linksById,
-      nodes.length,
-      setNodes,
-      vaultPath,
-      visibleSocketsSettings,
-    ],
+    [cardsById, linksById, setNodes, vaultPath, visibleSocketsSettings],
   );
 
   const addCanvasImage = useCallback(
@@ -774,10 +1070,13 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
       }
 
       const imageId = options?.imageId ?? crypto.randomUUID();
-      const nextPosition = position ?? {
-        x: 160 + nodesRef.current.length * 24,
-        y: 120 + nodesRef.current.length * 20,
-      };
+      const nextPosition =
+        position ??
+        canvasPointerApiRef.current?.resolveSpawnPosition({
+          anchorOffset: CANVAS_IMAGE_SPAWN_ANCHOR_OFFSET,
+          preferViewportCenter: options?.preferViewportCenter,
+        }) ??
+        ({ x: 0, y: 0 } satisfies CanvasFlowPointer);
 
       try {
         const imagePath =
@@ -815,6 +1114,9 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
         setSelectedImageIds([imageId]);
         setSelectedCardIds([]);
         setSelectedLinkId(null);
+        if (options?.preferViewportCenter) {
+          queueMicrotask(() => focusCardRef.current?.(imageId));
+        }
       } catch (error) {
         console.error("Failed to add canvas image:", error);
       }
@@ -844,13 +1146,85 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
       if (!sourcePath) {
         return;
       }
-      await addCanvasImage(sourcePath);
+      await addCanvasImage(sourcePath, undefined, {
+        preferViewportCenter: true,
+      });
     } catch (error) {
       console.error("Image tool failed:", error);
     } finally {
       setActiveTool("select");
     }
   }, [addCanvasImage, vaultPath]);
+
+  const addStickyNote = useCallback(
+    async (options?: { preferViewportCenter?: boolean }) => {
+      if (!vaultPath) {
+        return;
+      }
+
+      const noteId = crypto.randomUUID();
+      const nextPosition =
+        canvasPointerApiRef.current?.resolveSpawnPosition({
+          preferViewportCenter: options?.preferViewportCenter,
+        }) ?? ({ x: 0, y: 0 } satisfies CanvasFlowPointer);
+
+      const placement = StickyNotePlacementSchema.parse({
+        id: noteId,
+        x: nextPosition.x,
+        y: nextPosition.y,
+        color: DEFAULT_STICKY_NOTE_COLOR,
+        width: 200,
+        height: 200,
+      });
+
+      try {
+        await writeStickyNoteMarkdown(
+          vaultPath,
+          noteId,
+          serializeStickyNoteMarkdown(undefined, ""),
+        );
+        await updateCanvasManifestStickyNote(vaultPath, placement);
+        const flowNode = stickyNotePlacementToFlowNode(
+          placement,
+          "",
+          buildStickyNoteCallbacks(noteId),
+          {
+            selected: true,
+            enterAnimation: true,
+            editing: true,
+            draggable: false,
+          },
+        );
+        setNodes((prev) => [
+          ...prev.map((node) => ({ ...node, selected: false })),
+          flowNode,
+        ]);
+        setSelectedCardIds([]);
+        setSelectedImageIds([]);
+        setSelectedLinkId(null);
+        if (options?.preferViewportCenter) {
+          queueMicrotask(() => focusCardRef.current?.(noteId));
+        }
+      } catch (error) {
+        console.error("Failed to add sticky note:", error);
+      }
+    },
+    [buildStickyNoteCallbacks, setNodes, vaultPath],
+  );
+
+  const handleTextTool = useCallback(async () => {
+    if (!vaultPath) {
+      return;
+    }
+    setActiveTool("text");
+    try {
+      await addStickyNote({ preferViewportCenter: true });
+    } catch (error) {
+      console.error("Text tool failed:", error);
+    } finally {
+      setActiveTool("select");
+    }
+  }, [addStickyNote, vaultPath]);
 
   const handleDeleteImage = useCallback(
     async (imageId: string) => {
@@ -904,20 +1278,217 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
       if (!node) {
         return;
       }
-      const imagePath = node.data.imagePath;
-      if (!imagePath) {
-        return;
-      }
-      void updateImagePosition({
-        id: nodeId,
-        x: node.position.x,
-        y: node.position.y,
-        imagePath,
-        width: size.width,
-        height: size.height,
-      });
+      void updateImagePosition(
+        canvasImagePlacementFromFlowNode({
+          ...node,
+          style: {
+            ...node.style,
+            width: size.width,
+            height: size.height,
+          },
+        }),
+      );
     },
     [setNodes, updateImagePosition],
+  );
+
+  const applyCanvasImageTransform = useCallback(
+    (
+      imageId: string,
+      transform: (position: CardImagePosition) => CardImagePosition,
+    ) => {
+      const node = nodesRef.current.find(
+        (entry): entry is ImageFlowNode =>
+          entry.id === imageId && entry.type === "worldnoteImage",
+      );
+      if (!node || !updateImagePosition) {
+        return;
+      }
+      const imagePosition = transform(
+        node.data.imagePosition ?? defaultCanvasImageNodePosition(),
+      );
+      const updatedNode = canvasImageNodeWithPosition(node, imagePosition);
+      setNodes((prev) =>
+        prev.map((entry) =>
+          entry.id === imageId && entry.type === "worldnoteImage"
+            ? updatedNode
+            : entry,
+        ),
+      );
+      void updateImagePosition(canvasImagePlacementFromFlowNode(updatedNode));
+    },
+    [setNodes, updateImagePosition],
+  );
+
+  const handleFlipCanvasImageHorizontal = useCallback(
+    (imageId: string) => {
+      applyCanvasImageTransform(imageId, flipCardImageHorizontal);
+    },
+    [applyCanvasImageTransform],
+  );
+
+  const handleFlipCanvasImageVertical = useCallback(
+    (imageId: string) => {
+      applyCanvasImageTransform(imageId, flipCardImageVertical);
+    },
+    [applyCanvasImageTransform],
+  );
+
+  const handleRotateCanvasImageClockwise = useCallback(
+    (imageId: string) => {
+      applyCanvasImageTransform(imageId, rotateCardImageClockwise);
+    },
+    [applyCanvasImageTransform],
+  );
+
+  const handleCanvasImagePositionChange = useCallback(
+    (imageId: string, imagePosition: CardImagePosition) => {
+      const node = nodesRef.current.find(
+        (entry): entry is ImageFlowNode =>
+          entry.id === imageId && entry.type === "worldnoteImage",
+      );
+      if (!node || !updateImagePosition) {
+        return;
+      }
+      const updatedNode = canvasImageNodeWithPosition(node, imagePosition);
+      setNodes((prev) =>
+        prev.map((entry) =>
+          entry.id === imageId && entry.type === "worldnoteImage"
+            ? updatedNode
+            : entry,
+        ),
+      );
+      void updateImagePosition(canvasImagePlacementFromFlowNode(updatedNode));
+    },
+    [setNodes, updateImagePosition],
+  );
+
+  const handleStickyNoteResizeEnd = useCallback(
+    (nodeId: string, size: { width: number; height: number }) => {
+      setNodes((prev) =>
+        prev.map((node) =>
+          node.id === nodeId && node.type === "worldnoteNote"
+            ? {
+                ...node,
+                style: {
+                  ...node.style,
+                  width: size.width,
+                  height: size.height,
+                },
+              }
+            : node,
+        ),
+      );
+
+      if (!updateStickyNoteManifest) {
+        return;
+      }
+      const noteNode = nodesRef.current.find(
+        (entry): entry is NoteFlowNode =>
+          entry.id === nodeId && entry.type === "worldnoteNote",
+      );
+      if (!noteNode) {
+        return;
+      }
+      const updated: NoteFlowNode = {
+        ...noteNode,
+        style: {
+          ...noteNode.style,
+          width: size.width,
+          height: size.height,
+        },
+      };
+      void updateStickyNoteManifest(
+        StickyNotePlacementSchema.parse(
+          stickyNotePlacementFromFlowNode(updated),
+        ),
+      );
+    },
+    [setNodes, updateStickyNoteManifest],
+  );
+
+  const handleDuplicateStickyNote = useCallback(
+    async (noteId: string) => {
+      if (!vaultPath) {
+        return;
+      }
+      pushCanvasHistory();
+      const node = nodesRef.current.find(
+        (entry): entry is NoteFlowNode =>
+          entry.id === noteId && entry.type === "worldnoteNote",
+      );
+      if (!node) {
+        return;
+      }
+
+      const newId = crypto.randomUUID();
+      const offset = 48;
+      const source = stickyNotePlacementFromFlowNode(node);
+      const placement = StickyNotePlacementSchema.parse({
+        ...source,
+        id: newId,
+        x: source.x + offset,
+        y: source.y + offset,
+      });
+
+      try {
+        const markdown = serializeStickyNoteMarkdown(
+          source.heading,
+          node.data.content ?? "",
+        );
+        await writeStickyNoteMarkdown(vaultPath, newId, markdown);
+        await updateCanvasManifestStickyNote(vaultPath, placement);
+        const flowNode = stickyNotePlacementToFlowNode(
+          placement,
+          node.data.content ?? "",
+          buildStickyNoteCallbacks(newId),
+          { selected: true, enterAnimation: true, draggable: true },
+        );
+        setNodes((prev) => [
+          ...prev.map((entry) => ({ ...entry, selected: false })),
+          flowNode,
+        ]);
+        setSelectedCardIds([]);
+        setSelectedImageIds([]);
+        setSelectedLinkId(null);
+      } catch (error) {
+        console.error("Failed to duplicate sticky note:", error);
+      }
+    },
+    [buildStickyNoteCallbacks, pushCanvasHistory, setNodes, vaultPath],
+  );
+
+  const handleStickyNoteContextCopy = useCallback(
+    (noteId: string) => {
+      if (!vaultPath) {
+        return;
+      }
+      const node = nodesRef.current.find(
+        (entry): entry is NoteFlowNode =>
+          entry.id === noteId && entry.type === "worldnoteNote",
+      );
+      if (!node) {
+        return;
+      }
+      const placement = stickyNotePlacementFromFlowNode(node);
+      setCanvasClipboard({
+        vaultPath,
+        items: [
+          {
+            kind: "stickyNote",
+            noteId,
+            x: placement.x,
+            y: placement.y,
+            heading: placement.heading,
+            color: placement.color,
+            content: node.data.content,
+            width: placement.width,
+            height: placement.height,
+          },
+        ],
+      });
+    },
+    [setCanvasClipboard, vaultPath],
   );
 
   const handleDuplicateCanvasImage = useCallback(
@@ -947,14 +1518,12 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
           newId,
           sourceAbsolute,
         );
-        const { width, height } = imageDimensionsFromNode(node);
         const placement = {
+          ...canvasImagePlacementFromFlowNode(node),
           id: newId,
           x: node.position.x + offset,
           y: node.position.y + offset,
           imagePath: newImagePath,
-          width,
-          height,
         };
         await updateCanvasManifestImage(vaultPath, placement);
 
@@ -977,15 +1546,77 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
         console.error("Failed to duplicate canvas image:", error);
       }
     },
-    [imageDimensionsFromNode, pushCanvasHistory, setNodes, vaultPath],
+    [pushCanvasHistory, setNodes, vaultPath],
   );
+
+  const cardIdsForContextAction = useCallback((cardId: string): string[] => {
+    const selected = selectedCardIdsFromNodes(
+      nodesRef.current,
+      cardsByIdRef.current,
+    );
+    if (selected.length > 1 && selected.includes(cardId)) {
+      return selected;
+    }
+    return [cardId];
+  }, []);
 
   const handleNodeContextMenu = useCallback(
     (event: MouseEvent, node: Node) => {
+      event.preventDefault();
+      setCardContextMenu(null);
+      setStickyNoteContextMenu(null);
+
+      if (node.type === "worldnoteCard") {
+        if (!cardsByIdRef.current[node.id]) {
+          return;
+        }
+
+        setImageContextMenu(null);
+        setCardContextMenu({
+          cardId: node.id,
+          x: event.clientX,
+          y: event.clientY,
+          view: "actions",
+        });
+        setNodes((prev) =>
+          prev.map((entry) => ({
+            ...entry,
+            selected:
+              entry.type === "worldnoteCard" &&
+              cardIdsForContextAction(node.id).includes(entry.id),
+          })),
+        );
+        setSelectedCardIds(cardIdsForContextAction(node.id));
+        setSelectedImageIds([]);
+        setSelectedLinkId(null);
+        if (cardIdsForContextAction(node.id).length === 1) {
+          setInspectorMode("read");
+        }
+        return;
+      }
+
+      if (node.type === "worldnoteNote") {
+        setImageContextMenu(null);
+        setStickyNoteContextMenu({
+          noteId: node.id,
+          x: event.clientX,
+          y: event.clientY,
+        });
+        setNodes((prev) =>
+          prev.map((entry) => ({
+            ...entry,
+            selected: entry.id === node.id,
+          })),
+        );
+        setSelectedCardIds([]);
+        setSelectedImageIds([]);
+        setSelectedLinkId(null);
+        return;
+      }
+
       if (node.type !== "worldnoteImage") {
         return;
       }
-      event.preventDefault();
 
       const currentImageIds = selectedImageIdsFromNodes(nodesRef.current);
       if (currentImageIds.length > 1 && currentImageIds.includes(node.id)) {
@@ -1008,19 +1639,141 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
       setSelectedCardIds([]);
       setSelectedLinkId(null);
     },
-    [setNodes],
+    [cardIdsForContextAction, setNodes],
   );
 
-  const handlePaneClick = useCallback(() => {
-    setImageContextMenu(null);
-  }, []);
+  const handleCardContextCopy = useCallback(
+    (cardId: string) => {
+      if (!vaultPath) {
+        return;
+      }
+      const cardIds = cardIdsForContextAction(cardId);
+      const items: CanvasClipboardItem[] = [];
 
-  const handleDeleteCard = useCallback(
+      for (const id of cardIds) {
+        const node = nodesRef.current.find(
+          (entry): entry is CardFlowNode =>
+            entry.id === id && entry.type === "worldnoteCard",
+        );
+        if (!node || !cardsByIdRef.current[id]) {
+          continue;
+        }
+        items.push({
+          kind: "card",
+          cardId: id,
+          x: node.position.x,
+          y: node.position.y,
+        });
+      }
+
+      if (items.length === 0) {
+        return;
+      }
+
+      setCanvasClipboard({ vaultPath, items });
+    },
+    [cardIdsForContextAction, setCanvasClipboard, vaultPath],
+  );
+
+  const handleCardContextDuplicate = useCallback(
     async (cardId: string) => {
       if (!vaultPath) {
         return;
       }
+      const cardIds = cardIdsForContextAction(cardId);
       pushCanvasHistory();
+
+      const offset = { x: 48, y: 48 };
+      const duplicatedCards: WorldCard[] = [];
+      for (const id of cardIds) {
+        duplicatedCards.push(
+          await duplicateWorldCard(vaultPath, id, offset),
+        );
+      }
+
+      const links = Object.values(linksByIdRef.current);
+      const nextCardsById = { ...cardsByIdRef.current };
+      for (const card of duplicatedCards) {
+        nextCardsById[card.id] = card;
+      }
+      setCardsById(nextCardsById);
+
+      const newIds = duplicatedCards.map((card) => card.id);
+      setNodes((prev) => [
+        ...prev.map((node) => ({ ...node, selected: false })),
+        ...duplicatedCards.map((card) => ({
+          id: card.id,
+          type: "worldnoteCard" as const,
+          position: card.position,
+          selected: true,
+          data: worldCardToNodeData(card, vaultPath, {
+            visibleSocketsSettings: visibleSocketsSettingsRef.current,
+            links,
+            cardsById: nextCardsById,
+            onUpdate: (partial) => {
+              const existing = nextCardsById[card.id];
+              if (!existing) {
+                return;
+              }
+              void handleSaveCardRef.current({
+                ...existing,
+                ...partial,
+              } as WorldCard);
+            },
+          }),
+        })),
+      ]);
+      setSelectedCardIds(newIds);
+      setSelectedLinkId(null);
+      setInspectorMode("read");
+    },
+    [cardIdsForContextAction, pushCanvasHistory, setNodes, vaultPath],
+  );
+
+  const handleCardChangeType = useCallback(
+    async (cardId: string, newType: NewCardType) => {
+      if (!vaultPath) {
+        return;
+      }
+      const card = cardsByIdRef.current[cardId];
+      if (!card || card.card_type === newType) {
+        return;
+      }
+
+      pushCanvasHistory();
+      const next = changeWorldCardType(card, newType);
+      await handleSaveCard(next);
+      setSelectedCardIds([cardId]);
+      setSelectedImageIds([]);
+      setSelectedLinkId(null);
+      setInspectorMode("edit");
+    },
+    [handleSaveCard, pushCanvasHistory, vaultPath],
+  );
+
+  const handlePaneClick = useCallback(() => {
+    setImageContextMenu(null);
+    setCardContextMenu(null);
+    setStickyNoteContextMenu(null);
+    setNodes((prev) =>
+      prev.map((node) => {
+        if (node.type !== "worldnoteNote" || !node.data.editing) {
+          return node;
+        }
+        return {
+          ...node,
+          draggable: true,
+          data: { ...node.data, editing: false },
+        };
+      }),
+    );
+  }, [setNodes]);
+
+  const removeCardFromCanvas = useCallback(
+    async (cardId: string) => {
+      if (!vaultPath) {
+        return;
+      }
       await deleteWorldCard(vaultPath, cardId);
       setCardsById((prev) => {
         const next = { ...prev };
@@ -1052,7 +1805,15 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
         return current;
       });
     },
-    [linksById, pushCanvasHistory, setEdges, setNodes, vaultPath],
+    [linksById, setEdges, setNodes, vaultPath],
+  );
+
+  const handleDeleteCard = useCallback(
+    async (cardId: string) => {
+      pushCanvasHistory();
+      await removeCardFromCanvas(cardId);
+    },
+    [pushCanvasHistory, removeCardFromCanvas],
   );
 
   const handleSpawnCard = useCallback(
@@ -1060,10 +1821,11 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
       if (!vaultPath) {
         return;
       }
-      const position = {
-        x: 160 + nodesRef.current.length * 24,
-        y: 120 + nodesRef.current.length * 20,
-      };
+      const position =
+        canvasPointerApiRef.current?.resolveSpawnPosition({
+          preferViewportCenter: true,
+        }) ??
+        ({ x: 0, y: 0 } satisfies CanvasFlowPointer);
       const placed = { ...card, position } as WorldCard;
       try {
         const saved = await updateWorldCard(vaultPath, placed);
@@ -1091,6 +1853,7 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
         ]);
         setSelectedCardIds([saved.id]);
         setSelectedLinkId(null);
+        queueMicrotask(() => focusCardRef.current?.(saved.id));
       } catch (error) {
         console.error("Failed to spawn generated card:", error);
       }
@@ -1121,6 +1884,32 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
     setSelectedImageIds([]);
     setNodes((nds) => nds.map((node) => ({ ...node, selected: false })));
   }, [setNodes]);
+
+  const handleCardContextDelete = useCallback(
+    async (cardId: string) => {
+      const cardIds = cardIdsForContextAction(cardId);
+      const message =
+        cardIds.length > 1
+          ? `Delete ${cardIds.length} cards?`
+          : "Delete this card?";
+      if (!window.confirm(message)) {
+        return;
+      }
+
+      pushCanvasHistory();
+      for (const id of cardIds) {
+        await removeCardFromCanvas(id);
+      }
+      setCardContextMenu(null);
+      clearCardSelection();
+    },
+    [
+      cardIdsForContextAction,
+      clearCardSelection,
+      pushCanvasHistory,
+      removeCardFromCanvas,
+    ],
+  );
 
   const handleDeleteSelectedCards = useCallback(async () => {
     const ids = [...selectedCardIds];
@@ -1168,14 +1957,12 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
           newId,
           sourceAbsolute,
         );
-        const { width, height } = imageDimensionsFromNode(node);
         const placement = {
+          ...canvasImagePlacementFromFlowNode(node),
           id: newId,
           x: node.position.x + offset,
           y: node.position.y + offset,
           imagePath: newImagePath,
-          width,
-          height,
         };
         await updateCanvasManifestImage(vaultPath, placement);
 
@@ -1205,7 +1992,7 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
     } catch (error) {
       console.error("Failed to duplicate canvas images:", error);
     }
-  }, [imageDimensionsFromNode, selectedImageIds, setNodes, vaultPath]);
+  }, [selectedImageIds, setNodes, vaultPath]);
 
   const handleDuplicateSelectedCards = useCallback(async () => {
     if (!vaultPath || selectedCardIds.length === 0) {
@@ -1381,15 +2168,37 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
       if (!node?.data.imagePath) {
         continue;
       }
-      const { width, height } = imageDimensionsFromNode(node);
       items.push({
         kind: "image",
         imageId,
         x: node.position.x,
         y: node.position.y,
         imagePath: node.data.imagePath,
-        width,
-        height,
+        width:
+          typeof node.style?.width === "number" ? node.style.width : undefined,
+        height:
+          typeof node.style?.height === "number"
+            ? node.style.height
+            : undefined,
+        imagePosition: node.data.imagePosition,
+      });
+    }
+
+    for (const node of nodesRef.current) {
+      if (node.type !== "worldnoteNote" || !node.selected) {
+        continue;
+      }
+      const placement = stickyNotePlacementFromFlowNode(node);
+      items.push({
+        kind: "stickyNote",
+        noteId: node.id,
+        x: placement.x,
+        y: placement.y,
+        heading: placement.heading,
+        color: placement.color,
+        content: node.data.content,
+        width: placement.width,
+        height: placement.height,
       });
     }
 
@@ -1398,13 +2207,7 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
     }
 
     setCanvasClipboard({ vaultPath, items });
-  }, [
-    imageDimensionsFromNode,
-    selectedCardIds,
-    selectedImageIds,
-    setCanvasClipboard,
-    vaultPath,
-  ]);
+  }, [selectedCardIds, selectedImageIds, setCanvasClipboard, vaultPath]);
 
   const handlePasteFromClipboard = useCallback(async () => {
     const clipboard = useCanvasClipboard.getState();
@@ -1419,17 +2222,59 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
 
     pushCanvasHistory();
 
-    const offsetPx =
-      nextPasteGeneration() * CANVAS_PASTE_OFFSET_PX;
-    const offset = { x: offsetPx, y: offsetPx };
+    const firstItem = clipboard.items[0];
+    const pasteGeneration = nextPasteGeneration();
+    const spawnBase =
+      canvasPointerApiRef.current?.resolveSpawnPosition() ??
+      ({ x: 0, y: 0 } satisfies CanvasFlowPointer);
+    let pasteOffset = firstItem
+      ? { x: spawnBase.x - firstItem.x, y: spawnBase.y - firstItem.y }
+      : { x: 0, y: 0 };
+    if (pasteGeneration > 0) {
+      const nudge = pasteGeneration * CANVAS_PASTE_OFFSET_PX;
+      pasteOffset = {
+        x: pasteOffset.x + nudge,
+        y: pasteOffset.y + nudge,
+      };
+    }
 
     const pastedCardIds: string[] = [];
     const pastedImageIds: string[] = [];
     const duplicatedCards: WorldCard[] = [];
     const duplicatedImageNodes: ImageFlowNode[] = [];
+    const duplicatedNoteNodes: NoteFlowNode[] = [];
 
     try {
       for (const item of clipboard.items) {
+        if (item.kind === "stickyNote") {
+          const newId = crypto.randomUUID();
+          const placement = StickyNotePlacementSchema.parse({
+            id: newId,
+            x: item.x + pasteOffset.x,
+            y: item.y + pasteOffset.y,
+            heading: item.heading,
+            color: item.color,
+            width: item.width,
+            height: item.height,
+          });
+          const content = item.content ?? "";
+          await writeStickyNoteMarkdown(
+            vaultPath,
+            newId,
+            serializeStickyNoteMarkdown(item.heading, content),
+          );
+          await updateCanvasManifestStickyNote(vaultPath, placement);
+          duplicatedNoteNodes.push(
+            stickyNotePlacementToFlowNode(
+              placement,
+              content,
+              buildStickyNoteCallbacks(newId),
+              { selected: true, enterAnimation: true, draggable: true },
+            ),
+          );
+          continue;
+        }
+
         if (item.kind === "card") {
           if (!cardsByIdRef.current[item.cardId]) {
             continue;
@@ -1437,7 +2282,7 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
           const card = await duplicateWorldCard(
             vaultPath,
             item.cardId,
-            offset,
+            pasteOffset,
           );
           duplicatedCards.push(card);
           pastedCardIds.push(card.id);
@@ -1456,11 +2301,12 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
         );
         const placement = {
           id: newId,
-          x: item.x + offsetPx,
-          y: item.y + offsetPx,
+          x: item.x + pasteOffset.x,
+          y: item.y + pasteOffset.y,
           imagePath: newImagePath,
           width: item.width,
           height: item.height,
+          imagePosition: item.imagePosition,
         };
         await updateCanvasManifestImage(vaultPath, placement);
         const flowNode = imagePlacementToFlowNode(placement, vaultPath, {
@@ -1474,7 +2320,11 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
         pastedImageIds.push(newId);
       }
 
-      if (duplicatedCards.length === 0 && duplicatedImageNodes.length === 0) {
+      if (
+        duplicatedCards.length === 0 &&
+        duplicatedImageNodes.length === 0 &&
+        duplicatedNoteNodes.length === 0
+      ) {
         return;
       }
 
@@ -1509,6 +2359,7 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
           }),
         })),
         ...duplicatedImageNodes,
+        ...duplicatedNoteNodes,
       ]);
 
       if (pastedCardIds.length > 0) {
@@ -1521,11 +2372,22 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
         setSelectedCardIds([]);
         setSelectedLinkId(null);
         setImageContextMenu(null);
+      } else if (duplicatedNoteNodes.length > 0) {
+        setSelectedCardIds([]);
+        setSelectedImageIds([]);
+        setSelectedLinkId(null);
+        setStickyNoteContextMenu(null);
       }
     } catch (error) {
       console.error("Failed to paste canvas selection:", error);
     }
-  }, [nextPasteGeneration, pushCanvasHistory, setNodes, vaultPath]);
+  }, [
+    buildStickyNoteCallbacks,
+    nextPasteGeneration,
+    pushCanvasHistory,
+    setNodes,
+    vaultPath,
+  ]);
 
   const runDeleteWithoutHistoryPush = useCallback(
     async (action: () => Promise<void>) => {
@@ -1556,6 +2418,17 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
       return;
     }
 
+    const noteIds = nodesRef.current
+      .filter((node) => node.type === "worldnoteNote" && node.selected)
+      .map((node) => node.id);
+    if (noteIds.length > 0) {
+      for (const noteId of noteIds) {
+        await handleDeleteStickyNote(noteId);
+      }
+      setStickyNoteContextMenu(null);
+      return;
+    }
+
     const cardIds = [...selectedCardIds];
     if (cardIds.length > 0) {
       for (const cardId of cardIds) {
@@ -1567,6 +2440,7 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
     clearCardSelection,
     handleDeleteCard,
     handleDeleteImage,
+    handleDeleteStickyNote,
     handleDeleteLink,
     selectedCardIds,
     selectedImageIds,
@@ -1638,6 +2512,13 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
       }
       event.preventDefault();
       event.dataTransfer.dropEffect = "copy";
+      if (canvasPointerApiRef.current) {
+        lastCanvasPointerRef.current =
+          canvasPointerApiRef.current.clientToFlowPosition({
+            x: event.clientX,
+            y: event.clientY,
+          });
+      }
     },
     [isWizardOpen],
   );
@@ -1665,11 +2546,11 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
             return;
           }
 
-          const bounds = event.currentTarget.getBoundingClientRect();
-          const position = {
-            x: event.clientX - bounds.left - 120,
-            y: event.clientY - bounds.top - 60,
-          };
+          const position =
+            canvasPointerApiRef.current?.clientToFlowPosition({
+              x: event.clientX,
+              y: event.clientY,
+            }) ?? ({ x: 0, y: 0 } satisfies CanvasFlowPointer);
 
           const tempId = crypto.randomUUID();
           setNodes((prev) => [
@@ -1771,11 +2652,11 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
         return;
       }
 
-      const bounds = event.currentTarget.getBoundingClientRect();
-      const position = {
-        x: event.clientX - bounds.left - 120,
-        y: event.clientY - bounds.top - 60,
-      };
+      const position =
+        canvasPointerApiRef.current?.clientToFlowPosition({
+          x: event.clientX,
+          y: event.clientY,
+        }) ?? ({ x: 0, y: 0 } satisfies CanvasFlowPointer);
 
       void addCard(droppedType, position);
     },
@@ -1823,6 +2704,27 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
     selectedCardIds.length === 1
       ? (cardsById[selectedCardIds[0] ?? ""] ?? null)
       : null;
+  const selectedStickyNote = useMemo((): NoteFlowNode | null => {
+    const notes = nodes.filter(
+      (node): node is NoteFlowNode =>
+        node.type === "worldnoteNote" && node.selected === true,
+    );
+    return notes.length === 1 ? notes[0] : null;
+  }, [nodes]);
+  const selectedStickyNoteCallbacks = useMemo(
+    () =>
+      selectedStickyNote
+        ? buildStickyNoteCallbacks(selectedStickyNote.id)
+        : null,
+    [buildStickyNoteCallbacks, selectedStickyNote],
+  );
+  const selectedCanvasImage = useMemo((): ImageFlowNode | null => {
+    const images = nodes.filter(
+      (node): node is ImageFlowNode =>
+        node.type === "worldnoteImage" && node.selected === true,
+    );
+    return images.length === 1 ? images[0] : null;
+  }, [nodes]);
   const selectedLink = selectedLinkId ? linksById[selectedLinkId] : null;
   const hasBulkCardSelection = selectedCardIds.length > 1;
   const inspectorPanelOpen = Boolean(
@@ -1843,7 +2745,9 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
   });
 
   useCanvasEditShortcuts({
-    enabled: !inspectorPanelOpen && !linkPanelOpen,
+    enabled:
+      !linkPanelOpen &&
+      (!inspectorPanelOpen || inspectorMode === "read"),
     shortcuts: canvasShortcuts,
     onCopy: handleCopySelection,
     onCut: handleCutSelection,
@@ -1905,24 +2809,25 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
             }}
             onNodeDragStop={(_, node) => {
               dragHistoryPushedRef.current = false;
+              if (node.type === "worldnoteNote") {
+                if (!updateStickyNotePosition) {
+                  return;
+                }
+                const noteNode = node as NoteFlowNode;
+                void updateStickyNotePosition(
+                  StickyNotePlacementSchema.parse(
+                    stickyNotePlacementFromFlowNode(noteNode),
+                  ),
+                );
+                return;
+              }
               if (node.type === "worldnoteImage") {
                 if (!updateImagePosition) {
                   return;
                 }
-                const imageNode = node as ImageFlowNode;
-                const imagePath = imageNode.data.imagePath;
-                if (!imagePath) {
-                  return;
-                }
-                const { width, height } = imageDimensionsFromNode(imageNode);
-                void updateImagePosition({
-                  id: node.id,
-                  x: node.position.x,
-                  y: node.position.y,
-                  imagePath,
-                  width,
-                  height,
-                });
+                void updateImagePosition(
+                  canvasImagePlacementFromFlowNode(node as ImageFlowNode),
+                );
                 return;
               }
               if (!updateCardPosition) {
@@ -1936,6 +2841,10 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
             }}
             onNodeDoubleClick={(_, node) => {
               if (node.type === "worldnoteImage") {
+                return;
+              }
+              if (node.type === "worldnoteNote") {
+                buildStickyNoteCallbacks(node.id).onRequestEdit?.();
                 return;
               }
               setNodes((nds) =>
@@ -1962,14 +2871,51 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
             onPaneClick={handlePaneClick}
             imageContextMenu={imageContextMenu}
             onCloseImageContextMenu={handlePaneClick}
+            cardContextMenu={cardContextMenu}
+            onCloseCardContextMenu={handlePaneClick}
+            onCardContextDuplicate={(cardId) => {
+              void handleCardContextDuplicate(cardId);
+            }}
+            onCardContextCopy={handleCardContextCopy}
+            onCardContextShowChangeType={() => {
+              setCardContextMenu((current) =>
+                current ? { ...current, view: "change-type" as const } : null,
+              );
+            }}
+            onCardContextBackToActions={() => {
+              setCardContextMenu((current) =>
+                current ? { ...current, view: "actions" } : null,
+              );
+            }}
+            onCardChangeType={(cardId, newType) => {
+              void handleCardChangeType(cardId, newType);
+            }}
+            onCardContextDelete={(cardId) => {
+              void handleCardContextDelete(cardId);
+            }}
             onDuplicateCanvasImage={(imageId) => {
               void handleDuplicateCanvasImage(imageId);
             }}
             onDeleteCanvasImage={(imageId) => {
               void handleDeleteImage(imageId);
             }}
+            onFlipCanvasImageHorizontal={handleFlipCanvasImageHorizontal}
+            onFlipCanvasImageVertical={handleFlipCanvasImageVertical}
+            onRotateCanvasImageClockwise={handleRotateCanvasImageClockwise}
             onImageResizeEnd={handleImageResizeEnd}
+            stickyNoteContextMenu={stickyNoteContextMenu}
+            onCloseStickyNoteContextMenu={handlePaneClick}
+            onDuplicateStickyNote={(noteId) => {
+              void handleDuplicateStickyNote(noteId);
+            }}
+            onCopyStickyNote={handleStickyNoteContextCopy}
+            onDeleteStickyNote={(noteId) => {
+              void handleDeleteStickyNote(noteId);
+            }}
+            onStickyNoteResizeEnd={handleStickyNoteResizeEnd}
             focusCardRef={focusCardRef}
+            lastCanvasPointerRef={lastCanvasPointerRef}
+            canvasPointerApiRef={canvasPointerApiRef}
             onImportCanvasImage={handleImportCanvasImage}
           />
         </div>
@@ -2028,12 +2974,43 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
 
       <CanvasToolbar
         activeTool={activeTool}
+        noteToolbar={
+          selectedStickyNote && selectedStickyNoteCallbacks ? (
+            <StickyNoteToolbar
+              heading={selectedStickyNote.data.heading}
+              color={selectedStickyNote.data.color}
+              onChangeHeading={selectedStickyNoteCallbacks.onChangeHeading}
+              onChangeColor={selectedStickyNoteCallbacks.onChangeColor}
+              onDelete={selectedStickyNoteCallbacks.onDelete}
+            />
+          ) : null
+        }
+        imageToolbar={
+          selectedCanvasImage ? (
+            <CanvasImageToolbar
+              position={
+                selectedCanvasImage.data.imagePosition ??
+                defaultCanvasImageNodePosition()
+              }
+              onPositionChange={(imagePosition) => {
+                handleCanvasImagePositionChange(
+                  selectedCanvasImage.id,
+                  imagePosition,
+                );
+              }}
+            />
+          ) : null
+        }
         onCreate={(type) => {
-          void addCard(type);
+          void addCard(type, undefined, { preferViewportCenter: true });
         }}
         onImageTool={() => {
           void handleImageTool();
         }}
+        onTextTool={() => {
+          void handleTextTool();
+        }}
+        textToolDisabled={!vaultPath}
         imageToolDisabled={!vaultPath || !isTauriRuntime()}
         onOpenVault={onOpenVault}
         onToggleAllCardViews={() => {

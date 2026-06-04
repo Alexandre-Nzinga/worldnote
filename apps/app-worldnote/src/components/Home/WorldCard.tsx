@@ -146,7 +146,7 @@ export function WorldCard({
           </Pill>
         </div>
         <span className="shrink-0 text-xs text-wn-mono-400">
-          {formatRelativeTime(world.lastOpened)}
+          {formatRelativeTime(world.lastEdited)}
         </span>
       </div>
       </MotionPressable>

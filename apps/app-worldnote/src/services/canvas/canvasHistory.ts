@@ -52,6 +52,7 @@ export function captureCanvasHistorySnapshot(
           imagePath,
           width: typeof width === "number" ? width : undefined,
           height: typeof height === "number" ? height : undefined,
+          imagePosition: node.data.imagePosition,
         },
       ];
     });

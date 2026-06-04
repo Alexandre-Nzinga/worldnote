@@ -26,6 +26,7 @@ import {
 } from "../../services/links/socketLinks.js";
 import { formatSocketId } from "../../services/settings/visibleSocketSettings.js";
 import { CardImageEditorPreview } from "./CardImageEditorPreview.js";
+import { CardImageTransformControls } from "./CardImageTransformControls.js";
 import { CardTypeFields } from "./CardTypeFields.js";
 import {
   buildWorldCard,
@@ -275,15 +276,38 @@ export function CardEditorPanel({
           <div className="flex flex-col gap-2">
             <span className={modalFieldLabelClassName}>Image</span>
             {imagePreview ? (
-              <CardImageEditorPreview
-                src={imagePreview}
-                position={imagePosition}
-                onPositionChange={setImagePosition}
-              />
-            ) : (
-              <div className="flex aspect-5/3 items-center justify-center rounded-xl border border-wn-mono-700 bg-wn-mono-950 text-sm text-wn-mono-500">
-                No image
+              <div className="overflow-hidden rounded-xl border border-wn-mono-700">
+                <CardImageEditorPreview
+                  src={imagePreview}
+                  position={imagePosition}
+                  onPositionChange={setImagePosition}
+                  embedded
+                  showRepositionHint={false}
+                />
+                <div className="flex flex-wrap items-center justify-between gap-2 border-t border-wn-mono-800 bg-wn-mono-950 px-3 py-2">
+                  <CardImageTransformControls
+                    position={imagePosition}
+                    onPositionChange={setImagePosition}
+                    disabled={isBusy}
+                    chipClassName="flex h-8 w-8 items-center justify-center rounded-lg border border-wn-mono-700 bg-wn-mono-900 text-wn-mono-300 transition-colors hover:border-wn-mono-600 hover:bg-wn-mono-800 hover:text-wn-mono-50 disabled:opacity-40"
+                  />
+                  <p className="text-xs text-wn-mono-500">
+                    Drag to reposition · scroll to zoom
+                  </p>
+                </div>
               </div>
+            ) : (
+              <button
+                type="button"
+                className="flex aspect-5/3 w-full cursor-pointer items-center justify-center rounded-xl border border-wn-mono-700 bg-wn-mono-950 text-sm text-wn-mono-500 transition-colors hover:border-wn-mono-600 hover:bg-wn-mono-900 hover:text-wn-mono-400 disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={isBusy}
+                aria-label="Choose image"
+                onClick={() => {
+                  void handlePickImage();
+                }}
+              >
+                No image
+              </button>
             )}
             <div className="flex gap-2">
               <Button
