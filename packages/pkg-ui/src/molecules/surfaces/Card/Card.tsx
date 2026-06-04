@@ -1,6 +1,6 @@
 import clsx from "clsx";
 import type { ReactNode } from "react";
-import { getBodyTextStyle, getHeadingProps } from "../brand/typography.js";
+import { getBodyTextStyle, getHeadingProps } from "../../../brand/typography/typography.js";
 
 export type CardTone = "light" | "dark";
 

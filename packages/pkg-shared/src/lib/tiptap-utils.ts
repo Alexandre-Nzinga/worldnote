@@ -70,7 +70,7 @@ export function isMac(): boolean {
 export const formatShortcutKey = (
   key: string,
   isMac: boolean,
-  capitalize: boolean = true
+  capitalize = true
 ) => {
   if (isMac) {
     const lowerKey = key.toLowerCase()
@@ -267,10 +267,10 @@ export function findNodePosition(props: {
   }
 
   // If we have a valid position, use findNodeAtPosition
-  if (hasValidPos) {
-    const nodeAtPos = findNodeAtPosition(editor, nodePos!)
+  if (isValidPosition(nodePos)) {
+    const nodeAtPos = findNodeAtPosition(editor, nodePos)
     if (nodeAtPos) {
-      return { pos: nodePos!, node: nodeAtPos }
+      return { pos: nodePos, node: nodeAtPos }
     }
   }
 
@@ -287,7 +287,7 @@ export function findNodePosition(props: {
 export function isNodeTypeSelected(
   editor: Editor | null,
   nodeTypeNames: string[] = [],
-  checkAncestorNodes: boolean = false
+  checkAncestorNodes = false
 ): boolean {
   if (!editor || !editor.state.selection) return false
 
@@ -428,14 +428,14 @@ export function isAllowedUri(
   ]
 
   if (protocols) {
-    protocols.forEach((protocol) => {
+    for (const protocol of protocols) {
       const nextProtocol =
         typeof protocol === "string" ? protocol : protocol.scheme
 
       if (nextProtocol) {
         allowedProtocols.push(nextProtocol)
       }
-    })
+    }
   }
 
   return (
@@ -492,6 +492,7 @@ export function updateNodesAttr<A extends string = string, V = unknown>(
     const currentNode = tr.doc.nodeAt(pos)
     if (!currentNode) continue
 
+    // cast: ProseMirror attrs are loosely typed per node extension
     const prevValue = (currentNode.attrs as Record<string, unknown>)[
       attrName
     ] as V | undefined

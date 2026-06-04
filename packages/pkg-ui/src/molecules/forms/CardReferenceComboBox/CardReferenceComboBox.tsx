@@ -1,6 +1,7 @@
 import { Autocomplete, AutocompleteItem } from "@heroui/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { MaterialSymbol } from "../atoms/MaterialSymbol/MaterialSymbol.js";
+import { MaterialSymbol } from "../../../atoms/MaterialSymbol/MaterialSymbol.js";
+import { resolveOverlayContainer } from "../../../overlay/resolveOverlayContainer.js";
 
 export type CardReferenceOption = {
   id: string;
@@ -42,10 +43,10 @@ const inputClassName =
   "!pe-0 !text-sm text-wn-mono-200 placeholder:!text-wn-mono-600 data-[hover=true]:!text-wn-mono-200";
 
 const endContentWrapperClassName =
-  "!mr-0 flex h-full w-7 shrink-0 items-center justify-center self-stretch p-0";
+  "!mr-0 flex h-10 w-9 shrink-0 items-center justify-center self-center p-0";
 
 const selectorButtonClassName =
-  "flex h-6 w-6 min-h-0 min-w-6 shrink-0 items-center justify-center bg-transparent p-0 text-wn-mono-500 data-[hover=true]:bg-transparent";
+  "!m-0 flex h-full min-h-0 w-full min-w-0 items-center justify-center !rounded-none bg-transparent !p-0 text-wn-mono-500 shadow-none data-[hover=true]:bg-transparent";
 
 const popoverSurfaceClassName =
   "z-[250] rounded-xl border-0 bg-wn-mono-900 p-1 shadow-none";
@@ -58,27 +59,6 @@ const itemClassName =
 type ListItem =
   | { kind: "card"; key: string; name: string; typeLabel: string }
   | { kind: "create"; key: string; label: string; onCreate: () => void };
-
-function resolveOverlayContainer(anchor: HTMLElement | null): HTMLElement {
-  if (typeof document === "undefined") {
-    return undefined as unknown as HTMLElement;
-  }
-  if (anchor) {
-    const modalWrapper = anchor.closest('[data-slot="wrapper"]');
-    if (modalWrapper instanceof HTMLElement) {
-      return modalWrapper;
-    }
-    const dialog = anchor.closest("dialog");
-    if (dialog instanceof HTMLElement) {
-      return dialog;
-    }
-  }
-  const openDialog = document.querySelector("dialog[open]");
-  if (openDialog instanceof HTMLElement) {
-    return openDialog;
-  }
-  return document.body;
-}
 
 function filterOptions(
   options: CardReferenceOption[],
@@ -179,7 +159,7 @@ export function CardReferenceComboBox({
       }
       const container = resolveOverlayContainer(rootRef.current);
       setPortalContainer(container);
-      if (container !== document.body) {
+      if (container && container !== document.body) {
         overflowRestoreRef.current = {
           el: container,
           value: container.style.overflow,
@@ -257,7 +237,7 @@ export function CardReferenceComboBox({
         selectorIcon={
           <MaterialSymbol
             name="keyboard_arrow_down"
-            className="text-[1.125rem] leading-none"
+            className="text-base text-current"
           />
         }
         selectorButtonProps={{

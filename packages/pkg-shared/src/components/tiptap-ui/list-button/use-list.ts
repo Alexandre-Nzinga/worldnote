@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import { type Editor } from "@tiptap/react"
+import type { Editor } from "@tiptap/react"
 import { NodeSelection, TextSelection } from "@tiptap/pm/state"
 
 // --- Hooks ---
@@ -71,7 +71,7 @@ export const LIST_SHORTCUT_KEYS: Record<ListType, string> = {
 export function canToggleList(
   editor: Editor | null,
   type: ListType,
-  turnInto: boolean = true
+  turnInto = true
 ): boolean {
   if (!editor || !editor.isEditable) return false
   if (!isNodeInSchema(type, editor) || isNodeTypeSelected(editor, ["image"]))

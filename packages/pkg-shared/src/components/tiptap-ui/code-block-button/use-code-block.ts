@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import { type Editor } from "@tiptap/react"
+import type { Editor } from "@tiptap/react"
 import { NodeSelection, TextSelection } from "@tiptap/pm/state"
 
 // --- Hooks ---
@@ -46,7 +46,7 @@ export interface UseCodeBlockConfig {
  */
 export function canToggle(
   editor: Editor | null,
-  turnInto: boolean = true
+  turnInto = true
 ): boolean {
   if (!editor || !editor.isEditable) return false
   if (

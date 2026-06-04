@@ -20,8 +20,8 @@ const baseFields = (cardType: NewCardType, position: Position, name?: string) =>
   card_type: cardType,
   parent_id: null,
   position,
-  tags: [] as string[],
-  custom_properties: {} as Record<string, unknown>,
+  tags: [] satisfies string[],
+  custom_properties: {} satisfies Record<string, unknown>,
 });
 
 export function createCardTemplate(

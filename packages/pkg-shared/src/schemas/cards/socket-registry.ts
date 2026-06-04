@@ -138,21 +138,22 @@ export type RegisteredCardType = keyof typeof SOCKET_REGISTRY;
 export type SocketIdFor<T extends RegisteredCardType> =
   keyof (typeof SOCKET_REGISTRY)[T];
 
+const socketRegistryByCardType: Record<
+  string,
+  Record<string, SocketDescriptor>
+> = SOCKET_REGISTRY;
+
 export function getSocketDescriptor(
   cardType: string,
   socket: string,
 ): SocketDescriptor | undefined {
-  const cardSockets = SOCKET_REGISTRY[cardType as RegisteredCardType];
-  if (!cardSockets) {
-    return undefined;
-  }
-  return cardSockets[socket as SocketIdFor<RegisteredCardType>];
+  return socketRegistryByCardType[cardType]?.[socket];
 }
 
 export function listSocketsForCardType(
   cardType: string,
 ): Array<{ id: string; descriptor: SocketDescriptor }> {
-  const cardSockets = SOCKET_REGISTRY[cardType as RegisteredCardType];
+  const cardSockets = socketRegistryByCardType[cardType];
   if (!cardSockets) {
     return [];
   }

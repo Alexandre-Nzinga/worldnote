@@ -1,18 +1,18 @@
-import { Background, ReactFlow, type ReactFlowProps } from "@xyflow/react";
+import { Background, BackgroundVariant, ReactFlow, type BackgroundProps, type ReactFlowProps } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { CollapsibleMiniMap } from "./CollapsibleMiniMap.js";
 import { ZoomControls } from "./ZoomControls.js";
 
 export type WorldNoteCanvasProps = Omit<ReactFlowProps, "children"> & {
   children?: React.ReactNode;
-  backgroundVariant?: "lines" | "dots" | "cross";
+  backgroundVariant?: BackgroundProps["variant"];
   backgroundColor?: string;
   backgroundGap?: number;
 };
 
 export function WorldNoteCanvas({
   children,
-  backgroundVariant = "dots",
+  backgroundVariant = BackgroundVariant.Dots,
   backgroundColor = "var(--color-wn-mono-700)",
   backgroundGap = 16,
   colorMode = "dark",
@@ -45,7 +45,7 @@ export function WorldNoteCanvas({
         {...props}
       >
         <Background
-          variant={backgroundVariant as unknown as undefined}
+          variant={backgroundVariant}
           gap={backgroundGap}
           color={backgroundColor}
         />

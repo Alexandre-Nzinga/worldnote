@@ -30,3 +30,7 @@ export const CREATABLE_CARD_TYPES: readonly NewCardType[] = [
   "disaster",
   "combat_style",
 ] as const;
+
+export function isNewCardType(value: string): value is NewCardType {
+  return CREATABLE_CARD_TYPES.some((type) => type === value);
+}

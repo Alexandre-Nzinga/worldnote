@@ -1,4 +1,4 @@
-import { STICKY_NOTE_COLORS, type StickyNoteColor } from "@worldnote/shared";
+import { isStickyNoteColor, type StickyNoteColor } from "@worldnote/shared";
 import {
   STICKY_NOTE_FG_VAR,
   STICKY_NOTE_MAX_HEIGHT,
@@ -21,9 +21,7 @@ import { MarkdownEditor } from "../../editor/MarkdownEditor.js";
 function resolveToken(
   color: StickyNoteColor | StickyNoteColorToken,
 ): StickyNoteColorToken {
-  return STICKY_NOTE_COLORS.includes(color as StickyNoteColor)
-    ? (color as StickyNoteColorToken)
-    : "amber-200";
+  return isStickyNoteColor(color) ? color : "amber-200";
 }
 
 function StickyNoteNodeInner({

@@ -212,11 +212,14 @@ export const CARD_VISUAL_CONFIG: Record<WorldNoteCardType, CardVisualConfig> = {
 
 const DEFAULT_VISUAL_CONFIG = CARD_VISUAL_CONFIG.location;
 
+const visualConfigByCardType: Record<string, CardVisualConfig> =
+  CARD_VISUAL_CONFIG;
+
 export function visualConfigFor(
   cardType: WorldNoteCardType | string | undefined,
 ): CardVisualConfig {
-  if (cardType && cardType in CARD_VISUAL_CONFIG) {
-    return CARD_VISUAL_CONFIG[cardType as WorldNoteCardType];
+  if (cardType && cardType in visualConfigByCardType) {
+    return visualConfigByCardType[cardType] ?? DEFAULT_VISUAL_CONFIG;
   }
   return DEFAULT_VISUAL_CONFIG;
 }

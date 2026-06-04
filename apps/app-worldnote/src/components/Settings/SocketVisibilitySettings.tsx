@@ -2,12 +2,12 @@ import {
   CARD_TYPE_LABELS,
   listSocketsForCardType,
   SOCKET_REGISTRY,
-  type RegisteredCardType,
 } from "@worldnote/shared";
 import { MaterialSymbol } from "@worldnote/ui";
 import { modalFieldLabelClassName } from "../Onboarding/fieldClassNames.js";
 import type { VisibleSocketsByCardType } from "../../services/settings/settings.js";
 import { formatSocketId } from "../../services/settings/visibleSocketSettings.js";
+import { objectKeys } from "../../services/objectKeys.js";
 
 type SocketVisibilitySettingsProps = {
   value: VisibleSocketsByCardType;
@@ -20,7 +20,7 @@ export function SocketVisibilitySettings({
   onChange,
   disabled = false,
 }: SocketVisibilitySettingsProps) {
-  const cardTypes = Object.keys(SOCKET_REGISTRY) as RegisteredCardType[];
+  const cardTypes = objectKeys(SOCKET_REGISTRY);
 
   return (
     <div className="flex flex-col gap-4">
@@ -38,9 +38,7 @@ export function SocketVisibilitySettings({
           return null;
         }
         const cardSettings = value[cardType] ?? {};
-        const typeLabel =
-          CARD_TYPE_LABELS[cardType as keyof typeof CARD_TYPE_LABELS] ??
-          cardType;
+        const typeLabel = CARD_TYPE_LABELS[cardType] ?? cardType;
 
         return (
           <div key={cardType} className="flex flex-col gap-2">

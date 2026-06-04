@@ -1,9 +1,9 @@
 /** Portal target for HeroUI overlays inside modals / native dialogs. */
 export function resolveOverlayContainer(
   anchor: HTMLElement | null,
-): HTMLElement {
+): HTMLElement | undefined {
   if (typeof document === "undefined") {
-    return undefined as unknown as HTMLElement;
+    return undefined;
   }
   if (anchor) {
     const modalWrapper = anchor.closest('[data-slot="wrapper"]');

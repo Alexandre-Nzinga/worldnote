@@ -71,6 +71,7 @@ export const NodeBackground = Extension.create<NodeBackgroundOptions>({
         types: this.options.types,
         attributes: {
           backgroundColor: {
+            // cast: tiptap attribute default typing expects Attrs value
             default: null as string | null,
 
             parseHTML: (element: HTMLElement) => {
@@ -82,6 +83,7 @@ export const NodeBackground = Extension.create<NodeBackgroundOptions>({
             },
 
             renderHTML: (attributes) => {
+              // cast: tiptap renderHTML attributes are Record<string, unknown>
               const color = attributes.backgroundColor as string | null
               if (!color) return {}
 
@@ -89,10 +91,9 @@ export const NodeBackground = Extension.create<NodeBackgroundOptions>({
                 return {
                   style: `background-color: ${color}`,
                 }
-              } else {
-                return {
-                  "data-background-color": color,
-                }
+              }
+              return {
+                "data-background-color": color,
               }
             },
           },

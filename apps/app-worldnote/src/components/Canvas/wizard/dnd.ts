@@ -13,26 +13,36 @@ export type WizardCardDragPayload = {
   cardId: string;
 };
 
+function readCardIdFromPayload(raw: string): string | null {
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (
+      parsed &&
+      typeof parsed === "object" &&
+      "cardId" in parsed &&
+      typeof parsed.cardId === "string" &&
+      parsed.cardId.length > 0
+    ) {
+      return parsed.cardId;
+    }
+  } catch {
+    // fall through
+  }
+  return null;
+}
+
 /** Reads a card id from a drag event, supporting both canvas and vault sources. */
 export function readDraggedCardId(dataTransfer: DataTransfer): string | null {
   const canvasRaw = dataTransfer.getData(WIZARD_CARD_MIME);
   if (canvasRaw) {
-    try {
-      const parsed = JSON.parse(canvasRaw) as WizardCardDragPayload;
-      if (parsed?.cardId) return parsed.cardId;
-    } catch {
-      // fall through
-    }
+    const cardId = readCardIdFromPayload(canvasRaw);
+    if (cardId) return cardId;
   }
 
   const vaultRaw = dataTransfer.getData(VAULT_CARD_REF_MIME);
   if (vaultRaw) {
-    try {
-      const parsed = JSON.parse(vaultRaw) as { cardId?: string };
-      if (parsed?.cardId) return parsed.cardId;
-    } catch {
-      // ignore
-    }
+    const cardId = readCardIdFromPayload(vaultRaw);
+    if (cardId) return cardId;
   }
 
   const plain = dataTransfer.getData("text/plain");

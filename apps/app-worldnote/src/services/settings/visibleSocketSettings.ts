@@ -1,9 +1,9 @@
 import {
   listSocketsForCardType,
   SOCKET_REGISTRY,
-  type RegisteredCardType,
 } from "@worldnote/shared";
 import type { VisibleSocketsByCardType } from "./settings.js";
+import { objectKeys } from "../objectKeys.js";
 
 export function formatSocketId(socketId: string): string {
   const label = socketId.replace(/_/g, " ");
@@ -38,9 +38,7 @@ export function normalizeVisibleSocketsSettings(
   partial: VisibleSocketsByCardType | undefined,
 ): VisibleSocketsByCardType {
   const result: VisibleSocketsByCardType = {};
-  for (const cardType of Object.keys(
-    SOCKET_REGISTRY,
-  ) as RegisteredCardType[]) {
+  for (const cardType of objectKeys(SOCKET_REGISTRY)) {
     const sockets = listSocketsForCardType(cardType);
     const existing = partial?.[cardType] ?? {};
     result[cardType] = {};

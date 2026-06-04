@@ -1,5 +1,5 @@
 import { MaterialSymbol, Pill, type PillTone } from "@worldnote/ui";
-import clsx from "clsx";
+import { cx } from "../wizard/cx.js";
 import { useCallback, useRef, useState } from "react";
 import { inspectorSectionLabelClassName } from "./inspectorFieldStyles.js";
 
@@ -49,7 +49,7 @@ function RemovableTagPill({ tag, tone, onRemove }: RemovableTagPillProps) {
       </Pill>
       <button
         type="button"
-        className={clsx(
+        className={cx(
           "absolute right-0.5 top-1/2 inline-flex -translate-y-1/2 items-center justify-center rounded-full p-0.5",
           "opacity-0 transition-opacity duration-150",
           "group-hover/tag:opacity-100 focus-visible:opacity-100",
@@ -141,14 +141,14 @@ export function TagsSection({
             value={draft}
             aria-label="Add tag"
             placeholder={tags.length === 0 ? "Add tag…" : undefined}
-            className={clsx(
+            className={cx(
               "max-w-56 shrink-0 border-0 font-semibold outline-none transition-[width,padding,background-color]",
               isDrafting
-                ? clsx(
+                ? cx(
                     "rounded-full px-2 py-0.5 text-xs",
                     draftPillToneClassNames[draftTone],
                   )
-                : clsx(
+                : cx(
                     "bg-transparent py-0.5 text-xs font-medium",
                     tags.length === 0
                       ? "min-w-[8ch] text-wn-mono-500 placeholder:text-wn-mono-600"

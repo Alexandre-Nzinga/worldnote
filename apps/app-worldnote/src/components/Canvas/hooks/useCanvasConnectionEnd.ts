@@ -42,6 +42,10 @@ type UseCanvasConnectionEndOptions = {
   setInspectorMode: React.Dispatch<React.SetStateAction<"read" | "edit">>;
 };
 
+function isMouseEvent(event: MouseEvent | TouchEvent): event is MouseEvent {
+  return !("changedTouches" in event);
+}
+
 function pointerFromEvent(event: MouseEvent | TouchEvent): {
   x: number;
   y: number;
@@ -52,7 +56,10 @@ function pointerFromEvent(event: MouseEvent | TouchEvent): {
       y: event.changedTouches[0].clientY,
     };
   }
-  return { x: (event as MouseEvent).clientX, y: (event as MouseEvent).clientY };
+  if (isMouseEvent(event)) {
+    return { x: event.clientX, y: event.clientY };
+  }
+  return { x: 0, y: 0 };
 }
 
 function findDropTargetCardId(

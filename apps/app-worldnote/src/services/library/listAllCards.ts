@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
+import type { CardImageFit } from "@worldnote/shared";
 
 export type LibraryCardImagePosition = {
   x: number;
@@ -14,7 +15,7 @@ export type LibraryCard = {
   name: string;
   createdAt: number;
   imagePath?: string;
-  imageFit?: string;
+  imageFit?: CardImageFit;
   imagePosition?: LibraryCardImagePosition;
   subtitle: string;
 };

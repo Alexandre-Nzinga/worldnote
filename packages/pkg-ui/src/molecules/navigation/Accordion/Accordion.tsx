@@ -1,8 +1,8 @@
 import { Accordion, AccordionItem } from "@heroui/react";
 import clsx from "clsx";
 import type { ReactNode } from "react";
-import { MaterialSymbol } from "../atoms/MaterialSymbol/MaterialSymbol.js";
-import { NumberBadge } from "../atoms/NumberBadge/NumberBadge.js";
+import { MaterialSymbol } from "../../../atoms/MaterialSymbol/MaterialSymbol.js";
+import { NumberBadge } from "../../../atoms/NumberBadge/NumberBadge.js";
 
 export type AccordionItemData = {
   id: string;

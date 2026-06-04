@@ -20,6 +20,7 @@ export * from "./nodes/ImageNode.js";
 export * from "./nodes/canvas-image-sizing.js";
 export * from "./nodes/CanvasImageInteractionContext.js";
 export type { CanvasFlowNode } from "./nodes/canvas-flow-node.js";
+export { isImageFlowNode, isNoteFlowNode } from "./nodes/canvas-flow-node.js";
 export * from "./nodes/handle-ids.js";
 export * from "./nodes/socket-style.js";
 export * from "./nodes/GroupNode.js";

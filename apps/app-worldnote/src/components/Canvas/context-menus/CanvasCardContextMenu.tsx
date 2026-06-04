@@ -3,7 +3,6 @@ import {
   CARD_CLASS_LABELS,
   CARD_CLASS_ORDER,
   CARD_TYPE_LABELS,
-  type CardClass,
 } from "@worldnote/shared";
 import { MaterialSymbol } from "@worldnote/ui";
 import { useEffect, useMemo, useRef } from "react";
@@ -144,6 +143,7 @@ export function CanvasCardContextMenu({
     return null;
   }
 
+  const multi = selectionCount > 1;
   const style = { left: menu.x, top: menu.y };
 
   if (menu.view === "change-type") {
@@ -167,7 +167,7 @@ export function CanvasCardContextMenu({
           {groupedTypes.map((group) => (
             <div key={group.cardClass}>
               <div className={sectionLabelClassName}>
-                {CARD_CLASS_LABELS[group.cardClass as CardClass]}
+                {CARD_CLASS_LABELS[group.cardClass]}
               </div>
               {group.types.map((type) => {
                 const isCurrent = type === currentCardType;

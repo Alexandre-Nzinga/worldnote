@@ -1,7 +1,7 @@
 import {
   CARD_TYPE_LABELS,
+  listSocketsForCardType,
   type Link,
-  SOCKET_REGISTRY,
   type WorldCard,
 } from "@worldnote/shared";
 
@@ -50,8 +50,7 @@ function relationshipLines(
   card: WorldCard,
   context: SerializeCardContext,
 ): string[] {
-  const sockets = SOCKET_REGISTRY[card.card_type as keyof typeof SOCKET_REGISTRY];
-  if (!sockets) return [];
+  if (listSocketsForCardType(card.card_type).length === 0) return [];
 
   const bySocket = new Map<string, string[]>();
   for (const link of context.links) {

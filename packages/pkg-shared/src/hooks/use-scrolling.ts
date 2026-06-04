@@ -18,10 +18,14 @@ export function useScrolling(
 
   useEffect(() => {
     // Resolve element or window
+    const refElement =
+      target && typeof target === "object" && "current" in target
+        ? target.current
+        : null;
     const element: EventTargetWithScroll =
       target && typeof Window !== "undefined" && target instanceof Window
         ? target
-        : ((target as RefObject<HTMLElement>)?.current ?? window)
+        : (refElement ?? window)
 
     // Mobile: fallback to document when using window
     const eventTarget: EventTargetWithScroll =

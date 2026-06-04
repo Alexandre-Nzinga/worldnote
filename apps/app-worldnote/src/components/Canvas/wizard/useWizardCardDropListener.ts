@@ -1,6 +1,6 @@
 import {
   CANVAS_CARD_DROP_EVENT,
-  type CanvasCardDropDetail,
+  isCanvasCardDropEvent,
 } from "@worldnote/canvas";
 import { useEffect } from "react";
 
@@ -15,9 +15,11 @@ export function useWizardCardDropListener(
     }
 
     const onCanvasCardDrop = (event: Event) => {
-      const detail = (event as CustomEvent<CanvasCardDropDetail>).detail;
-      if (detail?.cardId) {
-        onAddCard(detail.cardId);
+      if (!isCanvasCardDropEvent(event)) {
+        return;
+      }
+      if (event.detail.cardId) {
+        onAddCard(event.detail.cardId);
       }
     };
 

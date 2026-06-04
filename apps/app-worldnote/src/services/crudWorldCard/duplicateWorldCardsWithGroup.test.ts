@@ -17,7 +17,7 @@ function stubCard(
     position: { x: 0, y: 0 },
     tags: [],
     card_type,
-  } as WorldCard;
+  } as unknown as WorldCard;
 }
 
 describe("expandCardIdsIncludingGroupMembers", () => {

@@ -109,15 +109,14 @@ function DockIcon({ item, mouseX, itemRef }: DockIconProps) {
             damping: 17,
           }}
         >
-          <MaterialSymbol
-            name={item.icon ?? "help"}
-            className={`text-xl ${item.iconClassName ?? ""} ${
-              item.iconNode ? "hidden" : ""
-            }`}
-          />
           {item.iconNode ? (
             <span className="flex items-center justify-center">{item.iconNode}</span>
-          ) : null}
+          ) : (
+            <MaterialSymbol
+              name={item.icon ?? "help"}
+              className={`text-xl ${item.iconClassName ?? ""}`}
+            />
+          )}
         </motion.span>
 
         <motion.span

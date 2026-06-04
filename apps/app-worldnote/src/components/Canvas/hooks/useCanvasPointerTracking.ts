@@ -71,7 +71,7 @@ export function useCanvasPointerTracking({
   ]);
 
   useEffect(() => {
-    const pane = document.querySelector(".react-flow__pane");
+    const pane = document.querySelector<HTMLElement>(".react-flow__pane");
     if (!pane) {
       return;
     }

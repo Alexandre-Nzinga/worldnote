@@ -8,6 +8,7 @@ import {
   type CanvasKeyboardShortcuts,
 } from "../../services/settings/keyboardShortcuts.js";
 import { modalFieldLabelClassName } from "../Onboarding/fieldClassNames.js";
+import { objectKeys } from "../../services/objectKeys.js";
 
 type ShortcutAction = keyof CanvasKeyboardShortcuts;
 
@@ -75,7 +76,7 @@ export function KeyboardShortcutsSettings({
       </div>
 
       <ul className="flex flex-col gap-2">
-        {(Object.keys(SHORTCUT_LABELS) as ShortcutAction[]).map((action) => {
+        {objectKeys(SHORTCUT_LABELS).map((action) => {
           const shortcut = shortcuts[action];
           const isRecording = recordingAction === action;
           return (

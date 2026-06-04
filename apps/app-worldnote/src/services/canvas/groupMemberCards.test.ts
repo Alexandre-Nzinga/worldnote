@@ -10,7 +10,7 @@ function stubCard(id: string, parent_id: string | null): WorldCard {
     position: { x: 0, y: 0 },
     tags: [],
     card_type: "character",
-  } as WorldCard;
+  } as unknown as WorldCard;
 }
 
 describe("cardsInGroup", () => {

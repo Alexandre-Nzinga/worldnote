@@ -117,7 +117,7 @@ function getReadableTextColor(hex: string) {
 function usePaletteHexMap() {
   return useMemo(() => {
     if (typeof document === "undefined") {
-      return {} as StepHexMap;
+      return {} satisfies StepHexMap;
     }
 
     const map: StepHexMap = {};

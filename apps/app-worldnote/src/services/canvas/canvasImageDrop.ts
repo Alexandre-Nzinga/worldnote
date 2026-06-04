@@ -28,9 +28,11 @@ export function isImageFile(file: File): boolean {
   return isImagePath(file.name);
 }
 
-/** WebView / Chromium may expose a local path on dropped files. */
 export function localPathFromFile(file: File): string | null {
-  const path = (file as File & { path?: string }).path;
+  if (!("path" in file)) {
+    return null;
+  }
+  const path = file.path;
   return typeof path === "string" && path.length > 0 ? path : null;
 }
 

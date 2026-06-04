@@ -6,7 +6,7 @@ import {
 } from "@heroui/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Key, ReactNode } from "react";
-import { resolveOverlayContainer } from "../overlay/resolveOverlayContainer.js";
+import { resolveOverlayContainer } from "../../../overlay/resolveOverlayContainer.js";
 
 export type ActionMenuPlacement =
   | "top"
@@ -82,7 +82,7 @@ export function ActionMenu({
       }
       const container = resolveOverlayContainer(rootRef.current);
       setPortalContainer(container);
-      if (container !== document.body) {
+      if (container && container !== document.body) {
         overflowRestoreRef.current = {
           el: container,
           value: container.style.overflow,

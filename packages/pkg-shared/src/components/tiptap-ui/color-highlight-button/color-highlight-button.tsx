@@ -123,6 +123,7 @@ export const ColorHighlightButton = forwardRef<
         ({
           ...style,
           "--highlight-color": highlightColor,
+          // cast: CSS custom property not in React.CSSProperties
         }) as React.CSSProperties,
       [highlightColor, style]
     )
@@ -136,7 +137,6 @@ export const ColorHighlightButton = forwardRef<
         type="button"
         variant="ghost"
         data-active-state={isActive ? "on" : "off"}
-        role="button"
         tabIndex={-1}
         disabled={!canColorHighlight}
         data-disabled={!canColorHighlight}

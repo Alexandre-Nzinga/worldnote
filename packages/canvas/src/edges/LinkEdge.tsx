@@ -10,6 +10,17 @@ import { getFloatingEdgeParams } from "./floating-edge-utils.js";
 
 export type LinkEdgeData = { sourceSocket?: string };
 
+function linkEdgeData(data: unknown): LinkEdgeData | undefined {
+  if (!data || typeof data !== "object") {
+    return undefined;
+  }
+  const sourceSocket =
+    "sourceSocket" in data && typeof data.sourceSocket === "string"
+      ? data.sourceSocket
+      : undefined;
+  return { sourceSocket };
+}
+
 function formatSocketLabel(socket: string): string {
   return socket.replace(/_/g, " ");
 }
@@ -28,9 +39,9 @@ function LinkEdgeInner({
   data,
   selected,
 }: EdgeProps) {
-  const linkData = data as LinkEdgeData | undefined;
-  const label = linkData?.sourceSocket
-    ? formatSocketLabel(linkData.sourceSocket)
+  const edgeData = linkEdgeData(data);
+  const label = edgeData?.sourceSocket
+    ? formatSocketLabel(edgeData.sourceSocket)
     : undefined;
 
   const sourceNode = useInternalNode(source);

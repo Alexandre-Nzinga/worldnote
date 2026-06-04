@@ -1,12 +1,12 @@
 import { Input } from "@heroui/react";
 import clsx from "clsx";
 import type { ComponentProps, ReactNode } from "react";
-import { MaterialSymbol } from "../atoms/MaterialSymbol/MaterialSymbol.js";
+import { MaterialSymbol } from "../../../atoms/MaterialSymbol/MaterialSymbol.js";
 import {
   fieldInputClassName,
   fieldInputClassNames,
   fieldLabelClassName,
-} from "./fieldStyles.js";
+} from "../fieldStyles.js";
 
 export type FieldProps = Omit<
   ComponentProps<typeof Input>,

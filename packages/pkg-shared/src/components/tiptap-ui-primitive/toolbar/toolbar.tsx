@@ -51,13 +51,19 @@ const useToolbarNavigation = (
     if (!toolbar) return
 
     const handleFocus = (e: FocusEvent) => {
-      const target = e.target as HTMLElement
+      const target = e.target;
+      if (!(target instanceof HTMLElement)) {
+        return;
+      }
       if (toolbar.contains(target))
         target.setAttribute("data-focus-visible", "true")
     }
 
     const handleBlur = (e: FocusEvent) => {
-      const target = e.target as HTMLElement
+      const target = e.target;
+      if (!(target instanceof HTMLElement)) {
+        return;
+      }
       if (toolbar.contains(target)) target.removeAttribute("data-focus-visible")
     }
 
@@ -99,18 +105,18 @@ export const Toolbar = forwardRef<HTMLDivElement, ToolbarProps>(
 )
 Toolbar.displayName = "Toolbar"
 
-export const ToolbarGroup = forwardRef<HTMLDivElement, BaseProps>(
-  ({ children, className, ...props }, ref) => (
-    <div
-      ref={ref}
-      role="group"
-      className={cn("tiptap-toolbar-group", className)}
-      {...props}
-    >
-      {children}
-    </div>
-  )
-)
+export const ToolbarGroup = forwardRef<
+  HTMLFieldSetElement,
+  React.FieldsetHTMLAttributes<HTMLFieldSetElement>
+>(({ children, className, ...props }, ref) => (
+  <fieldset
+    ref={ref}
+    className={cn("tiptap-toolbar-group", className)}
+    {...props}
+  >
+    {children}
+  </fieldset>
+))
 ToolbarGroup.displayName = "ToolbarGroup"
 
 export const ToolbarSeparator = forwardRef<HTMLDivElement, BaseProps>(

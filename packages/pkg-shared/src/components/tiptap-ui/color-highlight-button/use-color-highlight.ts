@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import { type Editor } from "@tiptap/react"
+import type { Editor } from "@tiptap/react"
 import { useHotkeys } from "react-hotkeys-hook"
 
 // --- Hooks ---
@@ -146,7 +146,7 @@ export function pickHighlightColorsByValue(values: string[]) {
  */
 export function getHighlightColorValue(
   color: string,
-  useColorValue: boolean = false
+  useColorValue = false
 ): string {
   if (!useColorValue) return color
 

@@ -27,7 +27,7 @@ export function Eyebrow<T extends ElementType = "span">({
   className,
   ...props
 }: EyebrowProps<T>) {
-  const Component = (as ?? "span") as ElementType;
+  const Component: ElementType = as ?? "span";
 
   return (
     <Component

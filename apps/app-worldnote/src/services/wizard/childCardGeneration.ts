@@ -42,13 +42,15 @@ export function buildGenerationSchema(
   };
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
 function safeParseJson(raw: string): Record<string, unknown> | null {
   const tryParse = (text: string): Record<string, unknown> | null => {
     try {
-      const value = JSON.parse(text);
-      return value && typeof value === "object" && !Array.isArray(value)
-        ? (value as Record<string, unknown>)
-        : null;
+      const value: unknown = JSON.parse(text);
+      return isRecord(value) ? value : null;
     } catch {
       return null;
     }
@@ -85,10 +87,7 @@ function mergeIntoTemplate(
   data: Record<string, unknown>,
 ): unknown {
   const name = typeof data.name === "string" ? data.name : undefined;
-  const template = createCardTemplate(cardType, position, name) as Record<
-    string,
-    unknown
-  >;
+  const template = createCardTemplate(cardType, position, name);
   const merged: Record<string, unknown> = { ...template };
 
   for (const [key, value] of Object.entries(data)) {

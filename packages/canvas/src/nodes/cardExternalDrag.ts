@@ -10,6 +10,24 @@ export type CanvasCardDropDetail = {
   cardId: string;
 };
 
+export function isCanvasCardDropEvent(
+  event: Event,
+): event is CustomEvent<CanvasCardDropDetail> {
+  if (event.type !== CANVAS_CARD_DROP_EVENT) {
+    return false;
+  }
+  if (!("detail" in event)) {
+    return false;
+  }
+  const detail = event.detail;
+  return (
+    detail !== null &&
+    typeof detail === "object" &&
+    "cardId" in detail &&
+    typeof detail.cardId === "string"
+  );
+}
+
 const MIN_POINTER_DRAG_PX = 4;
 export const CARD_EXTERNAL_POINTER_DRAG_BODY_CLASS =
   "wn-canvas-card-external-drag";

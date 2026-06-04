@@ -6,6 +6,7 @@ import {
 } from "@worldnote/canvas";
 import {
   ConnectionMode,
+  BackgroundVariant,
   SelectionMode,
   type Connection,
   type Edge,
@@ -187,11 +188,11 @@ export function CanvasFlow({
     pointerApiRef: canvasPointerApiRef,
   });
 
-  const bulkSelection =
+  const bulkSelection: { kind: BulkSelectionKind; ids: string[] } | null =
     selectedCardIds.length > 1
-      ? { kind: "card" as BulkSelectionKind, ids: selectedCardIds }
+      ? { kind: "card", ids: selectedCardIds }
       : selectedImageIds.length > 1
-        ? { kind: "image" as BulkSelectionKind, ids: selectedImageIds }
+        ? { kind: "image", ids: selectedImageIds }
         : null;
   const {
     onConnectStart,
@@ -213,6 +214,7 @@ export function CanvasFlow({
     setInspectorMode,
   });
 
+  // cast: connection hook handlers are typed for CardFlowNode; react-flow expects Node
   const onNodeMouseEnter = onCardMouseEnter as NodeMouseHandler<Node>;
   const onNodeMouseLeave = onCardMouseLeave as NodeMouseHandler<Node>;
 
@@ -239,7 +241,7 @@ export function CanvasFlow({
       connectionRadius={40}
       nodeOrigin={[0.5, 0]}
       className="h-full w-full rounded-none border-0"
-      backgroundVariant="dots"
+      backgroundVariant={BackgroundVariant.Dots}
       backgroundColor="var(--color-wn-mono-700)"
       backgroundGap={16}
       colorMode={resolvedTheme}

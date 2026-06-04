@@ -1,6 +1,11 @@
 import {
   VEHICLE_SUB_TYPE_LABELS,
   VEHICLE_SUB_TYPE_VALUES,
+  type FaunaCard,
+  type FloraCard,
+  type ItemCard,
+  type StructureCard,
+  type VehicleCard,
   type WorldCard,
 } from "@worldnote/shared";
 import { EnumComboBox } from "@worldnote/ui";
@@ -151,18 +156,14 @@ export function CardTypeFields({
               classNames={inspectorInlineInputClassNames}
             />
           </div>
-          <EnumComboBox
+          <EnumComboBox<NonNullable<ItemCard["rarity"]>>
             id="card-rarity"
             label="Rarity"
             value={fields.itemRarity ?? ""}
             options={[...itemRarityOptions]}
             allowEmpty
             disabled={disabled}
-            onChange={(itemRarity) =>
-              patch({
-                itemRarity: itemRarity as TypeSpecificEditorState["itemRarity"],
-              })
-            }
+            onChange={(itemRarity) => patch({ itemRarity })}
           />
         </>
       );
@@ -180,18 +181,17 @@ export function CardTypeFields({
       }
       return (
         <>
-          <EnumComboBox
+          <EnumComboBox<VehicleCard["sub_type"]>
             id="card-sub-type"
             label="Sub type"
             value={fields.vehicleSubType}
             options={[...vehicleSubTypeOptions]}
             disabled={disabled}
-            onChange={(vehicleSubType) =>
-              patch({
-                vehicleSubType:
-                  vehicleSubType as TypeSpecificEditorState["vehicleSubType"],
-              })
-            }
+            onChange={(vehicleSubType) => {
+              if (vehicleSubType !== "") {
+                patch({ vehicleSubType });
+              }
+            }}
           />
           <div className="flex flex-col gap-1">
             <label htmlFor="card-max-speed" className={inspectorFieldLabelClassName}>
@@ -217,18 +217,17 @@ export function CardTypeFields({
         );
       }
       return (
-        <EnumComboBox
+        <EnumComboBox<FloraCard["toxicity_level"]>
           id="card-toxicity"
           label="Toxicity"
           value={fields.floraToxicity}
           options={[...floraToxicityOptions]}
           disabled={disabled}
-          onChange={(floraToxicity) =>
-            patch({
-              floraToxicity:
-                floraToxicity as TypeSpecificEditorState["floraToxicity"],
-            })
-          }
+          onChange={(floraToxicity) => {
+            if (floraToxicity !== "") {
+              patch({ floraToxicity });
+            }
+          }}
         />
       );
     case "fauna":
@@ -245,18 +244,14 @@ export function CardTypeFields({
         );
       }
       return (
-        <EnumComboBox
+        <EnumComboBox<NonNullable<FaunaCard["diet"]>>
           id="card-diet"
           label="Diet"
           value={fields.faunaDiet ?? ""}
           options={[...faunaDietOptions]}
           allowEmpty
           disabled={disabled}
-          onChange={(faunaDiet) =>
-            patch({
-              faunaDiet: faunaDiet as TypeSpecificEditorState["faunaDiet"],
-            })
-          }
+          onChange={(faunaDiet) => patch({ faunaDiet })}
         />
       );
     case "structure":
@@ -272,18 +267,17 @@ export function CardTypeFields({
         );
       }
       return (
-        <EnumComboBox
+        <EnumComboBox<StructureCard["condition"]>
           id="card-condition"
           label="Condition"
           value={fields.structureCondition}
           options={[...structureConditionOptions]}
           disabled={disabled}
-          onChange={(structureCondition) =>
-            patch({
-              structureCondition:
-                structureCondition as TypeSpecificEditorState["structureCondition"],
-            })
-          }
+          onChange={(structureCondition) => {
+            if (structureCondition !== "") {
+              patch({ structureCondition });
+            }
+          }}
         />
       );
     case "species":

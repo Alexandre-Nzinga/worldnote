@@ -73,9 +73,11 @@ export function VaultFilterButton({
       }
     };
     const onPointerDown = (event: PointerEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) {
-        close();
+      const target = event.target;
+      if (!(target instanceof Node) || !rootRef.current?.contains(target)) {
+        return;
       }
+      close();
     };
     document.addEventListener("keydown", onKeyDown);
     document.addEventListener("pointerdown", onPointerDown);

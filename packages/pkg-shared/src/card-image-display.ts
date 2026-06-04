@@ -49,8 +49,13 @@ export function rotateCardImageClockwise(
   position: CardImagePosition,
 ): CardImagePosition {
   const rotation = normalizeCardImageRotation(position.rotation);
-  const next: CardImageRotation =
-    rotation === 270 ? 0 : ((rotation + 90) as CardImageRotation);
+  const nextRotationByStep: Record<CardImageRotation, CardImageRotation> = {
+    0: 90,
+    90: 180,
+    180: 270,
+    270: 0,
+  };
+  const next = nextRotationByStep[rotation];
   return { ...position, rotation: next };
 }
 

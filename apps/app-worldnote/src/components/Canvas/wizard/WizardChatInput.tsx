@@ -2,8 +2,8 @@ import {
   CANVAS_CARD_DROP_EVENT,
   CANVAS_CARD_DROP_TARGET_ATTR,
   getCardExternalPointerDragCardId,
+  isCanvasCardDropEvent,
   isCardExternalPointerDragActive,
-  type CanvasCardDropDetail,
 } from "@worldnote/canvas";
 import type { WorldCard } from "@worldnote/shared";
 import { CARD_TYPE_LABELS } from "@worldnote/shared";
@@ -186,11 +186,13 @@ export function WizardChatInput({
 
     const onCanvasCardDrop = (event: Event) => {
       event.stopPropagation();
-      const detail = (event as CustomEvent<CanvasCardDropDetail>).detail;
+      if (!isCanvasCardDropEvent(event)) {
+        return;
+      }
       clearPreview();
       setIsOver(false);
-      if (detail?.cardId) {
-        onAddCard(detail.cardId);
+      if (event.detail.cardId) {
+        onAddCard(event.detail.cardId);
       }
     };
 

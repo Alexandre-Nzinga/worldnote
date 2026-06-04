@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import { type Editor } from "@tiptap/react"
+import type { Editor } from "@tiptap/react"
 import { NodeSelection, TextSelection } from "@tiptap/pm/state"
 
 // --- Hooks ---
@@ -74,7 +74,7 @@ export const HEADING_SHORTCUT_KEYS: Record<Level, string> = {
 export function canToggle(
   editor: Editor | null,
   level?: Level,
-  turnInto: boolean = true
+  turnInto = true
 ): boolean {
   if (!editor || !editor.isEditable) return false
   if (

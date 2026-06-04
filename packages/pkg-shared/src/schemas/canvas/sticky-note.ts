@@ -11,6 +11,10 @@ export const STICKY_NOTE_COLORS = [
 
 export type StickyNoteColor = (typeof STICKY_NOTE_COLORS)[number];
 
+export function isStickyNoteColor(value: string): value is StickyNoteColor {
+  return STICKY_NOTE_COLORS.some((color) => color === value);
+}
+
 export const DEFAULT_STICKY_NOTE_COLOR: StickyNoteColor = "amber-200";
 
 export const StickyNoteColorSchema = z.enum(STICKY_NOTE_COLORS);

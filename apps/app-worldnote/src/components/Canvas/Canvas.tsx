@@ -4,6 +4,8 @@ import {
   canvasImageNodeStyle,
   canvasImageNodeStyleForNaturalSize,
   ImageNode,
+  isImageFlowNode,
+  isNoteFlowNode,
   LinkEdge,
   type CanvasFlowNode,
   type CardFlowNode,
@@ -42,7 +44,7 @@ import type { DragEvent, MouseEvent } from "react";
 import { useCardCommands } from "../../hooks/useCardCommands.js";
 import { useSettings } from "../../hooks/useSettings.js";
 import { useVault } from "../../hooks/useVault.js";
-import { WIZARD_CARD_MIME } from "../../services/canvas/cardDragOut.js";
+import { WIZARD_CARD_MIME, readVaultCardRefPayload } from "../../services/canvas/cardDragOut.js";
 import { canvasNodePosition } from "./flow/canvasNodePosition.js";
 import { cardImageSrc, worldCardToNodeData } from "../../services/canvas/cardNodeData.js";
 import {
@@ -96,6 +98,8 @@ import { createWorldCard } from "../../services/crudWorldCard/createWorldCard.js
 import { groupSelectedWorldCards } from "../../services/crudWorldCard/groupSelectedWorldCards.js";
 import { changeWorldCardType } from "../../services/crudWorldCard/changeWorldCardType.js";
 import type { NewCardType } from "../../services/crudWorldCard/cardTemplates.js";
+import { isNewCardType } from "../../services/crudWorldCard/creatableCardTypes.js";
+import { withCardPatch } from "../../services/crudWorldCard/withCardPatch.js";
 import { deleteWorldCard } from "../../services/crudWorldCard/deleteWorldCard.js";
 import {
   duplicatedCardsOnCanvas,
@@ -344,10 +348,9 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
               if (!existing) {
                 return;
               }
-              void handleSaveCardRef.current({
-                ...existing,
-                ...partial,
-              } as WorldCard);
+              void handleSaveCardRef.current(
+                withCardPatch(existing, partial),
+              );
             },
           }),
             },
@@ -459,6 +462,7 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
         return;
       }
 
+      // cast: react-flow passes NodeChange<Node>[]; nodes are always CanvasFlowNode
       onNodesChange(changes as NodeChange<CanvasFlowNode>[]);
       if (changes.some((change) => change.type === "select")) {
         const nextNodes = applyNodeChanges(
@@ -797,10 +801,9 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
       return;
     }
 
-    const currentModes = cards.map(
-      (card) => card.custom_properties?.view_mode as unknown,
+    const allNode = cards.every(
+      (card) => card.custom_properties?.view_mode === "node",
     );
-    const allNode = currentModes.every((mode) => mode === "node");
     const nextMode = allNode ? "visual" : "node";
 
     setIsBulkTogglingView(true);
@@ -856,10 +859,7 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
             links,
             cardsById: cards,
             onUpdate: (partial) => {
-              void handleSaveCardRef.current({
-                ...card,
-                ...partial,
-              } as WorldCard);
+              void handleSaveCardRef.current(withCardPatch(card, partial));
             },
           }),
         };
@@ -1836,10 +1836,9 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
               if (!existing) {
                 return;
               }
-              void handleSaveCardRef.current({
-                ...existing,
-                ...partial,
-              } as WorldCard);
+              void handleSaveCardRef.current(
+                withCardPatch(existing, partial),
+              );
             },
           }),
         })),
@@ -1951,7 +1950,7 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
           preferViewportCenter: true,
         }) ??
         ({ x: 0, y: 0 } satisfies CanvasFlowPointer);
-      const placed = { ...card, position } as WorldCard;
+      const placed = withCardPatch(card, { position });
       try {
         const saved = await updateWorldCard(vaultPath, placed);
         await updateCanvasManifestNode(vaultPath, {
@@ -2097,11 +2096,14 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
         ? { x: sourceNode.position.x + 120, y: sourceNode.position.y + 48 }
         : { ...sourceCard.position };
 
+      if (!isNewCardType(cardType)) {
+        return;
+      }
       pushCanvasHistory();
       try {
         const newCard = await createWorldCard({
           vault: vaultPath,
-          cardType: cardType as NewCardType,
+          cardType,
           position,
           name: name.trim() || undefined,
         });
@@ -2298,10 +2300,7 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
             if (!existing) {
               return;
             }
-            void handleSaveCardRef.current({
-              ...existing,
-              ...partial,
-            } as WorldCard);
+            void handleSaveCardRef.current(withCardPatch(existing, partial));
           },
         }),
       })),
@@ -2381,10 +2380,9 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
               if (!existing) {
                 return;
               }
-              void handleSaveCardRef.current({
-                ...existing,
-                ...partial,
-              } as WorldCard);
+              void handleSaveCardRef.current(
+                withCardPatch(existing, partial),
+              );
             },
           }),
         },
@@ -2634,10 +2632,9 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
               if (!existing) {
                 return;
               }
-              void handleSaveCardRef.current({
-                ...existing,
-                ...partial,
-              } as WorldCard);
+              void handleSaveCardRef.current(
+                withCardPatch(existing, partial),
+              );
             },
           }),
         })),
@@ -2817,23 +2814,19 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
         "application/worldnote-card-ref",
       );
       if (cardRefRaw) {
-        try {
-          const parsed = JSON.parse(cardRefRaw) as {
-            sourceWorldPath: string;
-            cardId: string;
-          };
-          if (!parsed?.sourceWorldPath || !parsed?.cardId) {
-            return;
-          }
-          if (parsed.sourceWorldPath === vaultPath) {
-            return;
-          }
+        const parsed = readVaultCardRefPayload(cardRefRaw);
+        if (!parsed?.sourceWorldPath || !parsed.cardId) {
+          return;
+        }
+        if (parsed.sourceWorldPath === vaultPath) {
+          return;
+        }
 
-          const position =
-            canvasPointerApiRef.current?.clientToFlowPosition({
-              x: event.clientX,
-              y: event.clientY,
-            }) ?? ({ x: 0, y: 0 } satisfies CanvasFlowPointer);
+        const position =
+          canvasPointerApiRef.current?.clientToFlowPosition({
+            x: event.clientX,
+            y: event.clientY,
+          }) ?? ({ x: 0, y: 0 } satisfies CanvasFlowPointer);
 
           const tempId = crypto.randomUUID();
           setNodes((prev) => [
@@ -2893,47 +2886,16 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
               console.error("Failed to copy card:", error);
               setNodes((prev) => prev.filter((node) => node.id !== tempId));
             });
-        } catch (error) {
-          console.error("Failed to parse dropped card ref:", error);
-        }
         return;
       }
 
-      const droppedType = event.dataTransfer.getData(
+      const droppedTypeRaw = event.dataTransfer.getData(
         "application/worldnote-card-type",
-      ) as NewCardType;
-      const validTypes: NewCardType[] = [
-        "character",
-        "location",
-        "item",
-        "vehicle",
-        "flora",
-        "fauna",
-        "building",
-        "structure",
-        "species",
-        "planet",
-        "organization",
-        "polity",
-        "event",
-        "family",
-        "group",
-        "star",
-        "moon",
-        "asteroid",
-        "satellite",
-        "law",
-        "religion",
-        "language",
-        "culture",
-        "spell",
-        "disease",
-        "disaster",
-        "combat_style",
-      ];
-      if (!validTypes.includes(droppedType)) {
+      );
+      if (!isNewCardType(droppedTypeRaw)) {
         return;
       }
+      const droppedType = droppedTypeRaw;
 
       const position =
         canvasPointerApiRef.current?.clientToFlowPosition({
@@ -3092,24 +3054,23 @@ export function Canvas({ onBack, onOpenVault }: CanvasProps) {
             }}
             onNodeDragStop={(_, node) => {
               dragHistoryPushedRef.current = false;
-              if (node.type === "worldnoteNote") {
+              if (isNoteFlowNode(node)) {
                 if (!updateStickyNotePosition) {
                   return;
                 }
-                const noteNode = node as NoteFlowNode;
                 void updateStickyNotePosition(
                   StickyNotePlacementSchema.parse(
-                    stickyNotePlacementFromFlowNode(noteNode),
+                    stickyNotePlacementFromFlowNode(node),
                   ),
                 );
                 return;
               }
-              if (node.type === "worldnoteImage") {
+              if (isImageFlowNode(node)) {
                 if (!updateImagePosition) {
                   return;
                 }
                 void updateImagePosition(
-                  canvasImagePlacementFromFlowNode(node as ImageFlowNode),
+                  canvasImagePlacementFromFlowNode(node),
                 );
                 return;
               }

@@ -3,6 +3,7 @@ import { useCurrentEditor, useEditorState } from "@tiptap/react"
 import { useEffect, useState } from "react"
 
 function getActivePageEditor(editor: Editor): Editor | null {
+  // cast: tiptap Pages extension storage is not in Editor typings
   const storage = editor.storage as unknown as Record<string, unknown>
   const pages = storage.pages as { activeEditor?: Editor | null } | undefined
   if (!pages || !("activeEditor" in pages)) return null
