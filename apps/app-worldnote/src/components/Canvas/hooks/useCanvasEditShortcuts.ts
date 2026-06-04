@@ -4,7 +4,7 @@ import {
   matchesKeyboardShortcut,
   normalizeCanvasKeyboardShortcuts,
   type CanvasKeyboardShortcuts,
-} from "../../services/settings/keyboardShortcuts.js";
+} from "../../../services/settings/keyboardShortcuts.js";
 import { isEditableTarget } from "./usePanelHotkeys.js";
 
 type UseCanvasEditShortcutsOptions = {

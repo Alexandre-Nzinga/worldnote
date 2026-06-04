@@ -16,7 +16,7 @@ import { MaterialSymbol } from "@worldnote/ui";
 import type { NodeProps } from "@xyflow/react";
 import { motion } from "framer-motion";
 import { memo, useCallback, useState } from "react";
-import { MarkdownEditor } from "../editor/MarkdownEditor.js";
+import { MarkdownEditor } from "../../editor/MarkdownEditor.js";
 
 function resolveToken(
   color: StickyNoteColor | StickyNoteColorToken,

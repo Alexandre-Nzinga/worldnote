@@ -4,7 +4,7 @@ import type {
   SocketDescriptor,
   WorldCard,
 } from "@worldnote/shared";
-import type { TypeSpecificEditorState } from "../cardEditorTypes.js";
+import type { TypeSpecificEditorState } from "../card-editor/cardEditorTypes.js";
 import { GroupMembersSection } from "./GroupMembersSection.js";
 import { FamilyCrestBlock } from "./FamilyCrestBlock.js";
 import { InspectorCardImageBlock } from "./InspectorCardImageBlock.js";

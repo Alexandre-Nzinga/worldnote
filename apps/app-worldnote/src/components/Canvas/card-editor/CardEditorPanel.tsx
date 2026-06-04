@@ -19,17 +19,17 @@ import {
   darkFieldInputClassNames,
   modalFieldLabelClassName,
   modalPrimaryButtonClassName,
-} from "../Onboarding/fieldClassNames.js";
-import { cardImageSrc } from "../../services/canvas/cardNodeData.js";
+} from "../../Onboarding/fieldClassNames.js";
+import { cardImageSrc } from "../../../services/canvas/cardNodeData.js";
 import {
   pickCardImageFile,
   saveCardImage,
-} from "../../services/desktop/saveCardImage.js";
+} from "../../../services/desktop/saveCardImage.js";
 import {
   formatSocketLinkValue,
   getSocketLinkLabels,
-} from "../../services/links/socketLinks.js";
-import { formatSocketId } from "../../services/settings/visibleSocketSettings.js";
+} from "../../../services/links/socketLinks.js";
+import { formatSocketId } from "../../../services/settings/visibleSocketSettings.js";
 import { CardImageEditorPreview } from "./CardImageEditorPreview.js";
 import { CardImageTransformControls } from "./CardImageTransformControls.js";
 import { CardTypeFields } from "./CardTypeFields.js";

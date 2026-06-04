@@ -2,7 +2,7 @@ import {
   useCanvasExternalImageDrop,
   type CanvasImageDropPosition,
   type CanvasImageImportOptions,
-} from "./useCanvasExternalImageDrop.js";
+} from "../../hooks/useCanvasExternalImageDrop.js";
 
 type CanvasExternalImageDropBridgeProps = {
   enabled: boolean;

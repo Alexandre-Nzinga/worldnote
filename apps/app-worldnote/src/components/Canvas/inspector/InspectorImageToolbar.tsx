@@ -4,12 +4,12 @@ import {
   MAX_CARD_IMAGE_ZOOM,
   MIN_CARD_IMAGE_ZOOM,
   stepCardImageZoom,
-} from "./CardImageEditorPreview.js";
-import { CardImageTransformControls } from "./CardImageTransformControls.js";
+} from "../card-editor/CardImageEditorPreview.js";
+import { CardImageTransformControls } from "../card-editor/CardImageTransformControls.js";
 import {
   inspectorImageOverlayChipClassName,
   inspectorImageOverlayLabelClassName,
-} from "./inspector/inspectorFieldStyles.js";
+} from "./inspectorFieldStyles.js";
 
 const iconChipClassName = `${inspectorImageOverlayChipClassName} flex h-7 w-7 shrink-0 items-center justify-center px-0`;
 

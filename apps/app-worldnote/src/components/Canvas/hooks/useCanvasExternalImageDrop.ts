@@ -8,9 +8,9 @@ import {
   imageFilesFromDataTransfer,
   isImageFile,
   localPathFromFile,
-} from "../../services/canvas/canvasImageDrop.js";
-import { saveCanvasImageBytes } from "../../services/desktop/saveCanvasImage.js";
-import { isTauriRuntime } from "../../services/desktop/tauriRuntime.js";
+} from "../../../services/canvas/canvasImageDrop.js";
+import { saveCanvasImageBytes } from "../../../services/desktop/saveCanvasImage.js";
+import { isTauriRuntime } from "../../../services/desktop/tauriRuntime.js";
 
 export type CanvasImageDropPosition = {
   x: number;

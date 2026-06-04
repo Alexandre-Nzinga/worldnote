@@ -13,8 +13,8 @@ import {
   WorldNoteLogo,
 } from "@worldnote/ui";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import type { NewCardType } from "../../services/crudWorldCard/cardTemplates.js";
-import { DockTabs, type DockTabItem } from "../ui/DockTabs.js";
+import type { NewCardType } from "../../../services/crudWorldCard/cardTemplates.js";
+import { DockTabs, type DockTabItem } from "../../ui/DockTabs.js";
 
 export type CreateOption = NewCardType;
 export type CanvasTool = "select" | "text" | "image" | "actions";

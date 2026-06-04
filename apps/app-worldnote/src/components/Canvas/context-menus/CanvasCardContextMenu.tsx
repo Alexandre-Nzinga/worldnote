@@ -7,8 +7,8 @@ import {
 } from "@worldnote/shared";
 import { MaterialSymbol } from "@worldnote/ui";
 import { useEffect, useMemo, useRef } from "react";
-import type { NewCardType } from "../../services/crudWorldCard/cardTemplates.js";
-import { CREATABLE_CARD_TYPES } from "../../services/crudWorldCard/creatableCardTypes.js";
+import type { NewCardType } from "../../../services/crudWorldCard/cardTemplates.js";
+import { CREATABLE_CARD_TYPES } from "../../../services/crudWorldCard/creatableCardTypes.js";
 
 export type CanvasCardContextMenuView = "actions" | "change-type";
 

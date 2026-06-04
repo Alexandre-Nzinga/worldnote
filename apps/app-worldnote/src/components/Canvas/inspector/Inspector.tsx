@@ -30,46 +30,46 @@ import {
   type MouseEvent,
   type PointerEvent,
 } from "react";
-import { useResolvedTheme } from "../../theme/ThemeProvider.js";
-import { InspectorCardMoreMenu } from "./inspector/InspectorCardMoreMenu.js";
+import { useResolvedTheme } from "../../../theme/ThemeProvider.js";
+import { InspectorCardMoreMenu } from "./InspectorCardMoreMenu.js";
 import {
   inspectorHeaderActionClassName,
   inspectorHeaderIconActionClassName,
   inspectorNameFieldClassNames,
   inspectorSubtitleFieldClassNames,
-} from "./inspector/inspectorFieldStyles.js";
-import { cardImageSrc } from "../../services/canvas/cardNodeData.js";
-import { cardsInGroup } from "../../services/canvas/groupMemberCards.js";
-import { openCardJsonInExternalApp } from "../../services/desktop/openCardJson.js";
+} from "./inspectorFieldStyles.js";
+import { cardImageSrc } from "../../../services/canvas/cardNodeData.js";
+import { cardsInGroup } from "../../../services/canvas/groupMemberCards.js";
+import { openCardJsonInExternalApp } from "../../../services/desktop/openCardJson.js";
 import {
   pickCardImageFile,
   saveCardImage,
   saveFamilyCrest,
-} from "../../services/desktop/saveCardImage.js";
+} from "../../../services/desktop/saveCardImage.js";
 import {
   formatSocketLinkValue,
   getSocketLinkLabels,
-} from "../../services/links/socketLinks.js";
-import { formatSocketId } from "../../services/settings/visibleSocketSettings.js";
-import { CardImageEditorPreview } from "./CardImageEditorPreview.js";
+} from "../../../services/links/socketLinks.js";
+import { formatSocketId } from "../../../services/settings/visibleSocketSettings.js";
+import { CardImageEditorPreview } from "../card-editor/CardImageEditorPreview.js";
 import { InspectorImageToolbar } from "./InspectorImageToolbar.js";
 import {
   buildWorldCard,
   defaultTypeFields,
   typeFieldsFromCard,
   type TypeSpecificEditorState,
-} from "./cardEditorTypes.js";
-import { DocumentOutline } from "./inspector/DocumentOutline.js";
-import { InspectorDeleteButton } from "./inspector/InspectorDeleteButton.js";
-import { InfoColumn } from "./inspector/InfoColumn.js";
-import { InfoTab } from "./inspector/InfoTab.js";
-import type { LoreSimpleEditorHandle } from "../editor/LoreSimpleEditor.js";
-import { InspectorTabs, type InspectorTabId } from "./inspector/InspectorTabs.js";
-import { descriptionSummaryFromMarkdown } from "../../services/canvas/stickyNoteMarkdown.js";
-import { PropertiesColumn } from "./inspector/PropertiesColumn.js";
-import { stripLeadingLoreHeading } from "./inspector/inspectorLoreMarkdown.js";
-import { PropertiesTab } from "./inspector/PropertiesTab.js";
-import { usePanelHotkeys } from "./usePanelHotkeys.js";
+} from "../card-editor/cardEditorTypes.js";
+import { DocumentOutline } from "./DocumentOutline.js";
+import { InspectorDeleteButton } from "./InspectorDeleteButton.js";
+import { InfoColumn } from "./InfoColumn.js";
+import { InfoTab } from "./InfoTab.js";
+import type { LoreSimpleEditorHandle } from "../../editor/LoreSimpleEditor.js";
+import { InspectorTabs, type InspectorTabId } from "./InspectorTabs.js";
+import { descriptionSummaryFromMarkdown } from "../../../services/canvas/stickyNoteMarkdown.js";
+import { PropertiesColumn } from "./PropertiesColumn.js";
+import { stripLeadingLoreHeading } from "./inspectorLoreMarkdown.js";
+import { PropertiesTab } from "./PropertiesTab.js";
+import { usePanelHotkeys } from "../hooks/usePanelHotkeys.js";
 
 type PropertyRow = { key: string; value: string };
 

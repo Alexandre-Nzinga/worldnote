@@ -3,8 +3,8 @@ import {
   type CardImagePosition,
 } from "@worldnote/shared";
 import { MaterialSymbol } from "@worldnote/ui";
-import { CardImageEditorPreview } from "../CardImageEditorPreview.js";
-import { InspectorImageToolbar } from "../InspectorImageToolbar.js";
+import { CardImageEditorPreview } from "../card-editor/CardImageEditorPreview.js";
+import { InspectorImageToolbar } from "./InspectorImageToolbar.js";
 
 const propertiesImageBlockClassName =
   "group/image flex w-full shrink-0 flex-col overflow-hidden border-b border-wn-mono-800 bg-wn-mono-950";

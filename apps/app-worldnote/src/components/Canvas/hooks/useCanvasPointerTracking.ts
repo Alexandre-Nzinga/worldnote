@@ -3,7 +3,7 @@ import { useCallback, useEffect, type MutableRefObject } from "react";
 import type {
   CanvasFlowPointer,
   ResolveCanvasSpawnPosition,
-} from "../../services/canvas/canvasSpawnPosition.js";
+} from "../../../services/canvas/canvasSpawnPosition.js";
 
 export type CanvasPointerApi = {
   resolveSpawnPosition: ResolveCanvasSpawnPosition;

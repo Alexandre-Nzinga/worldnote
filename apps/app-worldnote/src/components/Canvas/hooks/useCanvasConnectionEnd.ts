@@ -14,18 +14,18 @@ import type { Link, WorldCard } from "@worldnote/shared";
 import {
   AUTO_CREATE_CHARACTER_SOCKETS,
   contextualCharacterName,
-} from "../../services/links/characterFromSocketDrop.js";
+} from "../../../services/links/characterFromSocketDrop.js";
 import {
   canEasyConnect,
   connectOriginFromHandle,
   resolveEasyConnect,
   type ConnectDragOrigin,
-} from "../../services/links/resolveEasyConnect.js";
-import { createLink } from "../../services/links/createLink.js";
-import { linkToEdge } from "../../services/links/linkToEdge.js";
-import { worldCardToNodeData } from "../../services/canvas/cardNodeData.js";
-import { createWorldCard } from "../../services/crudWorldCard/createWorldCard.js";
-import type { VisibleSocketsByCardType } from "../../services/settings/settings.js";
+} from "../../../services/links/resolveEasyConnect.js";
+import { createLink } from "../../../services/links/createLink.js";
+import { linkToEdge } from "../../../services/links/linkToEdge.js";
+import { worldCardToNodeData } from "../../../services/canvas/cardNodeData.js";
+import { createWorldCard } from "../../../services/crudWorldCard/createWorldCard.js";
+import type { VisibleSocketsByCardType } from "../../../services/settings/settings.js";
 
 type UseCanvasConnectionEndOptions = {
   vaultPath: string | null;

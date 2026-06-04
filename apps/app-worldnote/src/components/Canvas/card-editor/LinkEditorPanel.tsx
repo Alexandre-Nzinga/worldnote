@@ -1,8 +1,8 @@
 import { AnimatedPanel, Button, getHeadingProps } from "@worldnote/ui";
 import type { Link } from "@worldnote/shared";
 import { useCallback, useRef, useState } from "react";
-import { modalFieldLabelClassName } from "../Onboarding/fieldClassNames.js";
-import { usePanelHotkeys } from "./usePanelHotkeys.js";
+import { modalFieldLabelClassName } from "../../Onboarding/fieldClassNames.js";
+import { usePanelHotkeys } from "../hooks/usePanelHotkeys.js";
 
 function formatSocketId(socketId: string): string {
   return socketId.replace(/_/g, " ");

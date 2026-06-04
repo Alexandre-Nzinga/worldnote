@@ -1,5 +1,5 @@
 import type { CardImagePosition } from "@worldnote/shared";
-import { CardImageTransformControls } from "./CardImageTransformControls.js";
+import { CardImageTransformControls } from "../card-editor/CardImageTransformControls.js";
 
 type CanvasImageToolbarProps = {
   position: CardImagePosition;

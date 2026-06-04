@@ -43,7 +43,7 @@ import { useCardCommands } from "../../hooks/useCardCommands.js";
 import { useSettings } from "../../hooks/useSettings.js";
 import { useVault } from "../../hooks/useVault.js";
 import { WIZARD_CARD_MIME } from "../../services/canvas/cardDragOut.js";
-import { canvasNodePosition } from "./canvasNodePosition.js";
+import { canvasNodePosition } from "./flow/canvasNodePosition.js";
 import { cardImageSrc, worldCardToNodeData } from "../../services/canvas/cardNodeData.js";
 import {
   removeCanvasManifestStickyNote,
@@ -108,28 +108,28 @@ import { createLink } from "../../services/links/createLink.js";
 import { deleteLink } from "../../services/links/deleteLink.js";
 import { linkToEdge } from "../../services/links/linkToEdge.js";
 import { listLinks } from "../../services/links/listLinks.js";
-import { LinkEditorPanel } from "./LinkEditorPanel.js";
-import { Inspector, type InspectorMode } from "./Inspector.js";
+import { LinkEditorPanel } from "./card-editor/LinkEditorPanel.js";
+import { Inspector, type InspectorMode } from "./inspector/Inspector.js";
 import { openCanvasCardContextMenuRef } from "../../services/canvas/canvasCardContextMenuRef.js";
 import { applyCanvasCardSelectionRef } from "../../services/canvas/canvasCardSelectionRef.js";
-import { CanvasFlow } from "./CanvasFlow.js";
-import type { CanvasPointerApi } from "./useCanvasPointerTracking.js";
+import { CanvasFlow } from "./flow/CanvasFlow.js";
+import type { CanvasPointerApi } from "./hooks/useCanvasPointerTracking.js";
 import type {
   CanvasImageDropPosition,
   CanvasImageImportOptions,
-} from "./useCanvasExternalImageDrop.js";
-import type { CanvasCardContextMenuState } from "./CanvasCardContextMenu.js";
-import type { CanvasImageContextMenuState } from "./CanvasImageContextMenu.js";
-import type { CanvasStickyNoteContextMenuState } from "./CanvasStickyNoteContextMenu.js";
-import { CanvasHeader } from "./CanvasHeader.js";
-import { CanvasCommandPalette } from "./CanvasCommandPalette.js";
-import { StickyNoteNode } from "./StickyNoteNode.js";
-import { StickyNoteToolbar } from "./StickyNoteToolbar.js";
-import { CanvasImageToolbar } from "./CanvasImageToolbar.js";
-import { CanvasToolbar, type CanvasTool } from "./CanvasToolbar.js";
+} from "./hooks/useCanvasExternalImageDrop.js";
+import type { CanvasCardContextMenuState } from "./context-menus/CanvasCardContextMenu.js";
+import type { CanvasImageContextMenuState } from "./context-menus/CanvasImageContextMenu.js";
+import type { CanvasStickyNoteContextMenuState } from "./context-menus/CanvasStickyNoteContextMenu.js";
+import { CanvasHeader } from "./chrome/CanvasHeader.js";
+import { CanvasCommandPalette } from "./chrome/CanvasCommandPalette.js";
+import { StickyNoteNode } from "./sticky-note/StickyNoteNode.js";
+import { StickyNoteToolbar } from "./toolbars/StickyNoteToolbar.js";
+import { CanvasImageToolbar } from "./toolbars/CanvasImageToolbar.js";
+import { CanvasToolbar, type CanvasTool } from "./chrome/CanvasToolbar.js";
 import { WorldWizardPanel } from "./wizard/WorldWizardPanel.js";
-import { useCanvasCommandPaletteShortcut } from "./useCanvasCommandPaletteShortcut.js";
-import { useCanvasEditShortcuts } from "./useCanvasEditShortcuts.js";
+import { useCanvasCommandPaletteShortcut } from "./hooks/useCanvasCommandPaletteShortcut.js";
+import { useCanvasEditShortcuts } from "./hooks/useCanvasEditShortcuts.js";
 import {
   useCanvasClipboard,
   type CanvasClipboardItem,

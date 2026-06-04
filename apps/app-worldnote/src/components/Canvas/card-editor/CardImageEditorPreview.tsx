@@ -6,7 +6,7 @@ import {
   type CardImagePosition,
 } from "@worldnote/shared";
 import { useCallback, useRef } from "react";
-import { inspectorImageOverlayLabelClassName } from "./inspector/inspectorFieldStyles.js";
+import { inspectorImageOverlayLabelClassName } from "../inspector/inspectorFieldStyles.js";
 
 const ZOOM_WHEEL_STEP = 5;
 const ZOOM_BUTTON_STEP = 10;

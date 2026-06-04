@@ -3,12 +3,12 @@ import { CARD_TYPE_LABELS } from "@worldnote/shared";
 import type { WorldCard } from "@worldnote/shared";
 import { AnimatedModal, getHeadingProps, MaterialSymbol } from "@worldnote/ui";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { darkFieldInputClassNames } from "../Onboarding/fieldClassNames.js";
+import { darkFieldInputClassNames } from "../../Onboarding/fieldClassNames.js";
 import {
   searchCanvasCards,
   type CardSearchMatchKind,
   type CardSearchResult,
-} from "../../services/canvas/searchCanvasCards.js";
+} from "../../../services/canvas/searchCanvasCards.js";
 
 type CanvasCommandPaletteProps = {
   isOpen: boolean;

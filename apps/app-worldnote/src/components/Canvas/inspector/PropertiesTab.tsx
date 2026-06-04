@@ -1,8 +1,8 @@
 import { Input } from "@heroui/react";
 import { MaterialSymbol } from "@worldnote/ui";
 import type { Link, SocketDescriptor, WorldCard } from "@worldnote/shared";
-import { CardTypeFields } from "../CardTypeFields.js";
-import type { TypeSpecificEditorState } from "../cardEditorTypes.js";
+import { CardTypeFields } from "../card-editor/CardTypeFields.js";
+import type { TypeSpecificEditorState } from "../card-editor/cardEditorTypes.js";
 import {
   inspectorFieldLabelClassName,
   inspectorFieldValueClassName,

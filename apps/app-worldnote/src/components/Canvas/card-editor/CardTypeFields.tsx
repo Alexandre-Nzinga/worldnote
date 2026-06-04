@@ -9,7 +9,7 @@ import {
   inspectorFieldLabelClassName,
   inspectorFieldValueClassName,
   inspectorInlineInputClassNames,
-} from "./inspector/inspectorFieldStyles.js";
+} from "../inspector/inspectorFieldStyles.js";
 import type { TypeSpecificEditorState } from "./cardEditorTypes.js";
 
 const itemRarityOptions = [

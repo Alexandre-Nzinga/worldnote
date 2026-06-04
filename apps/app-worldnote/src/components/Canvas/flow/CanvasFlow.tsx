@@ -23,35 +23,35 @@ import type {
   MutableRefObject,
   RefObject,
 } from "react";
-import type { CanvasImageContextMenuState } from "./CanvasImageContextMenu.js";
+import type { CanvasImageContextMenuState } from "../context-menus/CanvasImageContextMenu.js";
 import {
   CanvasCardContextMenu,
   type CanvasCardContextMenuState,
-} from "./CanvasCardContextMenu.js";
-import { CanvasImageContextMenu } from "./CanvasImageContextMenu.js";
+} from "../context-menus/CanvasCardContextMenu.js";
+import { CanvasImageContextMenu } from "../context-menus/CanvasImageContextMenu.js";
 import {
   CanvasStickyNoteContextMenu,
   type CanvasStickyNoteContextMenuState,
-} from "./CanvasStickyNoteContextMenu.js";
+} from "../context-menus/CanvasStickyNoteContextMenu.js";
 import type { Link, WorldCard } from "@worldnote/shared";
-import type { NewCardType } from "../../services/crudWorldCard/cardTemplates.js";
-import type { VisibleSocketsByCardType } from "../../services/settings/settings.js";
+import type { NewCardType } from "../../../services/crudWorldCard/cardTemplates.js";
+import type { VisibleSocketsByCardType } from "../../../services/settings/settings.js";
 import {
   BulkSelectionToolbar,
   type BulkSelectionKind,
-} from "./BulkSelectionToolbar.js";
-import { CanvasExternalImageDropBridge } from "./CanvasExternalImageDropBridge.js";
-import { CanvasFitViewBridge } from "./CanvasFitViewBridge.js";
-import { CanvasFocusBridge } from "./CanvasFocusBridge.js";
+} from "../toolbars/BulkSelectionToolbar.js";
+import { CanvasExternalImageDropBridge } from "./bridges/CanvasExternalImageDropBridge.js";
+import { CanvasFitViewBridge } from "./bridges/CanvasFitViewBridge.js";
+import { CanvasFocusBridge } from "./bridges/CanvasFocusBridge.js";
 import type {
   CanvasImageDropPosition,
   CanvasImageImportOptions,
-} from "./useCanvasExternalImageDrop.js";
-import { useCanvasConnectionEnd } from "./useCanvasConnectionEnd.js";
-import { useCanvasPointerTracking } from "./useCanvasPointerTracking.js";
-import type { CanvasPointerApi } from "./useCanvasPointerTracking.js";
-import type { CanvasFlowPointer } from "../../services/canvas/canvasSpawnPosition.js";
-import { useResolvedTheme } from "../../theme/ThemeProvider.js";
+} from "../hooks/useCanvasExternalImageDrop.js";
+import { useCanvasConnectionEnd } from "../hooks/useCanvasConnectionEnd.js";
+import { useCanvasPointerTracking } from "../hooks/useCanvasPointerTracking.js";
+import type { CanvasPointerApi } from "../hooks/useCanvasPointerTracking.js";
+import type { CanvasFlowPointer } from "../../../services/canvas/canvasSpawnPosition.js";
+import { useResolvedTheme } from "../../../theme/ThemeProvider.js";
 
 type CanvasFlowProps = {
   nodeTypes: NodeTypes;
