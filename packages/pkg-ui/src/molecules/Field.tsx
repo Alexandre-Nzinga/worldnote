@@ -84,7 +84,7 @@ export function SearchField({
           <button
             type="button"
             aria-label="Clear search"
-            className="rounded-lg p-0.5 text-wn-mono-500 transition-colors hover:text-wn-mono-50"
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-wn-mono-500 transition-colors hover:bg-wn-mono-800 hover:text-wn-mono-50"
             onClick={onClear}
           >
             <MaterialSymbol name="close" className="text-base" />

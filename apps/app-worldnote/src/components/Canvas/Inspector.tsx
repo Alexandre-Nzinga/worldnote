@@ -12,6 +12,7 @@ import { CardTypePill, visualConfigFor } from "@worldnote/canvas";
 import {
   AnimatedModal,
   AnimatedPanel,
+  getHeadingProps,
   MaterialSymbol,
   type StepDirection,
   stepTransition,
@@ -20,15 +21,31 @@ import {
 } from "@worldnote/ui";
 import type { Editor } from "@tiptap/core";
 import { AnimatePresence, motion } from "framer-motion";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useResolvedTheme } from "../../theme/ThemeProvider.js";
 import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type MouseEvent,
+  type PointerEvent,
+} from "react";
+import { useResolvedTheme } from "../../theme/ThemeProvider.js";
+import { InspectorCardMoreMenu } from "./inspector/InspectorCardMoreMenu.js";
+import {
+  inspectorHeaderActionClassName,
+  inspectorHeaderIconActionClassName,
   inspectorNameFieldClassNames,
   inspectorSubtitleFieldClassNames,
 } from "./inspector/inspectorFieldStyles.js";
 import { cardImageSrc } from "../../services/canvas/cardNodeData.js";
 import { cardsInGroup } from "../../services/canvas/groupMemberCards.js";
-import { pickCardImageFile, saveCardImage } from "../../services/desktop/saveCardImage.js";
+import { openCardJsonInExternalApp } from "../../services/desktop/openCardJson.js";
+import {
+  pickCardImageFile,
+  saveCardImage,
+  saveFamilyCrest,
+} from "../../services/desktop/saveCardImage.js";
 import {
   formatSocketLinkValue,
   getSocketLinkLabels,
@@ -50,6 +67,7 @@ import type { LoreSimpleEditorHandle } from "../editor/LoreSimpleEditor.js";
 import { InspectorTabs, type InspectorTabId } from "./inspector/InspectorTabs.js";
 import { descriptionSummaryFromMarkdown } from "../../services/canvas/stickyNoteMarkdown.js";
 import { PropertiesColumn } from "./inspector/PropertiesColumn.js";
+import { stripLeadingLoreHeading } from "./inspector/inspectorLoreMarkdown.js";
 import { PropertiesTab } from "./inspector/PropertiesTab.js";
 import { usePanelHotkeys } from "./usePanelHotkeys.js";
 
@@ -61,32 +79,39 @@ const inspectorSidebarClassName =
   "pointer-events-auto absolute bottom-4 right-4 top-4 z-30 flex w-[min(100%,26rem)] flex-col overflow-hidden rounded-2xl border border-wn-mono-800 bg-wn-mono-900 shadow-2xl";
 
 const inspectorModalPanelClassName =
-  "relative z-10 flex h-[88vh] w-full max-w-7xl flex-col overflow-hidden bg-transparent text-wn-mono-100 shadow-none";
+  "relative z-10 flex h-[88vh] w-full max-w-[min(100%,84rem)] flex-col overflow-hidden bg-transparent text-wn-mono-100 shadow-none";
 
 const inspectorModalColumnClassName =
   "flex min-h-0 flex-col overflow-hidden rounded-2xl border border-transparent bg-wn-mono-900";
 
-const inspectorModalColumnsClassName =
-  "flex min-h-0 flex-1 items-stretch gap-3 overflow-hidden px-4 pb-4 pt-2";
+const inspectorModalGridColsClassName =
+  "grid-cols-[min(100%,11rem)_minmax(0,2fr)_min(100%,17.5rem)]";
+
+const inspectorModalHeaderClassName = [
+  "grid shrink-0 items-center gap-x-3 px-3 pb-2 pt-3",
+  inspectorModalGridColsClassName,
+].join(" ");
+
+const inspectorModalColumnsClassName = [
+  "grid min-h-0 flex-1 items-stretch gap-x-3 overflow-hidden px-3 pb-4 pt-2",
+  inspectorModalGridColsClassName,
+].join(" ");
 
 const inspectorModalOutlineClassName =
-  "flex h-full min-h-0 w-[min(100%,12rem)] shrink-0 self-stretch flex-col overflow-hidden bg-transparent";
+  "flex min-h-0 flex-col overflow-hidden bg-transparent";
 
 const inspectorModalInfoClassName = [
   inspectorModalColumnClassName,
-  "flex h-full min-h-0 min-w-0 flex-[2] self-stretch",
+  "flex min-h-0 flex-col",
 ].join(" ");
 
 const inspectorModalPropertiesClassName = [
-  inspectorModalColumnClassName,
-  "flex h-full min-h-0 w-[min(100%,15rem)] shrink-0 self-stretch",
+  "flex min-h-0 flex-col overflow-hidden rounded-2xl border border-transparent bg-wn-mono-950",
+  "flex min-h-0 flex-col",
 ].join(" ");
 
 const inspectorImageStripClassName =
   "group/image relative h-64 shrink-0 overflow-hidden bg-wn-mono-950";
-
-const inspectorHeaderActionClassName =
-  "flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-sm font-medium text-wn-mono-300 transition-colors hover:bg-wn-mono-800 hover:text-wn-mono-50 disabled:opacity-50";
 
 const INSPECTOR_TAB_ORDER: InspectorTabId[] = ["info", "properties"];
 
@@ -110,18 +135,14 @@ type InspectorProps = {
   onSave: (card: WorldCard) => Promise<void>;
   onDelete: (cardId: string) => Promise<void>;
   onNavigateToCard?: (cardId: string) => void;
+  onCreateSocketLink?: (socketId: string, targetCardId: string) => void;
+  onRemoveSocketLink?: (linkId: string) => void;
+  onCreateAndLinkCard?: (
+    socketId: string,
+    cardType: WorldCard["card_type"],
+    name: string,
+  ) => void;
 };
-
-function tagsToString(tags: string[]): string {
-  return tags.join(", ");
-}
-
-function stringToTags(raw: string): string[] {
-  return raw
-    .split(",")
-    .map((tag) => tag.trim())
-    .filter((tag) => tag.length > 0);
-}
 
 function propertiesToRows(
   properties: Record<string, unknown>,
@@ -175,6 +196,9 @@ export function Inspector({
   onSave,
   onDelete,
   onNavigateToCard,
+  onCreateSocketLink,
+  onRemoveSocketLink,
+  onCreateAndLinkCard,
 }: InspectorProps) {
   const lastCardRef = useRef<WorldCard | undefined>(undefined);
   if (card) {
@@ -187,6 +211,63 @@ export function Inspector({
   const theme = useResolvedTheme();
   const logoTone = theme === "dark" ? "white" : "black";
   const [layout, setLayout] = useState<InspectorLayout>("sidebar");
+  const layoutTransitionLockRef = useRef(false);
+
+  const releaseLayoutTransitionLock = useCallback(() => {
+    window.setTimeout(() => {
+      layoutTransitionLockRef.current = false;
+    }, 400);
+  }, []);
+
+  const applyInspectorLayoutChange = useCallback(
+    (next: InspectorLayout) => {
+      layoutTransitionLockRef.current = true;
+      setLayout(next);
+      releaseLayoutTransitionLock();
+    },
+    [releaseLayoutTransitionLock],
+  );
+
+  const scheduleInspectorLayoutOnPointerUp = useCallback(
+    (next: InspectorLayout) => {
+      const apply = () => {
+        window.removeEventListener("pointerup", apply);
+        window.removeEventListener("pointercancel", apply);
+        applyInspectorLayoutChange(next);
+      };
+      window.addEventListener("pointerup", apply, { once: true });
+      window.addEventListener("pointercancel", apply, { once: true });
+    },
+    [applyInspectorLayoutChange],
+  );
+
+  const handleInspectorLayoutPointerDown = useCallback(
+    (next: InspectorLayout) => (event: PointerEvent) => {
+      event.stopPropagation();
+      if (event.button !== 0) {
+        return;
+      }
+      scheduleInspectorLayoutOnPointerUp(next);
+    },
+    [scheduleInspectorLayoutOnPointerUp],
+  );
+
+  const handleInspectorLayoutClick = useCallback(
+    (next: InspectorLayout) => (event: MouseEvent) => {
+      event.stopPropagation();
+      if (event.detail === 0) {
+        applyInspectorLayoutChange(next);
+      }
+    },
+    [applyInspectorLayoutChange],
+  );
+
+  const handleInspectorClose = useCallback(() => {
+    if (layoutTransitionLockRef.current) {
+      return;
+    }
+    onClose();
+  }, [onClose]);
   const [loreEditor, setLoreEditor] = useState<Editor | null>(null);
   const [loreScrollElement, setLoreScrollElement] = useState<HTMLElement | null>(
     null,
@@ -197,15 +278,16 @@ export function Inspector({
   const [name, setName] = useState(activeCard?.name ?? "");
   const [subtitle, setSubtitle] = useState(activeCard?.subtitle ?? "");
   const [lore, setLore] = useState(activeCard?.lore ?? "");
-  const [tagsInput, setTagsInput] = useState(
-    activeCard ? tagsToString(activeCard.tags) : "",
-  );
+  const [tags, setTags] = useState<string[]>(activeCard?.tags ?? []);
   const [typeFields, setTypeFields] = useState<TypeSpecificEditorState>(() =>
     activeCard
       ? typeFieldsFromCard(activeCard)
       : defaultTypeFields("character"),
   );
   const [imagePath, setImagePath] = useState(activeCard?.image_path ?? "");
+  const [crestPath, setCrestPath] = useState(() =>
+    activeCard?.card_type === "family" ? (activeCard.crest_path ?? "") : "",
+  );
   const [imagePosition, setImagePosition] = useState<CardImagePosition>(() =>
     activeCard
       ? normalizeCardImageDisplay(undefined, activeCard.image_position).position
@@ -255,10 +337,11 @@ export function Inspector({
     }
     setName(card.name);
     setSubtitle(card.subtitle ?? "");
-    setLore(card.lore ?? "");
-    setTagsInput(tagsToString(card.tags));
+    setLore(stripLeadingLoreHeading(card.lore ?? ""));
+    setTags(card.tags);
     setTypeFields(typeFieldsFromCard(card));
     setImagePath(card.image_path ?? "");
+    setCrestPath(card.card_type === "family" ? (card.crest_path ?? "") : "");
     setImagePosition(
       normalizeCardImageDisplay(undefined, card.image_position).position,
     );
@@ -274,7 +357,10 @@ export function Inspector({
     : {};
 
   const imagePreview = cardImageSrc(vaultPath, imagePath);
-  const parsedTags = stringToTags(tagsInput);
+  const crestPreview =
+    activeCard?.card_type === "family"
+      ? (cardImageSrc(vaultPath, crestPath) ?? null)
+      : null;
   const groupMembers = useMemo(() => {
     if (!activeCard || activeCard.card_type !== "group") {
       return [];
@@ -293,26 +379,44 @@ export function Inspector({
       name: name.trim(),
       parent_id: activeCard.parent_id,
       position: activeCard.position,
-      tags: parsedTags,
+      tags,
       description: descriptionSummaryFromMarkdown(savedLoreMarkdown),
       subtitle: subtitle.trim() || undefined,
       lore: savedLoreMarkdown.trim() || undefined,
       image_path: imagePath.trim() || undefined,
       image_position: imagePath.trim() ? imagePosition : undefined,
+      ...(activeCard.card_type === "family"
+        ? { crest_path: crestPath.trim() || undefined }
+        : {}),
       custom_properties: rowsToProperties(propertyRows),
     };
     return buildWorldCard(activeCard, base, typeFields);
   }, [
     activeCard,
+    crestPath,
     imagePath,
     imagePosition,
     lore,
     name,
-    parsedTags,
+    tags,
     propertyRows,
     subtitle,
     typeFields,
   ]);
+
+  const handleViewJson = useCallback(async () => {
+    if (!activeCard) {
+      return;
+    }
+    setError(null);
+    try {
+      await openCardJsonInExternalApp(buildCard());
+    } catch (viewError) {
+      setError(
+        viewError instanceof Error ? viewError.message : String(viewError),
+      );
+    }
+  }, [activeCard, buildCard]);
 
   const handleSave = useCallback(async () => {
     if (!name.trim()) {
@@ -356,6 +460,29 @@ export function Inspector({
     }
   }, [activeCard, vaultPath]);
 
+  const handlePickCrest = useCallback(async () => {
+    if (!activeCard || activeCard.card_type !== "family") {
+      return;
+    }
+    setError(null);
+    try {
+      const sourcePath = await pickCardImageFile();
+      if (!sourcePath) {
+        return;
+      }
+      const relativePath = await saveFamilyCrest(
+        vaultPath,
+        activeCard.id,
+        sourcePath,
+      );
+      setCrestPath(relativePath);
+    } catch (crestError) {
+      setError(
+        crestError instanceof Error ? crestError.message : String(crestError),
+      );
+    }
+  }, [activeCard, vaultPath]);
+
   const handleDelete = useCallback(async () => {
     if (!activeCard) {
       return;
@@ -386,7 +513,7 @@ export function Inspector({
   usePanelHotkeys({
     enabled: isOpen && !isBusy,
     onEscape: () => {
-      onClose();
+      handleInspectorClose();
     },
     onSave: readOnly ? undefined : () => {
       void handleSave();
@@ -407,34 +534,8 @@ export function Inspector({
     return null;
   }
 
-  const inspectorHeader = (
-    <header
-      className={
-        layout === "modal"
-          ? "flex shrink-0 items-center justify-end gap-0.5 px-4 pb-2 pt-3"
-          : "flex shrink-0 items-center justify-end gap-0.5 border-b border-wn-mono-800 px-4 py-3"
-      }
-    >
-      <button
-        type="button"
-        className={inspectorHeaderActionClassName}
-        aria-label={
-          layout === "sidebar" ? "Expand inspector" : "Dock inspector"
-        }
-        title={layout === "sidebar" ? "Expand" : "Dock to sidebar"}
-        disabled={isBusy}
-        onClick={() =>
-          setLayout((current) =>
-            current === "sidebar" ? "modal" : "sidebar",
-          )
-        }
-      >
-        <MaterialSymbol
-          name={layout === "sidebar" ? "open_in_full" : "close_fullscreen"}
-          className="text-[18px]"
-        />
-        {layout === "sidebar" ? "Expand" : "Dock"}
-      </button>
+  const inspectorSaveCloseActions = (
+    <>
       <button
         type="button"
         className={inspectorHeaderActionClassName}
@@ -455,16 +556,54 @@ export function Inspector({
       </button>
       <button
         type="button"
-        className={inspectorHeaderActionClassName}
+        className={inspectorHeaderIconActionClassName}
         onClick={onClose}
         disabled={isBusy}
         aria-label="Close inspector"
+        title="Close"
       >
         <MaterialSymbol name="close" className="text-[18px]" />
-        Close
       </button>
-    </header>
+    </>
   );
+
+  const inspectorHeader =
+    layout === "modal" ? (
+      <header className={inspectorModalHeaderClassName}>
+        <button
+          type="button"
+          className={`${inspectorHeaderActionClassName} col-start-2 justify-self-start`}
+          aria-label="Dock inspector"
+          title="Dock to sidebar"
+          disabled={isBusy}
+          onPointerDown={handleInspectorLayoutPointerDown("sidebar")}
+          onClick={handleInspectorLayoutClick("sidebar")}
+        >
+          <MaterialSymbol name="close_fullscreen" className="text-[18px]" />
+          Dock
+        </button>
+        <div className="col-start-3 flex items-center justify-end gap-0.5">
+          {inspectorSaveCloseActions}
+        </div>
+      </header>
+    ) : (
+      <header className="flex shrink-0 items-center justify-between gap-0.5 border-b border-wn-mono-800 px-4 py-3">
+        <button
+          type="button"
+          className={inspectorHeaderIconActionClassName}
+          aria-label="Expand inspector"
+          title="Expand"
+          disabled={isBusy}
+          onPointerDown={handleInspectorLayoutPointerDown("modal")}
+          onClick={handleInspectorLayoutClick("modal")}
+        >
+          <MaterialSymbol name="open_in_full" className="text-[18px]" />
+        </button>
+        <div className="flex items-center gap-0.5">
+          {inspectorSaveCloseActions}
+        </div>
+      </header>
+    );
 
   const modalInspectorBody = (
     <>
@@ -484,25 +623,30 @@ export function Inspector({
             subtitle={subtitle}
             lore={lore}
             logoTone={logoTone}
+            isMoreMenuDisabled={isBusy}
             loreEditorRef={loreEditorRef}
             onNameChange={setName}
             onSubtitleChange={setSubtitle}
             onLoreChange={setLore}
             onEditorReady={handleLoreEditorReady}
+            onViewJson={() => {
+              void handleViewJson();
+            }}
           />
         </div>
         <div className={inspectorModalPropertiesClassName}>
           <PropertiesColumn
           readOnly={readOnly}
           card={activeCard}
+          cardsById={cardsById}
           vaultPath={vaultPath}
+          links={links}
           imagePreview={imagePreview ?? null}
           imagePath={imagePath}
           imagePosition={imagePosition}
           isBusy={isBusy}
-          tags={parsedTags}
-          tagsInput={tagsInput}
-          onTagsInputChange={setTagsInput}
+          tags={tags}
+          onTagsChange={setTags}
           typeFields={typeFields}
           onTypeFieldsChange={setTypeFields}
           socketEntries={socketEntries}
@@ -516,12 +660,21 @@ export function Inspector({
           }}
           onRemoveImage={() => setImagePath("")}
           onPositionChange={setImagePosition}
+          crestPreview={crestPreview}
+          crestPath={crestPath}
+          onPickCrest={() => {
+            void handlePickCrest();
+          }}
+          onRemoveCrest={() => setCrestPath("")}
           groupMembers={groupMembers}
           onNavigateToCard={onNavigateToCard}
           isDeleting={isDeleting}
           onDelete={() => {
             void handleDelete();
           }}
+          onCreateSocketLink={onCreateSocketLink}
+          onRemoveSocketLink={onRemoveSocketLink}
+          onCreateAndLinkCard={onCreateAndLinkCard}
           />
         </div>
       </div>
@@ -537,7 +690,7 @@ export function Inspector({
     <>
       {inspectorHeader}
 
-      <div className="shrink-0 border-b border-wn-mono-800 py-3">
+      <div className="shrink-0 border-b border-wn-mono-800 py-2">
         <InspectorTabs activeTab={activeTab} onTabChange={handleInspectorTabChange} />
       </div>
 
@@ -587,62 +740,83 @@ export function Inspector({
         ) : null}
       </div>
 
-      <div className="flex flex-col gap-3 px-5 pb-5 pt-5">
-        <div className="flex flex-col gap-1">
-          {readOnly ? (
-            <>
-              <h2 className="m-0 text-2xl font-bold leading-tight tracking-tight text-wn-mono-50">
-                {name}
-              </h2>
-              {subtitle.trim() ? (
-                <p className="m-0 text-base font-medium leading-snug text-wn-mono-300">
-                  {subtitle}
-                </p>
-              ) : null}
-            </>
-          ) : (
-            <>
-              <Input
-                id="inspector-name"
-                aria-label="Name"
-                placeholder="Name"
-                value={name}
-                variant="flat"
-                onValueChange={setName}
-                classNames={inspectorNameFieldClassNames}
-              />
-              <Input
-                id="inspector-subtitle"
-                aria-label="Subtitle"
-                placeholder="Subtitle or alias"
-                value={subtitle}
-                variant="flat"
-                onValueChange={setSubtitle}
-                classNames={inspectorSubtitleFieldClassNames}
-              />
-            </>
-          )}
-        </div>
-        {typeVisual ? (
-          <div className="flex items-center gap-2">
-            <CardTypePill
-              className={typeVisual.badgeClassName}
-              textClassName={typeVisual.badgeTextColor}
-            >
-              {typeLabel}
-            </CardTypePill>
+      <div className="px-5 pb-5 pt-5">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex min-w-0 flex-1 flex-col gap-1">
+            {readOnly ? (
+              <>
+                <h2
+                  {...getHeadingProps("h4", {
+                    tone: "inverse",
+                    weight: "bold",
+                    className: "m-0",
+                  })}
+                >
+                  {name}
+                </h2>
+                {subtitle.trim() ? (
+                  <p className="m-0 text-base font-medium leading-snug text-wn-mono-300">
+                    {subtitle}
+                  </p>
+                ) : null}
+              </>
+            ) : (
+              <>
+                <Input
+                  id="inspector-name"
+                  aria-label="Name"
+                  placeholder="Name"
+                  value={name}
+                  variant="flat"
+                  onValueChange={setName}
+                  classNames={inspectorNameFieldClassNames}
+                />
+                <Input
+                  id="inspector-subtitle"
+                  aria-label="Subtitle"
+                  placeholder="Subtitle or alias"
+                  value={subtitle}
+                  variant="flat"
+                  onValueChange={setSubtitle}
+                  classNames={inspectorSubtitleFieldClassNames}
+                />
+              </>
+            )}
           </div>
-        ) : null}
+          <div className="flex shrink-0 items-center gap-2">
+            {typeVisual ? (
+              <CardTypePill
+                className={typeVisual.badgeClassName}
+                textClassName={typeVisual.badgeTextColor}
+              >
+                {typeLabel}
+              </CardTypePill>
+            ) : null}
+            <InspectorCardMoreMenu
+              disabled={isBusy}
+              onViewJson={() => {
+                void handleViewJson();
+              }}
+            />
+          </div>
+        </div>
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col">
-        <div className="scrollbar-wn flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto px-5 pb-6 pt-2">
+        <div
+          className={[
+            "scrollbar-wn flex min-h-0 flex-1 flex-col overflow-x-clip pt-2",
+            !readOnly && activeTab === "info"
+              ? "overflow-hidden"
+              : "overflow-y-auto pb-6",
+          ].join(" ")}
+        >
           <AnimatePresence mode="wait" custom={tabDirection}>
             <motion.div
               key={activeTab}
               custom={tabDirection}
               className={
-                readOnly && activeTab === "info"
+                activeTab === "info"
                   ? "flex min-h-0 flex-1 flex-col"
                   : "flex flex-col"
               }
@@ -661,9 +835,6 @@ export function Inspector({
               {activeTab === "info" ? (
                 <InfoTab
                   readOnly={readOnly}
-                  tags={parsedTags}
-                  tagsInput={tagsInput}
-                  onTagsInputChange={setTagsInput}
                   lore={lore}
                   vaultPath={vaultPath}
                   loreEditorRef={loreEditorRef}
@@ -674,6 +845,11 @@ export function Inspector({
               ) : (
                 <PropertiesTab
                   readOnly={readOnly}
+                  tags={tags}
+                  onTagsChange={setTags}
+                  card={activeCard}
+                  cardsById={cardsById}
+                  links={links}
                   cardType={activeCard.card_type}
                   typeFields={typeFields}
                   onTypeFieldsChange={setTypeFields}
@@ -684,12 +860,15 @@ export function Inspector({
                   propertyRows={propertyRows}
                   onPropertyRowsChange={setPropertyRows}
                   isBusy={isBusy}
+                  onCreateSocketLink={onCreateSocketLink}
+                  onRemoveSocketLink={onRemoveSocketLink}
+                  onCreateAndLinkCard={onCreateAndLinkCard}
                 />
               )}
             </motion.div>
           </AnimatePresence>
           {error ? (
-            <p className="mt-4 text-sm text-wn-red-400" role="alert">
+            <p className="mt-4 px-5 text-sm text-wn-red-400" role="alert">
               {error}
             </p>
           ) : null}
@@ -713,8 +892,9 @@ export function Inspector({
     return (
       <AnimatedModal
         isOpen={isOpen}
-        onClose={onClose}
+        onClose={handleInspectorClose}
         closeDisabled={isBusy}
+        backdropDismissGuardMs={400}
         panelClassName={inspectorModalPanelClassName}
       >
         {modalInspectorBody}

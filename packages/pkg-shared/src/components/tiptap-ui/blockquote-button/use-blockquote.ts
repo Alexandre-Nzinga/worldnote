@@ -3,8 +3,10 @@
 import { useCallback, useEffect, useState } from "react"
 import type { Editor } from "@tiptap/react"
 import { NodeSelection, TextSelection } from "@tiptap/pm/state"
+import { useHotkeys } from "react-hotkeys-hook"
 
 // --- Hooks ---
+import { useIsBreakpoint } from "@worldnote/shared/hooks/use-is-breakpoint"
 import { useTiptapEditor } from "@worldnote/shared/hooks/use-tiptap-editor"
 
 // --- Icons ---
@@ -46,7 +48,7 @@ export interface UseBlockquoteConfig {
  */
 export function canToggleBlockquote(
   editor: Editor | null,
-  turnInto: boolean = true
+  turnInto = true
 ): boolean {
   if (!editor || !editor.isEditable) return false
   if (
@@ -231,6 +233,7 @@ export function useBlockquote(config?: UseBlockquoteConfig) {
   } = config || {}
 
   const { editor } = useTiptapEditor(providedEditor)
+  const isMobile = useIsBreakpoint()
   const [isVisible, setIsVisible] = useState<boolean>(true)
   const canToggle = canToggleBlockquote(editor)
   const isActive = editor?.isActive("blockquote") || false
@@ -260,6 +263,19 @@ export function useBlockquote(config?: UseBlockquoteConfig) {
     }
     return success
   }, [editor, onToggled])
+
+  useHotkeys(
+    BLOCKQUOTE_SHORTCUT_KEY,
+    (event) => {
+      event.preventDefault()
+      handleToggle()
+    },
+    {
+      enabled: isVisible && canToggle,
+      enableOnContentEditable: !isMobile,
+      enableOnFormTags: true,
+    }
+  )
 
   return {
     isVisible,

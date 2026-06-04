@@ -9,12 +9,11 @@ export type SocketDescriptor = {
 
 export const SOCKET_REGISTRY = {
   character: {
-    birthplace: { accepts: ["location", "building", "structure"], cardinality: "single" },
-    deathplace: { accepts: ["location", "building", "structure"], cardinality: "single" },
-    current_location: { accepts: ["location", "building", "structure"], cardinality: "single" },
+    birthplace: { accepts: ["location", "building", "structure","planet", "moon", "satellite", "asteroid", "star"], cardinality: "single" },
+    deathplace: { accepts: ["location", "building", "structure", "planet", "moon", "satellite", "asteroid", "star"], cardinality: "single" },
     mother: { accepts: ["character"], cardinality: "single" },
     father: { accepts: ["character"], cardinality: "single" },
-    spouse: { accepts: ["character"], cardinality: "single" },
+    spouse: { accepts: ["character"], cardinality: "many" },
     issue: { accepts: ["character"], cardinality: "many" },
     religion: { accepts: ["religion"], cardinality: "single" },
     culture: { accepts: ["culture"], cardinality: "single" },
@@ -44,47 +43,52 @@ export const SOCKET_REGISTRY = {
       accepts: ["location", "building", "structure"],
       cardinality: "single",
     },
-    creator_id: { accepts: ["character"], cardinality: "single" },
+    creator: { accepts: ["character"], cardinality: "single" },
   },
   vehicle: {
-    manufacturer_id: { accepts: ["character"], cardinality: "single" },
+    manufacturer: { accepts: ["character", "organization", "polity"], cardinality: "single" },
     operator: { accepts: ["organization", "polity"], cardinality: "single" },
-    current_hangar_id: {
-      accepts: ["building", "structure"],
-      cardinality: "single",
-    },
   },
   fauna: {
     species: { accepts: ["species"], cardinality: "single" },
-    native_habitat_id: { accepts: ["location"], cardinality: "single" },
+    habitat: { accepts: ["location", "planet", "moon", "satellite", "asteroid", "star"], cardinality: "single" },
   },
   flora: {
-    native_habitat_id: { accepts: ["location"], cardinality: "single" },
+    habitat: { accepts: ["location", "planet", "moon", "satellite", "asteroid", "star"], cardinality: "single" },
   },
   building: {
-    parent_structure_id: { accepts: ["structure"], cardinality: "single" },
-    culture: { accepts: ["culture"], cardinality: "single" },
+    parent_structure: { accepts: ["structure"], cardinality: "single" },
+    location: { accepts: ["location", "planet", "moon", "satellite", "asteroid", "star"], cardinality: "single" },
   },
   structure: {
     parent_location_id: { accepts: ["location"], cardinality: "single" },
   },
   species: {
-    homeworld: { accepts: ["location", "planet"], cardinality: "single" },
+    homeworld: { accepts: ["location", "planet", "moon", "satellite", "asteroid", "star"], cardinality: "single" },
   },
   planet: {
     orbits_star: { accepts: ["star"], cardinality: "single" },
+    moons: { accepts: ["moon"], cardinality: "many" },
+    satellites: { accepts: ["satellite"], cardinality: "many" },
+    asteroids: { accepts: ["asteroid"], cardinality: "many" },
   },
   moon: {
     orbits: { accepts: ["planet"], cardinality: "single" },
+    satellites: { accepts: ["satellite"], cardinality: "many" },
+    asteroids: { accepts: ["asteroid"], cardinality: "many" },
+    moon_of: { accepts: ["planet", "star"], cardinality: "single" },
   },
   satellite: {
     orbits: { accepts: ["planet"], cardinality: "single" },
   },
   asteroid: {
     orbits: { accepts: ["star", "planet"], cardinality: "single" },
+    satellites: { accepts: ["satellite"], cardinality: "many" },
   },
   star: {
     galaxy: { accepts: ["location"], cardinality: "single" },
+    star_of: { accepts: ["planet", "moon", "satellite", "asteroid"], cardinality: "single" },
+    satellites: { accepts: ["satellite"], cardinality: "many" },
   },
   organization: {
     parent_organization: { accepts: ["organization"], cardinality: "single" },
@@ -119,7 +123,7 @@ export const SOCKET_REGISTRY = {
   },
   event: {
     event_location: {
-      accepts: ["location", "building", "structure"],
+      accepts: ["location", "building", "structure", "planet", "moon", "satellite", "asteroid", "star"],
       cardinality: "single",
     },
     participants: {

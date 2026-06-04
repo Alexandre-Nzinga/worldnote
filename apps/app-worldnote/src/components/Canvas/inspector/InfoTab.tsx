@@ -4,16 +4,12 @@ import {
   type LoreSimpleEditorHandle,
 } from "../../editor/LoreSimpleEditor.js";
 import type { Ref } from "react";
-import { inspectorSectionLabelClassName } from "./inspectorFieldStyles.js";
+import { inspectorTabPaddingXClassName } from "./inspectorFieldStyles.js";
 import { GroupMembersSection } from "./GroupMembersSection.js";
 import { MarkdownView } from "./MarkdownView.js";
-import { TagsSection } from "./TagsSection.js";
 
 type InfoTabProps = {
   readOnly: boolean;
-  tags: string[];
-  tagsInput: string;
-  onTagsInputChange: (value: string) => void;
   lore: string;
   vaultPath: string;
   loreEditorRef?: Ref<LoreSimpleEditorHandle>;
@@ -24,9 +20,6 @@ type InfoTabProps = {
 
 export function InfoTab({
   readOnly,
-  tags,
-  tagsInput,
-  onTagsInputChange,
   lore,
   vaultPath,
   loreEditorRef,
@@ -35,50 +28,36 @@ export function InfoTab({
   groupMembers = [],
 }: InfoTabProps) {
   return (
-    <div
-      className={
-        readOnly
-          ? "flex min-h-full flex-1 flex-col gap-8"
-          : "flex flex-col gap-8"
-      }
-    >
-      <section
-        className={
-          readOnly
-            ? "flex min-h-0 flex-1 flex-col gap-3"
-            : "flex flex-col gap-3"
-        }
-      >
-        <span className={inspectorSectionLabelClassName}>Lore</span>
+    <div className="flex min-h-0 flex-1 flex-col gap-8">
+      <section className="flex min-h-0 flex-1 flex-col">
         {readOnly ? (
-          <div className="min-h-0 flex-1">
+          <div className="scrollbar-wn min-h-0 flex-1 overflow-y-auto px-5 py-3">
             <MarkdownView content={lore} emptyMessage="No lore yet." />
           </div>
         ) : (
-          <LoreSimpleEditor
-            ref={loreEditorRef}
-            value={lore}
-            editable
-            placeholder="Write the lore…"
-            onChange={onLoreChange}
-          />
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+            <LoreSimpleEditor
+              ref={loreEditorRef}
+              value={lore}
+              editable
+              flushWidth
+              fillHeight
+              placeholder="Write the lore…"
+              onChange={onLoreChange}
+            />
+          </div>
         )}
       </section>
 
       {groupMembers.length > 0 ? (
-        <GroupMembersSection
-          members={groupMembers}
-          vaultPath={vaultPath}
-          onNavigateToCard={onNavigateToCard}
-        />
+        <div className={inspectorTabPaddingXClassName}>
+          <GroupMembersSection
+            members={groupMembers}
+            vaultPath={vaultPath}
+            onNavigateToCard={onNavigateToCard}
+          />
+        </div>
       ) : null}
-
-      <TagsSection
-        readOnly={readOnly}
-        tags={tags}
-        tagsInput={tagsInput}
-        onTagsInputChange={onTagsInputChange}
-      />
     </div>
   );
 }

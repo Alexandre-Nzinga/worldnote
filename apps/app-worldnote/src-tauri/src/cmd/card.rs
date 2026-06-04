@@ -1,10 +1,14 @@
 use serde::Serialize;
 use std::fs;
 use std::path::{Path, PathBuf};
+use tauri_plugin_opener::OpenerExt;
 use uuid::Uuid;
 use worldnote_persistence::repository::{CardRepository, JsonCardRepository};
 use worldnote_persistence::sqlite::SqliteIndex;
 
+use super::image_optimize::{
+    write_optimized_card_asset, COVER_MAX_EDGE_PX, CREST_MAX_EDGE_PX,
+};
 use super::manifest::{update_canvas_manifest_node, CanvasNodePlacement};
 
 fn lore_root(vault: &str) -> PathBuf {
@@ -41,16 +45,79 @@ fn copy_dir_all(source: &Path, destination: &Path) -> Result<(), String> {
     Ok(())
 }
 
-fn rewrite_image_path(card: &mut serde_json::Value, old_id: &str, new_id: &str) {
-    let Some(image_path) = card.get("image_path").and_then(|value| value.as_str()) else {
+fn rewrite_asset_path_field(
+    card: &mut serde_json::Value,
+    field: &str,
+    old_id: &str,
+    new_id: &str,
+) {
+    let Some(path) = card.get(field).and_then(|value| value.as_str()) else {
         return;
     };
     let old_fragment = format!(".worldnote/assets/{old_id}/");
     let new_fragment = format!(".worldnote/assets/{new_id}/");
-    let rewritten = image_path.replace('\\', "/").replace(&old_fragment, &new_fragment);
-    if rewritten != image_path {
-        card["image_path"] = serde_json::Value::String(rewritten);
+    let rewritten = path.replace('\\', "/").replace(&old_fragment, &new_fragment);
+    if rewritten != path {
+        card[field] = serde_json::Value::String(rewritten);
     }
+}
+
+fn rewrite_image_path(card: &mut serde_json::Value, old_id: &str, new_id: &str) {
+    rewrite_asset_path_field(card, "image_path", old_id, new_id);
+    rewrite_asset_path_field(card, "crest_path", old_id, new_id);
+}
+
+fn remove_asset_files_with_prefix(assets_dir: &Path, prefix: &str) -> Result<(), String> {
+    if !assets_dir.is_dir() {
+        return Ok(());
+    }
+    for entry in fs::read_dir(assets_dir).map_err(|error| error.to_string())? {
+        let entry = entry.map_err(|error| error.to_string())?;
+        let path = entry.path();
+        if !path.is_file() {
+            continue;
+        }
+        let Some(name) = path.file_name().and_then(|name| name.to_str()) else {
+            continue;
+        };
+        if name.starts_with(prefix) {
+            fs::remove_file(&path).map_err(|error| error.to_string())?;
+        }
+    }
+    Ok(())
+}
+
+fn max_edge_for_asset_prefix(file_prefix: &str) -> u32 {
+    if file_prefix.starts_with("crest.") {
+        CREST_MAX_EDGE_PX
+    } else {
+        COVER_MAX_EDGE_PX
+    }
+}
+
+fn save_card_asset_with_prefix(
+    vault: &str,
+    card_id: &str,
+    source_path: &str,
+    file_prefix: &str,
+) -> Result<String, String> {
+    let source = PathBuf::from(source_path);
+    let assets_dir = card_assets_dir(vault, card_id);
+    remove_asset_files_with_prefix(&assets_dir, file_prefix)?;
+
+    let filename = write_optimized_card_asset(
+        &source,
+        &assets_dir,
+        file_prefix,
+        max_edge_for_asset_prefix(file_prefix),
+    )?;
+
+    let relative = Path::new(".worldnote")
+        .join("assets")
+        .join(card_id)
+        .join(&filename);
+
+    Ok(relative.to_string_lossy().replace('\\', "/"))
 }
 
 fn position_offset(card: &serde_json::Value, offset_x: f64, offset_y: f64) -> (f64, f64) {
@@ -72,7 +139,9 @@ pub fn duplicate_card(
     card_id: String,
     offset_x: f64,
     offset_y: f64,
+    register_on_canvas: Option<bool>,
 ) -> Result<serde_json::Value, String> {
+    let register_on_canvas = register_on_canvas.unwrap_or(true);
     let source_card_path = lore_root(&vault).join(format!("{card_id}.json"));
     if !source_card_path.is_file() {
         return Err("Card does not exist".to_string());
@@ -122,15 +191,17 @@ pub fn duplicate_card(
         .upsert(&new_id, name, &tags)
         .map_err(|error| error.to_string())?;
 
-    update_canvas_manifest_node(
-        vault,
-        CanvasNodePlacement {
-            card_id: new_id,
-            x,
-            y,
-            z: None,
-        },
-    )?;
+    if register_on_canvas {
+        update_canvas_manifest_node(
+            vault,
+            CanvasNodePlacement {
+                card_id: new_id,
+                x,
+                y,
+                z: None,
+            },
+        )?;
+    }
 
     Ok(card)
 }
@@ -206,10 +277,7 @@ pub fn delete_card(vault: String, id: String) -> Result<(), String> {
     let index = SqliteIndex::open(sqlite_path(&vault)).map_err(|error| error.to_string())?;
     index.delete(&id).map_err(|error| error.to_string())?;
 
-    let assets_dir = card_assets_dir(&vault, &id);
-    if assets_dir.exists() {
-        fs::remove_dir_all(assets_dir).map_err(|error| error.to_string())?;
-    }
+    // Keep .worldnote/assets/{id}/ so undo can restore cover and lore images after delete.
 
     super::link::delete_links_referencing_card(&vault, &id)?;
     super::manifest::remove_node_from_manifest(&vault, &id)
@@ -221,39 +289,16 @@ pub fn save_card_image(
     card_id: String,
     source_path: String,
 ) -> Result<String, String> {
-    let source = PathBuf::from(&source_path);
-    if !source.is_file() {
-        return Err("Image file does not exist".to_string());
-    }
+    save_card_asset_with_prefix(&vault, &card_id, &source_path, "cover.")
+}
 
-    let extension = source
-        .extension()
-        .and_then(|ext| ext.to_str())
-        .filter(|ext| !ext.is_empty())
-        .unwrap_or("png");
-
-    let assets_dir = card_assets_dir(&vault, &card_id);
-    fs::create_dir_all(&assets_dir).map_err(|error| error.to_string())?;
-
-    if assets_dir.exists() {
-        for entry in fs::read_dir(&assets_dir).map_err(|error| error.to_string())? {
-            let entry = entry.map_err(|error| error.to_string())?;
-            let path = entry.path();
-            if path.is_file() {
-                fs::remove_file(path).map_err(|error| error.to_string())?;
-            }
-        }
-    }
-
-    let dest = assets_dir.join(format!("cover.{extension}"));
-    fs::copy(&source, &dest).map_err(|error| error.to_string())?;
-
-    let relative = Path::new(".worldnote")
-        .join("assets")
-        .join(&card_id)
-        .join(format!("cover.{extension}"));
-
-    Ok(relative.to_string_lossy().replace('\\', "/"))
+#[tauri::command]
+pub fn save_family_crest(
+    vault: String,
+    card_id: String,
+    source_path: String,
+) -> Result<String, String> {
+    save_card_asset_with_prefix(&vault, &card_id, &source_path, "crest.")
 }
 
 #[tauri::command]
@@ -287,4 +332,21 @@ pub fn add_card_lore_image(
         .join(format!("{file_id}.{extension}"));
 
     Ok(relative.to_string_lossy().replace('\\', "/"))
+}
+
+/// Writes pretty-printed card JSON to a temp file and opens it with the OS default app.
+#[tauri::command]
+pub async fn open_card_json(
+    app: tauri::AppHandle,
+    card_id: String,
+    card: serde_json::Value,
+) -> Result<String, String> {
+    let json = serde_json::to_string_pretty(&card).map_err(|error| error.to_string())?;
+    let path = std::env::temp_dir().join(format!("worldnote-card-{card_id}.json"));
+    fs::write(&path, json).map_err(|error| error.to_string())?;
+    let path_str = path.to_string_lossy().into_owned();
+    app.opener()
+        .open_path(path_str.clone(), None::<&str>)
+        .map_err(|error| error.to_string())?;
+    Ok(path_str)
 }

@@ -8,7 +8,7 @@ import {
   useUpdateNodeInternals,
 } from "@xyflow/react";
 import { AnimatePresence, motion } from "framer-motion";
-import type { ReactNode } from "react";
+import type { MouseEvent as ReactMouseEvent, ReactNode } from "react";
 import {
   Fragment,
   memo,
@@ -46,6 +46,7 @@ import {
   visualConfigFor,
   type WorldNoteCardType,
 } from "./card-visual-config.js";
+import { FamilyCrestOverlay } from "./FamilyCrestOverlay.js";
 import { GroupMembersVisual } from "./GroupMembersVisual.js";
 import type { GroupMemberPreview } from "./group-member-preview.js";
 
@@ -69,12 +70,25 @@ export type CardNodeScalars = {
   coordinates?: string;
 };
 
+export type CardNodeSelectModifiers = {
+  shiftKey: boolean;
+  metaKey: boolean;
+  ctrlKey: boolean;
+};
+
+export type CardNodeContextMenuPointer = {
+  clientX: number;
+  clientY: number;
+};
+
 export type CardNodeData = {
   cardId?: string;
   title: string;
   subtitle?: string;
   description?: string;
   imageUrl?: string;
+  /** Family card heraldic crest (upper-right on visual view). */
+  crestUrl?: string;
   imageFit?: CardImageFit;
   imagePosition?: CardImagePosition;
   cardType?: WorldNoteCardType;
@@ -83,6 +97,10 @@ export type CardNodeData = {
   scalars?: CardNodeScalars;
   socketValues?: Record<string, string[]>;
   onUpdate?: (partial: Record<string, unknown>) => void;
+  /** Canvas selection (shift/ctrl/meta for multi-select). */
+  onSelect?: (modifiers: CardNodeSelectModifiers) => void;
+  /** Opens the canvas card context menu. */
+  onContextMenu?: (pointer: CardNodeContextMenuPointer) => void;
   /** Persisted user preference for card display mode. */
   viewMode?: CardViewMode;
   /** Pass-through card custom properties for persisting view toggles. */
@@ -146,7 +164,7 @@ function CardDragGrip({ cardId }: { cardId: string }) {
   return (
     <div
       ref={gripRef}
-      className="nodrag nopan nowheel absolute -left-2 -top-2 z-30 flex h-7 w-7 cursor-grab touch-none items-center justify-center rounded-full border border-wn-mono-600 bg-wn-mono-900 text-wn-mono-300 opacity-80 shadow-md transition-opacity hover:border-wn-azure-500 hover:text-wn-mono-50 group-hover/card:opacity-100 active:cursor-grabbing"
+      className="nodrag nopan nowheel absolute -left-2 -top-2 z-30 flex h-7 w-7 cursor-grab touch-none items-center justify-center rounded-full border border-wn-mono-600 bg-wn-mono-900 text-wn-mono-300 opacity-80 shadow-md transition-opacity hover:border-wn-mono-50 hover:text-wn-mono-50 group-hover/card:opacity-100 active:cursor-grabbing"
       title="Drag into WorldWizard"
       aria-label="Drag card into WorldWizard"
     >
@@ -173,12 +191,14 @@ function CardDragGrip({ cardId }: { cardId: string }) {
 const connectHoverRingClass = "ring-1 ring-inset ring-wn-mono-50/50";
 
 const cardBorderTransitionClass =
-  "transition-[border-color,box-shadow] duration-150";
+  "transition-[border-color,box-shadow,ring-color] duration-150";
 const cardSolidBorderBaseClass = `border-[5px] ${cardBorderTransitionClass}`;
 const cardSolidBorderDefaultClass = `${cardSolidBorderBaseClass} border-wn-mono-600`;
-const cardSolidBorderHighlightClass = `${cardSolidBorderBaseClass} border-wn-mono-50`;
+/** Selected node view: thin white chrome (not the heavy 5px default). */
+const cardSolidBorderSelectedClass = `border-2 ${cardBorderTransitionClass} border-wn-mono-50`;
 const cardSolidBorderHoverClass = "group-hover/card:border-wn-mono-50";
-const cardImageFrameHighlightClass = "ring-2 ring-inset ring-wn-mono-50";
+/** Selected visual view: single inset ring on the card frame only. */
+const cardImageFrameSelectedClass = "ring-1 ring-inset ring-wn-mono-50";
 const cardImageFrameHoverClass =
   "group-hover/card:ring-2 group-hover/card:ring-inset group-hover/card:ring-wn-mono-50";
 
@@ -193,7 +213,7 @@ function cardChromeBorderClass({
 }): string {
   if (!hasSolidBorder) {
     if (isSelected) {
-      return cardImageFrameHighlightClass;
+      return cardImageFrameSelectedClass;
     }
     if (connectionHover) {
       return connectHoverRingClass;
@@ -202,7 +222,7 @@ function cardChromeBorderClass({
   }
 
   if (isSelected) {
-    return cardSolidBorderHighlightClass;
+    return cardSolidBorderSelectedClass;
   }
   if (connectionHover) {
     return `${cardSolidBorderDefaultClass} ${connectHoverRingClass}`;
@@ -242,9 +262,9 @@ const NODE_VIEW_WIDTH = "w-[260px]";
 const visualHandleClassName =
   "!h-2.5 !w-2.5 !min-h-0 !min-w-0 !border-2 !opacity-0 !pointer-events-none";
 
-const visualSocketHandleClassName = `${visualHandleClassName} !border-wn-azure-400 !bg-wn-azure-200`;
+const visualSocketHandleClassName = `${visualHandleClassName} !border-wn-mono-50 !bg-wn-mono-50`;
 
-const visualOutputHandleClassName = `${visualHandleClassName} !border-wn-mono-400 !bg-wn-mono-200`;
+const visualOutputHandleClassName = `${visualHandleClassName} !border-wn-mono-50 !bg-wn-mono-50`;
 
 const nodeFieldClassName =
   "w-full rounded-xl border border-wn-mono-700 bg-wn-mono-900 px-3 py-2 text-sm text-wn-mono-50 placeholder:text-wn-mono-500 outline-none transition-colors hover:border-wn-mono-600 focus:border-wn-mono-500";
@@ -437,6 +457,9 @@ function OverlayMediaCard({
           />
         )}
         <CardBrandLogo onClick={onToggleView} />
+        {data.cardType === "family" ? (
+          <FamilyCrestOverlay crestUrl={data.crestUrl} />
+        ) : null}
         <div
           className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-black/35 to-transparent"
           aria-hidden
@@ -710,8 +733,51 @@ function CardNodeInner({ data, selected = false }: NodeProps<CardFlowNode>) {
   const shouldEnter = Boolean(data.enterAnimation && !enterDone);
   const wizardDragCardId = data.cardId?.trim();
 
+  const applyCardSelect = useCallback(
+    (modifiers: {
+      shiftKey: boolean;
+      metaKey: boolean;
+      ctrlKey: boolean;
+    }) => {
+      data.onSelect?.(modifiers);
+    },
+    [data.onSelect],
+  );
+
+  const onCardRootClick = useCallback(
+    (event: ReactMouseEvent<HTMLButtonElement>) => {
+      if (event.button !== 0) {
+        return;
+      }
+      event.stopPropagation();
+      applyCardSelect({
+        shiftKey: event.shiftKey,
+        metaKey: event.metaKey,
+        ctrlKey: event.ctrlKey,
+      });
+    },
+    [applyCardSelect],
+  );
+
+  const onCardRootContextMenu = useCallback(
+    (event: ReactMouseEvent<HTMLButtonElement>) => {
+      event.preventDefault();
+      event.stopPropagation();
+      data.onContextMenu?.({
+        clientX: event.clientX,
+        clientY: event.clientY,
+      });
+    },
+    [data.onContextMenu],
+  );
+
   return (
-    <div className="group/card relative">
+    <button
+      type="button"
+      className="group/card relative block w-full cursor-pointer border-0 bg-transparent p-0 text-left outline-none focus-visible:ring-2 focus-visible:ring-wn-mono-50 focus-visible:ring-offset-2 focus-visible:ring-offset-wn-mono-950"
+      onClick={onCardRootClick}
+      onContextMenu={onCardRootContextMenu}
+    >
       {handles}
       {wizardDragCardId ? <CardDragGrip cardId={wizardDragCardId} /> : null}
       <motion.div
@@ -744,7 +810,7 @@ function CardNodeInner({ data, selected = false }: NodeProps<CardFlowNode>) {
           </motion.div>
         </AnimatePresence>
       </motion.div>
-    </div>
+    </button>
   );
 }
 

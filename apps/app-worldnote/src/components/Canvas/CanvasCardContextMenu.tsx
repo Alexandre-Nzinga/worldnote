@@ -21,6 +21,7 @@ export type CanvasCardContextMenuState = {
 
 type CanvasCardContextMenuProps = {
   menu: CanvasCardContextMenuState | null;
+  selectionCount?: number;
   currentCardType?: NewCardType;
   onClose: () => void;
   onDuplicate: (cardId: string) => void;
@@ -60,6 +61,7 @@ function clampMenuPosition(
 
 export function CanvasCardContextMenu({
   menu,
+  selectionCount = 1,
   currentCardType,
   onClose,
   onDuplicate,
@@ -206,6 +208,11 @@ export function CanvasCardContextMenu({
       className={menuClassName}
       style={style}
     >
+      {multi ? (
+        <div className={sectionLabelClassName}>
+          {selectionCount} cards selected
+        </div>
+      ) : null}
       <button
         type="button"
         role="menuitem"
@@ -216,7 +223,7 @@ export function CanvasCardContextMenu({
         }}
       >
         <MaterialSymbol name="content_copy" className="text-base" />
-        Duplicate
+        {multi ? `Duplicate (${selectionCount})` : "Duplicate"}
       </button>
       <button
         type="button"
@@ -230,16 +237,21 @@ export function CanvasCardContextMenu({
         <MaterialSymbol name="copy_all" className="text-base" />
         Copy
       </button>
-      <button
-        type="button"
-        role="menuitem"
-        className={itemClassName}
-        onClick={() => onShowChangeType(menu.cardId)}
-      >
-        <MaterialSymbol name="category" className="text-base" />
-        <span className="min-w-0 flex-1">Change type</span>
-        <MaterialSymbol name="chevron_right" className="text-base text-wn-mono-400" />
-      </button>
+      {multi ? null : (
+        <button
+          type="button"
+          role="menuitem"
+          className={itemClassName}
+          onClick={() => onShowChangeType(menu.cardId)}
+        >
+          <MaterialSymbol name="category" className="text-base" />
+          <span className="min-w-0 flex-1">Change type</span>
+          <MaterialSymbol
+            name="chevron_right"
+            className="text-base text-wn-mono-400"
+          />
+        </button>
+      )}
       <button
         type="button"
         role="menuitem"
@@ -250,7 +262,7 @@ export function CanvasCardContextMenu({
         }}
       >
         <MaterialSymbol name="delete" className="text-base" />
-        Delete
+        {multi ? `Delete (${selectionCount})` : "Delete"}
       </button>
     </div>
   );

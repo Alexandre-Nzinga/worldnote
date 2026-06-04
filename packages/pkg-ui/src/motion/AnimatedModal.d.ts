@@ -11,6 +11,8 @@ export type AnimatedModalProps = {
     labelledBy?: string;
     className?: string;
     panelClassName?: string;
+    /** Ignore backdrop dismiss for this many ms after open (avoids same-gesture close). */
+    backdropDismissGuardMs?: number;
 };
-export declare function AnimatedModal({ isOpen, onClose, children, closeDisabled, backdropLabel, labelledBy, className, panelClassName, }: AnimatedModalProps): import("react").ReactPortal | null;
+export declare function AnimatedModal({ isOpen, onClose, children, closeDisabled, backdropLabel, labelledBy, className, panelClassName, backdropDismissGuardMs, }: AnimatedModalProps): import("react").ReactPortal | null;
 //# sourceMappingURL=AnimatedModal.d.ts.map

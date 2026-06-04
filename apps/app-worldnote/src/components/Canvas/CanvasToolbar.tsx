@@ -7,6 +7,7 @@ import {
 } from "@worldnote/shared";
 import {
   AnimatedPopover,
+  getHeadingProps,
   MaterialSymbol,
   MotionPressable,
   WorldNoteLogo,
@@ -78,8 +79,11 @@ const createMenuIcons: Record<CreateOption, string> = {
   combat_style: "swords",
 };
 
+const createSearchFieldClassName =
+  "relative flex w-full items-center rounded-full bg-wn-mono-800 transition-colors hover:bg-wn-mono-700 focus-within:bg-wn-mono-700";
+
 const createSearchInputClassName =
-  "w-full rounded-xl border border-wn-mono-700 bg-wn-mono-950 px-3 py-2 text-sm text-wn-mono-50 placeholder:text-wn-mono-500 outline-none transition-colors hover:border-wn-mono-600 focus:border-wn-mono-500";
+  "w-full rounded-full border-0 bg-transparent py-2.5 pl-10 pr-11 text-sm text-wn-mono-100 shadow-none ring-0 outline-none transition-colors placeholder:text-wn-mono-500 focus:outline-none focus:ring-0";
 
 function matchesCreateQuery(type: CreateOption, normalizedQuery: string): boolean {
   if (!normalizedQuery) {
@@ -332,18 +336,44 @@ export function CanvasToolbar({
           className="scrollbar-wn absolute bottom-full left-1/2 z-50 mb-3 max-h-[60vh] w-136 max-w-[calc(100vw-2rem)] -translate-x-1/2 overflow-y-auto rounded-xl border border-wn-mono-700 bg-wn-mono-900 p-3 shadow-lg"
         >
           <div className="mb-3 space-y-2">
-            <div className="px-1 text-[11px] font-semibold uppercase tracking-wide text-wn-mono-500">
+            <h2
+              {...getHeadingProps("h5", {
+                tone: "subtle",
+                weight: "bold",
+                className: "px-1",
+              })}
+            >
               Create card
+            </h2>
+            <div className={createSearchFieldClassName}>
+              <MaterialSymbol
+                name="search"
+                className="pointer-events-none absolute left-3.5 text-[20px] text-wn-mono-500"
+                aria-hidden
+              />
+              <input
+                ref={createSearchRef}
+                type="text"
+                aria-label="Search card types"
+                placeholder="Search card types…"
+                value={createQuery}
+                onChange={(event) => setCreateQuery(event.target.value)}
+                className={createSearchInputClassName}
+              />
+              {createQuery.length > 0 ? (
+                <button
+                  type="button"
+                  aria-label="Clear search"
+                  className="absolute right-2 flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-wn-mono-700 text-wn-mono-300 transition-colors hover:bg-wn-mono-600 hover:text-wn-mono-50"
+                  onClick={() => {
+                    setCreateQuery("");
+                    createSearchRef.current?.focus();
+                  }}
+                >
+                  <MaterialSymbol name="close" className="text-[18px]" />
+                </button>
+              ) : null}
             </div>
-            <input
-              ref={createSearchRef}
-              type="search"
-              aria-label="Search card types"
-              placeholder="Search card types…"
-              value={createQuery}
-              onChange={(event) => setCreateQuery(event.target.value)}
-              className={createSearchInputClassName}
-            />
           </div>
 
           {hasCreateResults ? (
@@ -381,23 +411,29 @@ function CreateCardClassColumn({
 }: CreateCardClassColumnProps) {
   return (
     <div className="min-w-0">
-      <div className="mb-1.5 px-1 text-[11px] font-semibold uppercase tracking-wide text-wn-mono-500">
+      <h3
+        {...getHeadingProps("h6", {
+          tone: "subtle",
+          weight: "bold",
+          className: "mb-1.5 px-1",
+        })}
+      >
         {CARD_CLASS_LABELS[cardClass]}
-      </div>
+      </h3>
       <div className="flex flex-col gap-0.5">
         {types.map((type) => (
           <MotionPressable
             key={type}
-            className="flex w-full items-center gap-2 rounded-lg border border-transparent px-2 py-1.5 text-left text-wn-mono-200 hover:border-wn-mono-700 hover:bg-wn-mono-800"
+            className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-wn-mono-200 outline-none ring-0 hover:bg-wn-mono-800 focus:outline-none focus-visible:outline-none"
             onClick={() => onSelect(type)}
           >
             <span className="shrink-0 text-wn-mono-400">
               <MaterialSymbol
                 name={createMenuIcons[type]}
-                className="text-[16px]"
+                className="text-[20px]"
               />
             </span>
-            <span className="truncate text-[12px] font-medium text-wn-mono-100">
+            <span className="truncate text-sm font-semibold text-wn-mono-100">
               {CARD_TYPE_LABELS[type]}
             </span>
           </MotionPressable>

@@ -68,6 +68,8 @@ type CanvasFlowProps = {
   onNodeDoubleClick: (event: ReactMouseEvent, node: Node) => void;
   onEdgeDoubleClick: (event: ReactMouseEvent, edge: Edge) => void;
   onNodeContextMenu: (event: ReactMouseEvent, node: Node) => void;
+  onSelectionContextMenu: (event: ReactMouseEvent, nodes: Node[]) => void;
+  onNodeClick: NodeMouseHandler<Node>;
   onPaneClick: () => void;
   imageContextMenu: CanvasImageContextMenuState | null;
   onCloseImageContextMenu: () => void;
@@ -133,6 +135,8 @@ export function CanvasFlow({
   onNodeDoubleClick,
   onEdgeDoubleClick,
   onNodeContextMenu,
+  onSelectionContextMenu,
+  onNodeClick,
   onPaneClick,
   imageContextMenu,
   onCloseImageContextMenu,
@@ -249,7 +253,8 @@ export function CanvasFlow({
       selectNodesOnDrag={false}
       selectionOnDrag
       selectionMode={SelectionMode.Partial}
-      selectionKeyCode={null}
+      selectionKeyCode="Shift"
+      multiSelectionKeyCode="Shift"
       panActivationKeyCode="Space"
       minZoom={0.15}
       maxZoom={4}
@@ -258,6 +263,8 @@ export function CanvasFlow({
       onNodeDoubleClick={onNodeDoubleClick}
       onEdgeDoubleClick={onEdgeDoubleClick}
       onNodeContextMenu={onNodeContextMenu}
+      onSelectionContextMenu={onSelectionContextMenu}
+      onNodeClick={onNodeClick}
       onPaneClick={onPaneClick}
     >
       <CanvasFitViewBridge
@@ -291,6 +298,7 @@ export function CanvasFlow({
     />
     <CanvasCardContextMenu
       menu={cardContextMenu}
+      selectionCount={cardContextMenu ? selectedCardIds.length : 1}
       currentCardType={
         cardContextMenu
           ? cardsByIdRef.current[cardContextMenu.cardId]?.card_type

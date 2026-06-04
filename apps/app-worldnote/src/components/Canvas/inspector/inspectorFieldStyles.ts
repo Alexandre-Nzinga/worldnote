@@ -1,11 +1,27 @@
 /** Shared inspector field styles — borderless edits that match read-only typography. */
 
+export const inspectorHeaderActionClassName =
+  "flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-sm font-medium text-wn-mono-300 transition-colors hover:bg-wn-mono-800 hover:text-wn-mono-50 disabled:opacity-50";
+
+export const inspectorHeaderIconActionClassName =
+  "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-wn-mono-300 transition-colors hover:bg-wn-mono-800 hover:text-wn-mono-50 disabled:opacity-50";
+
+export const inspectorMoreMenuTriggerClassName =
+  "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-wn-mono-300 transition-colors hover:bg-wn-mono-800 hover:text-wn-mono-50 disabled:opacity-50";
+
 export const inspectorSectionLabelClassName =
   "text-xs font-semibold uppercase tracking-wide text-wn-text-subtle";
 
+/** Connections block — slightly larger than other section eyebrows. */
+export const inspectorConnectionsSectionLabelClassName =
+  "text-sm font-semibold uppercase tracking-wide text-wn-text-subtle";
+
+/** Horizontal inset for inspector tab sections (lore editor is full-bleed). */
+export const inspectorTabPaddingXClassName = "px-4";
+
 /** Field label in read/edit inspector rows (below section headings). */
 export const inspectorFieldLabelClassName =
-  "text-xs font-medium text-wn-text-subtle";
+  "text-sm font-medium text-wn-text-subtle";
 
 /** Field value in read-only inspector rows. */
 export const inspectorFieldValueClassName = "text-sm text-wn-text";

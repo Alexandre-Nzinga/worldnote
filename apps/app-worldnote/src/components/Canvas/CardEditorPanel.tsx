@@ -1,5 +1,10 @@
 import { Input, Textarea } from "@heroui/react";
-import { AnimatedPanel, Button, MaterialSymbol } from "@worldnote/ui";
+import {
+  AnimatedPanel,
+  Button,
+  getHeadingProps,
+  MaterialSymbol,
+} from "@worldnote/ui";
 import {
   CARD_TYPE_LABELS,
   DEFAULT_CARD_IMAGE_POSITION,
@@ -259,7 +264,9 @@ export function CardEditorPanel({
           <p className="text-xs font-medium uppercase tracking-wide text-wn-mono-500">
             {typeLabel}
           </p>
-          <h2 className="text-lg font-semibold text-wn-mono-50">Edit card</h2>
+          <h2 {...getHeadingProps("h6", { tone: "inverse", weight: "semibold" })}>
+            Edit card
+          </h2>
         </div>
         <button
           type="button"

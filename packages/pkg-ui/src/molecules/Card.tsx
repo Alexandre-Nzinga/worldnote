@@ -1,6 +1,6 @@
 import clsx from "clsx";
 import type { ReactNode } from "react";
-import { getBodyTextStyle, getHeadingStyle, headingClass } from "../brand/typography.js";
+import { getBodyTextStyle, getHeadingProps } from "../brand/typography.js";
 
 export type CardTone = "light" | "dark";
 
@@ -80,12 +80,7 @@ export function Card({
         >
           {eyebrow ? <div>{eyebrow}</div> : null}
           {title ? (
-            <h3
-              className={headingClass.h4}
-              style={getHeadingStyle("h4")}
-            >
-              {title}
-            </h3>
+            <h3 {...getHeadingProps("h4")}>{title}</h3>
           ) : null}
           {subtitle ? (
             <p

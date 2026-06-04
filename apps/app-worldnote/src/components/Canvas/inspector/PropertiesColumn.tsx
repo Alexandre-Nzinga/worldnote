@@ -1,28 +1,29 @@
 import type {
   CardImagePosition,
+  Link,
   SocketDescriptor,
   WorldCard,
 } from "@worldnote/shared";
 import type { TypeSpecificEditorState } from "../cardEditorTypes.js";
 import { GroupMembersSection } from "./GroupMembersSection.js";
+import { FamilyCrestBlock } from "./FamilyCrestBlock.js";
 import { InspectorCardImageBlock } from "./InspectorCardImageBlock.js";
 import { PropertiesTab } from "./PropertiesTab.js";
 import { InspectorDeleteButton } from "./InspectorDeleteButton.js";
-import { TagsSection } from "./TagsSection.js";
 
 type PropertyRow = { key: string; value: string };
 
 type PropertiesColumnProps = {
   readOnly: boolean;
   card: WorldCard;
+  cardsById: Record<string, WorldCard>;
   vaultPath: string;
   imagePreview: string | null;
   imagePath: string;
   imagePosition: CardImagePosition;
   isBusy: boolean;
   tags: string[];
-  tagsInput: string;
-  onTagsInputChange: (value: string) => void;
+  onTagsChange: (tags: string[]) => void;
   typeFields: TypeSpecificEditorState;
   onTypeFieldsChange: (next: TypeSpecificEditorState) => void;
   socketEntries: Array<{ id: string; descriptor: SocketDescriptor }>;
@@ -34,23 +35,35 @@ type PropertiesColumnProps = {
   onPickImage: () => void;
   onRemoveImage: () => void;
   onPositionChange: (position: CardImagePosition) => void;
+  crestPreview: string | null;
+  crestPath: string;
+  onPickCrest: () => void;
+  onRemoveCrest: () => void;
   groupMembers: WorldCard[];
   onNavigateToCard?: (cardId: string) => void;
   isDeleting?: boolean;
   onDelete?: () => void;
+  links: Link[];
+  onCreateSocketLink?: (socketId: string, targetCardId: string) => void;
+  onRemoveSocketLink?: (linkId: string) => void;
+  onCreateAndLinkCard?: (
+    socketId: string,
+    cardType: WorldCard["card_type"],
+    name: string,
+  ) => void;
 };
 
 export function PropertiesColumn({
   readOnly,
   card,
+  cardsById,
   vaultPath,
   imagePreview,
   imagePath,
   imagePosition,
   isBusy,
   tags,
-  tagsInput,
-  onTagsInputChange,
+  onTagsChange,
   typeFields,
   onTypeFieldsChange,
   socketEntries,
@@ -62,14 +75,21 @@ export function PropertiesColumn({
   onPickImage,
   onRemoveImage,
   onPositionChange,
+  crestPreview,
+  onPickCrest,
+  onRemoveCrest,
   groupMembers,
   onNavigateToCard,
   isDeleting,
   onDelete,
+  links,
+  onCreateSocketLink,
+  onRemoveSocketLink,
+  onCreateAndLinkCard,
 }: PropertiesColumnProps) {
   return (
     <aside
-      className="scrollbar-wn flex min-h-0 flex-1 flex-col overflow-y-auto"
+      className="scrollbar-wn flex min-h-0 flex-1 flex-col overflow-y-auto bg-wn-mono-950"
       aria-label="Card properties"
     >
       <InspectorCardImageBlock
@@ -83,9 +103,24 @@ export function PropertiesColumn({
         onPositionChange={onPositionChange}
       />
 
-      <div className="flex flex-col gap-6 px-5 py-5">
+      {card.card_type === "family" ? (
+        <FamilyCrestBlock
+          readOnly={readOnly}
+          crestPreview={crestPreview}
+          isBusy={isBusy}
+          onPickCrest={onPickCrest}
+          onRemoveCrest={onRemoveCrest}
+        />
+      ) : null}
+
+      <div className="flex flex-col gap-5 py-4">
       <PropertiesTab
         readOnly={readOnly}
+        tags={tags}
+        onTagsChange={onTagsChange}
+        card={card}
+        cardsById={cardsById}
+        links={links}
         cardType={card.card_type}
         typeFields={typeFields}
         onTypeFieldsChange={onTypeFieldsChange}
@@ -96,6 +131,9 @@ export function PropertiesColumn({
         propertyRows={propertyRows}
         onPropertyRowsChange={onPropertyRowsChange}
         isBusy={isBusy}
+        onCreateSocketLink={onCreateSocketLink}
+        onRemoveSocketLink={onRemoveSocketLink}
+        onCreateAndLinkCard={onCreateAndLinkCard}
       />
 
       {groupMembers.length > 0 ? (
@@ -105,13 +143,6 @@ export function PropertiesColumn({
           onNavigateToCard={onNavigateToCard}
         />
       ) : null}
-
-      <TagsSection
-        readOnly={readOnly}
-        tags={tags}
-        tagsInput={tagsInput}
-        onTagsInputChange={onTagsInputChange}
-      />
 
       {!readOnly && onDelete ? (
         <InspectorDeleteButton

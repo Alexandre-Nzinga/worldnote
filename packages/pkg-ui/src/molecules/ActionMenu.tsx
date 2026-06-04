@@ -4,7 +4,9 @@ import {
   DropdownMenu,
   DropdownTrigger,
 } from "@heroui/react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Key, ReactNode } from "react";
+import { resolveOverlayContainer } from "../overlay/resolveOverlayContainer.js";
 
 export type ActionMenuPlacement =
   | "top"
@@ -39,7 +41,7 @@ export type ActionMenuProps = {
 };
 
 const menuPopoverClassName =
-  "rounded-xl border border-wn-mono-700 bg-wn-mono-800 p-1 shadow-lg";
+  "z-[250] rounded-xl border border-wn-mono-700 bg-wn-mono-800 p-1 shadow-lg";
 
 const menuListClassName = "bg-wn-mono-800";
 
@@ -56,39 +58,80 @@ export function ActionMenu({
   placement = "bottom-start",
   onAction,
 }: ActionMenuProps) {
+  const rootRef = useRef<HTMLDivElement>(null);
+  const overflowRestoreRef = useRef<{ el: HTMLElement; value: string } | null>(
+    null,
+  );
+  const [portalContainer, setPortalContainer] = useState<
+    HTMLElement | undefined
+  >(undefined);
+
+  const releaseOverflow = useCallback(() => {
+    const saved = overflowRestoreRef.current;
+    if (saved) {
+      saved.el.style.overflow = saved.value;
+      overflowRestoreRef.current = null;
+    }
+  }, []);
+
+  const handleOpenChange = useCallback(
+    (isOpen: boolean) => {
+      if (!isOpen) {
+        releaseOverflow();
+        return;
+      }
+      const container = resolveOverlayContainer(rootRef.current);
+      setPortalContainer(container);
+      if (container !== document.body) {
+        overflowRestoreRef.current = {
+          el: container,
+          value: container.style.overflow,
+        };
+        container.style.overflow = "visible";
+      }
+    },
+    [releaseOverflow],
+  );
+
+  useEffect(() => () => releaseOverflow(), [releaseOverflow]);
+
   return (
-    <Dropdown
-      placement={placement}
-      classNames={{
-        content: menuPopoverClassName,
-      }}
-    >
-      <DropdownTrigger>{trigger}</DropdownTrigger>
-      <DropdownMenu
-        aria-label={ariaLabel}
-        onAction={onAction}
+    <div ref={rootRef} className="inline-flex shrink-0">
+      <Dropdown
+        placement={placement}
+        portalContainer={portalContainer}
+        onOpenChange={handleOpenChange}
         classNames={{
-          base: menuListClassName,
-        }}
-        itemClasses={{
-          base: menuItemClassName,
-          title:
-            "font-semibold text-wn-mono-100 group-data-[hover=true]:!text-wn-mono-50 group-data-[focus=true]:!text-wn-mono-50",
+          content: menuPopoverClassName,
         }}
       >
-        {items.map((item) => (
-          <DropdownItem
-            key={item.id}
-            startContent={item.icon}
-            color={item.variant === "danger" ? "danger" : undefined}
-            className={
-              item.variant === "danger" ? "text-danger" : undefined
-            }
-          >
-            {item.label}
-          </DropdownItem>
-        ))}
-      </DropdownMenu>
-    </Dropdown>
+        <DropdownTrigger>{trigger}</DropdownTrigger>
+        <DropdownMenu
+          aria-label={ariaLabel}
+          onAction={onAction}
+          classNames={{
+            base: menuListClassName,
+          }}
+          itemClasses={{
+            base: menuItemClassName,
+            title:
+              "font-semibold text-wn-mono-100 group-data-[hover=true]:!text-wn-mono-50 group-data-[focus=true]:!text-wn-mono-50",
+          }}
+        >
+          {items.map((item) => (
+            <DropdownItem
+              key={item.id}
+              startContent={item.icon}
+              color={item.variant === "danger" ? "danger" : undefined}
+              className={
+                item.variant === "danger" ? "text-danger" : undefined
+              }
+            >
+              {item.label}
+            </DropdownItem>
+          ))}
+        </DropdownMenu>
+      </Dropdown>
+    </div>
   );
 }

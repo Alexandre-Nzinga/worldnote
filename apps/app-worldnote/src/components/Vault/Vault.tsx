@@ -4,8 +4,7 @@ import {
   MaterialSymbol,
   WorldNoteLogo,
   getBodyTextStyle,
-  getHeadingStyle,
-  headingClass,
+  getHeadingProps,
 } from "@worldnote/ui";
 import { motion } from "framer-motion";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -265,11 +264,10 @@ export function Vault({ onBack, worldnoteRoot, currentWorldPath }: VaultProps) {
             <div className="flex flex-col gap-4">
               <div className="flex items-center justify-between gap-4 overflow-visible pr-1">
                 <h1
-                  className={`shrink-0 text-wn-mono-50 ${headingClass.h2}`}
-                  style={{
-                    ...getHeadingStyle("h2"),
-                    color: "var(--color-wn-mono-50)",
-                  }}
+                  {...getHeadingProps("h2", {
+                    tone: "inverse",
+                    className: "shrink-0",
+                  })}
                 >
                   All cards
                 </h1>
@@ -345,7 +343,12 @@ export function Vault({ onBack, worldnoteRoot, currentWorldPath }: VaultProps) {
                   {grouped.map((group) => (
                     <section key={group.worldPath} className="flex flex-col gap-3">
                       <div className="flex items-baseline justify-between gap-3">
-                        <h2 className="text-sm font-semibold text-wn-mono-50">
+                        <h2
+                          {...getHeadingProps("h6", {
+                            tone: "inverse",
+                            weight: "semibold",
+                          })}
+                        >
                           {group.worldName}
                         </h2>
                         <span className="text-xs text-wn-mono-500">

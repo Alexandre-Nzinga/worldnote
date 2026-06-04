@@ -4,7 +4,7 @@ import {
   MaterialSymbol,
   WorldNoteLogo,
   getBodyTextStyle,
-  getHeadingStyle,
+  getHeadingProps,
   springSnappy,
 } from "@worldnote/ui";
 import { motion } from "framer-motion";
@@ -280,13 +280,11 @@ function HomeHeader({
 function HeroTitle() {
   return (
     <h1
-      className="mx-auto mb-10 max-w-[648px] shrink-0 text-center leading-tight text-wn-mono-50"
-      style={{
-        ...getHeadingStyle("h1"),
-        fontSize: "48px",
-        fontWeight: "var(--font-weight-wn-semibold)",
-        color: "var(--color-wn-mono-50)",
-      }}
+      {...getHeadingProps("h1", {
+        tone: "inverse",
+        weight: "semibold",
+        className: "mx-auto mb-10 shrink-0 text-center whitespace-nowrap",
+      })}
     >
       What are you building today?
     </h1>
@@ -329,13 +327,7 @@ function WorldsSection({
   return (
     <section className="mx-auto flex min-h-0 w-full max-w-[1008px] flex-1 flex-col">
       <div className="mb-6 flex shrink-0 items-center justify-between">
-        <h2
-          className="text-wn-mono-50"
-          style={{
-            fontSize: "20px",
-            fontWeight: "var(--font-weight-wn-medium)",
-          }}
-        >
+        <h2 {...getHeadingProps("h5", { tone: "inverse", weight: "medium" })}>
           Your Worlds
         </h2>
         <div className="flex items-center gap-6">

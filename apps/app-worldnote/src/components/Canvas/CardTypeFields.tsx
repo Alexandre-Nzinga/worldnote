@@ -1,4 +1,8 @@
-import type { WorldCard } from "@worldnote/shared";
+import {
+  VEHICLE_SUB_TYPE_LABELS,
+  VEHICLE_SUB_TYPE_VALUES,
+  type WorldCard,
+} from "@worldnote/shared";
 import { EnumComboBox } from "@worldnote/ui";
 import { Input } from "@heroui/react";
 import {
@@ -17,14 +21,10 @@ const itemRarityOptions = [
   { value: "artifact", label: "Artifact" },
 ] as const;
 
-const vehicleSubTypeOptions = [
-  { value: "car", label: "Car" },
-  { value: "ship", label: "Ship" },
-  { value: "spaceship", label: "Spaceship" },
-  { value: "mount", label: "Mount" },
-  { value: "bike", label: "Bike" },
-  { value: "other", label: "Other" },
-] as const;
+const vehicleSubTypeOptions = VEHICLE_SUB_TYPE_VALUES.map((value) => ({
+  value,
+  label: VEHICLE_SUB_TYPE_LABELS[value],
+}));
 
 const floraToxicityOptions = [
   { value: "harmless", label: "Harmless" },

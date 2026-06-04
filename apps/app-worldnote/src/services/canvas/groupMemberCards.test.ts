@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { WorldCard } from "@worldnote/shared";
-import { cardsInGroup } from "./groupMemberCards.js";
+import { cardsInGroup, isGroupMemberHiddenOnCanvas } from "./groupMemberCards.js";
 
 function stubCard(id: string, parent_id: string | null): WorldCard {
   return {
@@ -29,5 +29,18 @@ describe("cardsInGroup", () => {
       "a",
       "b",
     ]);
+  });
+});
+
+describe("isGroupMemberHiddenOnCanvas", () => {
+  it("hides group members that are not on the canvas manifest", () => {
+    const group = stubCard("g1", null);
+    (group as WorldCard).card_type = "group";
+    const member = stubCard("a", "g1");
+    const byId = { g1: group as WorldCard, a: member };
+    expect(isGroupMemberHiddenOnCanvas(member, byId, new Set())).toBe(true);
+    expect(isGroupMemberHiddenOnCanvas(member, byId, new Set(["a"]))).toBe(
+      false,
+    );
   });
 });

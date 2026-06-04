@@ -2,8 +2,7 @@ import {
   ActionMenu,
   Button,
   MaterialSymbol,
-  getHeadingStyle,
-  headingClass,
+  getHeadingProps,
 } from "@worldnote/ui";
 
 type CanvasHeaderProps = {
@@ -64,11 +63,11 @@ export function CanvasHeader({
         />
       </div>
       <h1
-        className={`max-w-[min(24rem,calc(100vw-6rem))] min-w-0 truncate whitespace-nowrap text-wn-mono-50 ${headingClass.h4}`}
-        style={{
-          ...getHeadingStyle("h4"),
-          color: "var(--color-wn-mono-50)",
-        }}
+        {...getHeadingProps("h4", {
+          tone: "inverse",
+          className:
+            "max-w-[min(24rem,calc(100vw-6rem))] min-w-0 truncate whitespace-nowrap",
+        })}
         title={worldName}
       >
         {worldName}

@@ -1,6 +1,15 @@
 import { convertFileSrc } from "@tauri-apps/api/core";
 
-import type { CardNodeData, CardNodeScalars, GroupMemberPreview } from "@worldnote/canvas";
+import type {
+  CardNodeContextMenuPointer,
+  CardNodeData,
+  CardNodeScalars,
+  CardNodeSelectModifiers,
+  GroupMemberPreview,
+} from "@worldnote/canvas";
+
+import { openCanvasCardContextMenuRef } from "./canvasCardContextMenuRef.js";
+import { applyCanvasCardSelectionRef } from "./canvasCardSelectionRef.js";
 
 import {
   CARD_TYPE_LABELS,
@@ -122,7 +131,25 @@ export type WorldCardToNodeDataOptions = {
   links?: Link[];
   cardsById?: Record<string, WorldCard>;
   onUpdate?: (partial: Record<string, unknown>) => void;
+  onSelect?: (modifiers: CardNodeSelectModifiers) => void;
+  onContextMenu?: (pointer: CardNodeContextMenuPointer) => void;
 };
+
+export function cardNodeOnSelectHandler(
+  cardId: string,
+): (modifiers: CardNodeSelectModifiers) => void {
+  return (modifiers) => {
+    applyCanvasCardSelectionRef.current?.(cardId, modifiers);
+  };
+}
+
+export function cardNodeOnContextMenuHandler(
+  cardId: string,
+): (pointer: { clientX: number; clientY: number }) => void {
+  return (pointer) => {
+    openCanvasCardContextMenuRef.current?.(cardId, pointer);
+  };
+}
 
 export function worldCardToNodeData(
   card: WorldCard,
@@ -134,6 +161,8 @@ export function worldCardToNodeData(
     links = [],
     cardsById = {},
     onUpdate,
+    onSelect = cardNodeOnSelectHandler(card.id),
+    onContextMenu = cardNodeOnContextMenuHandler(card.id),
   } = options;
 
   const imageDisplay = normalizeCardImageDisplay(
@@ -170,6 +199,11 @@ export function worldCardToNodeData(
         })
       : undefined;
 
+  const crestUrl =
+    card.card_type === "family" && card.crest_path
+      ? cardImageSrc(vaultPath, card.crest_path)
+      : undefined;
+
   return {
     cardId: card.id,
     title: card.name,
@@ -177,6 +211,7 @@ export function worldCardToNodeData(
     cardType: card.card_type,
     description: cardDescriptionLine(card),
     imageUrl: cardImageSrc(vaultPath, card.image_path),
+    crestUrl,
     imageFit: imageDisplay.fit,
     imagePosition: imageDisplay.position,
     sockets: socketEntries.map(({ id, descriptor }) => ({
@@ -193,6 +228,8 @@ export function worldCardToNodeData(
     viewMode,
     customProperties: card.custom_properties,
     onUpdate,
+    onSelect,
+    onContextMenu,
     onDragCardStart: makeCardDragStartHandler(card.id, card.name),
     groupMembers:
       groupMembers && groupMembers.length > 0 ? groupMembers : undefined,

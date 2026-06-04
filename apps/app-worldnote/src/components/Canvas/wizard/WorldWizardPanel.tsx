@@ -1,5 +1,10 @@
 import type { Link, WorldCard } from "@worldnote/shared";
-import { AnimatedPanel, MaterialSymbol, WorldNoteLogo } from "@worldnote/ui";
+import {
+  AnimatedPanel,
+  getHeadingProps,
+  MaterialSymbol,
+  WorldNoteLogo,
+} from "@worldnote/ui";
 import {
   useCallback,
   useEffect,
@@ -143,7 +148,9 @@ export function WorldWizardPanel({
             className="h-4 w-4 opacity-90"
             alt=""
           />
-          <h2 className="text-sm font-bold text-wn-mono-50">WorldWizard</h2>
+          <h2 {...getHeadingProps("h6", { tone: "inverse", weight: "bold" })}>
+            WorldWizard
+          </h2>
           <StatusDot healthy={wizard.healthy} />
         </div>
         <button

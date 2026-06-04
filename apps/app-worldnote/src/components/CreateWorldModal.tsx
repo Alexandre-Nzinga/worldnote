@@ -1,5 +1,5 @@
 import { Input, Textarea } from "@heroui/react";
-import { AnimatedModal, Button } from "@worldnote/ui";
+import { AnimatedModal, Button, getHeadingProps } from "@worldnote/ui";
 import { useCallback, useEffect, useState } from "react";
 import { useVault } from "../hooks/useVault.js";
 import { useVaultCommands } from "../hooks/useVaultCommands.js";
@@ -122,7 +122,7 @@ export function CreateWorldModal({
       <header className="flex flex-col gap-1">
         <h2
           id="create-world-title"
-          className="text-xl font-semibold text-wn-mono-50"
+          {...getHeadingProps("h5", { tone: "inverse", weight: "semibold" })}
         >
           Create new world
         </h2>

@@ -20,6 +20,8 @@ export type CanvasHistorySnapshot = {
   cards: WorldCard[];
   links: Link[];
   images: CanvasImagePlacement[];
+  /** Card ids that had a canvas node when this snapshot was taken. */
+  canvasCardIds?: string[];
 };
 
 export function captureCanvasHistorySnapshot(
@@ -57,11 +59,16 @@ export function captureCanvasHistorySnapshot(
       ];
     });
 
+  const canvasCardIds = nodes
+    .filter((node) => node.type === "worldnoteCard")
+    .map((node) => node.id);
+
   return {
     vaultPath,
     cards,
     links: Object.values(linksById),
     images,
+    canvasCardIds,
   };
 }
 

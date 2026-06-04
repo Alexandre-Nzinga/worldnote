@@ -6,7 +6,11 @@ import {
 import type { VisibleSocketsByCardType } from "./settings.js";
 
 export function formatSocketId(socketId: string): string {
-  return socketId.replace(/_/g, " ");
+  const label = socketId.replace(/_/g, " ");
+  if (!label) {
+    return label;
+  }
+  return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
 export function getVisibleSocketsForCardType(

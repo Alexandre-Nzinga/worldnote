@@ -16,7 +16,7 @@ type InspectorTabsProps = {
 export function InspectorTabs({ activeTab, onTabChange }: InspectorTabsProps) {
   return (
     <div
-      className="mx-4 flex gap-1 rounded-lg bg-wn-mono-950 p-1"
+      className="flex w-full gap-1 rounded-lg bg-wn-mono-950 p-1"
       role="tablist"
       aria-label="Inspector sections"
     >

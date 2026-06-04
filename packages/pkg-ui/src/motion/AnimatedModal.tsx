@@ -18,6 +18,8 @@ export type AnimatedModalProps = {
   labelledBy?: string;
   className?: string;
   panelClassName?: string;
+  /** Ignore backdrop dismiss for this many ms after open (avoids same-gesture close). */
+  backdropDismissGuardMs?: number;
 };
 
 const defaultDialogClassName =
@@ -35,15 +37,18 @@ export function AnimatedModal({
   labelledBy,
   className,
   panelClassName,
+  backdropDismissGuardMs = 0,
 }: AnimatedModalProps) {
   const reducedMotion = usePrefersReducedMotion();
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const openedAtRef = useRef(0);
 
   useLayoutEffect(() => {
     const node = dialogRef.current;
     if (!node || !isOpen) {
       return;
     }
+    openedAtRef.current = Date.now();
     if (!node.open) {
       node.showModal();
     }
@@ -60,13 +65,26 @@ export function AnimatedModal({
   );
 
   const requestClose = () => {
-    if (!closeDisabled) {
-      onClose();
+    if (closeDisabled) {
+      return;
     }
+    if (
+      backdropDismissGuardMs > 0 &&
+      Date.now() - openedAtRef.current < backdropDismissGuardMs
+    ) {
+      return;
+    }
+    onClose();
   };
 
   const handleDialogClose = (event: SyntheticEvent<HTMLDialogElement>) => {
     event.preventDefault();
+    if (
+      backdropDismissGuardMs > 0 &&
+      Date.now() - openedAtRef.current < backdropDismissGuardMs
+    ) {
+      return;
+    }
     requestClose();
   };
 

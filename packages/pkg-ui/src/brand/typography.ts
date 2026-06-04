@@ -103,27 +103,68 @@ export const headingClass: Record<HeadingLevel, string> = {
   h6: "leading-snug",
 };
 
+const fontWeightTokenMap: Record<HeadingToken["fontWeight"], `--${string}`> = {
+  thin: "--font-weight-wn-thin",
+  extralight: "--font-weight-wn-extralight",
+  light: "--font-weight-wn-light",
+  regular: "--font-weight-wn-regular",
+  medium: "--font-weight-wn-medium",
+  semibold: "--font-weight-wn-semibold",
+  bold: "--font-weight-wn-bold",
+  extrabold: "--font-weight-wn-extrabold",
+  black: "--font-weight-wn-black",
+};
+
+/** Text color preset for headings on dark or muted surfaces. */
+export type HeadingTone = "default" | "inverse" | "subtle";
+
+const headingToneColors: Record<Exclude<HeadingTone, "default">, string> = {
+  inverse: "var(--color-wn-mono-50)",
+  subtle: "var(--color-wn-mono-300)",
+};
+
 /** Runtime style helper from heading tokens. */
 export function getHeadingStyle(level: HeadingLevel) {
   const token = headingTokens[level];
-  const fontWeightTokenMap: Record<HeadingToken["fontWeight"], `--${string}`> =
-    {
-      thin: "--font-weight-wn-thin",
-      extralight: "--font-weight-wn-extralight",
-      light: "--font-weight-wn-light",
-      regular: "--font-weight-wn-regular",
-      medium: "--font-weight-wn-medium",
-      semibold: "--font-weight-wn-semibold",
-      bold: "--font-weight-wn-bold",
-      extrabold: "--font-weight-wn-extrabold",
-      black: "--font-weight-wn-black",
-    };
 
   return {
     fontSize: `var(${token.size})`,
     letterSpacing: `${token.spacingRem}rem`,
     color: `var(${token.color})`,
     fontWeight: `var(${fontWeightTokenMap[token.fontWeight]})`,
+  };
+}
+
+export type GetHeadingPropsOptions = {
+  /** Override token color — use on dark UI (`inverse`) or section labels (`subtle`). */
+  tone?: HeadingTone;
+  /** Override token weight. */
+  weight?: HeadingToken["fontWeight"];
+  /** Extra layout classes (e.g. `m-0`, `truncate`). */
+  className?: string;
+};
+
+/**
+ * Returns `className` + `style` for a heading from design tokens.
+ * Spread onto `<h1>`–`<h6>`: `<h2 {...getHeadingProps("h6", { tone: "inverse" })}>`.
+ */
+export function getHeadingProps(
+  level: HeadingLevel,
+  options?: GetHeadingPropsOptions,
+) {
+  const { tone = "default", weight, className } = options ?? {};
+  const style = getHeadingStyle(level);
+
+  if (tone !== "default") {
+    style.color = headingToneColors[tone];
+  }
+  if (weight) {
+    style.fontWeight = `var(${fontWeightTokenMap[weight]})`;
+  }
+
+  return {
+    className: className ? `${headingClass[level]} ${className}` : headingClass[level],
+    style,
   };
 }
 
@@ -151,24 +192,25 @@ export const bodyTextTokens: Record<BodyTextLevel, BodyTextToken> = {
   },
 };
 
+const bodyFontWeightTokenMap: Record<BodyTextToken["fontWeight"], `--${string}`> =
+  {
+    thin: "--font-weight-wn-thin",
+    extralight: "--font-weight-wn-extralight",
+    light: "--font-weight-wn-light",
+    regular: "--font-weight-wn-regular",
+    medium: "--font-weight-wn-medium",
+    semibold: "--font-weight-wn-semibold",
+    bold: "--font-weight-wn-bold",
+    extrabold: "--font-weight-wn-extrabold",
+    black: "--font-weight-wn-black",
+  };
+
 export function getBodyTextStyle(level: BodyTextLevel) {
   const token = bodyTextTokens[level];
-  const fontWeightTokenMap: Record<BodyTextToken["fontWeight"], `--${string}`> =
-    {
-      thin: "--font-weight-wn-thin",
-      extralight: "--font-weight-wn-extralight",
-      light: "--font-weight-wn-light",
-      regular: "--font-weight-wn-regular",
-      medium: "--font-weight-wn-medium",
-      semibold: "--font-weight-wn-semibold",
-      bold: "--font-weight-wn-bold",
-      extrabold: "--font-weight-wn-extrabold",
-      black: "--font-weight-wn-black",
-    };
 
   return {
     fontSize: `var(${token.size})`,
     color: `var(${token.color})`,
-    fontWeight: `var(${fontWeightTokenMap[token.fontWeight]})`,
+    fontWeight: `var(${bodyFontWeightTokenMap[token.fontWeight]})`,
   };
 }

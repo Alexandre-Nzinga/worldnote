@@ -4,6 +4,7 @@ import {
   MaterialSymbol,
   WorldNoteLogo,
   getBodyTextStyle,
+  getHeadingProps,
 } from "@worldnote/ui";
 import { motion } from "framer-motion";
 import { useCallback, useEffect, useState } from "react";
@@ -150,7 +151,7 @@ export function Settings({ onBack }: SettingsProps) {
         <div className="scrollbar-wn mx-auto w-full max-w-2xl flex-1 overflow-y-auto">
           <div className="flex flex-col gap-8">
             <div className="flex flex-col gap-1">
-              <h1 className="text-2xl font-semibold text-wn-mono-50">
+              <h1 {...getHeadingProps("h4", { tone: "inverse", weight: "semibold" })}>
                 Profile Settings
               </h1>
               <p className="text-sm font-semibold text-wn-mono-400">

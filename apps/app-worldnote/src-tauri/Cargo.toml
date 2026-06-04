@@ -25,3 +25,5 @@ http = "1"
 reqwest = { version = "0.12", default-features = false, features = ["json", "stream", "rustls-tls"] }
 futures-util = "0.3"
 worldnote_persistence = { path = "../../../packages/pkg-persistence" }
+image = { version = "0.25", default-features = false, features = ["jpeg", "png", "gif", "webp", "bmp", "tiff"] }
+webp = "0.3"

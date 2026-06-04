@@ -33,6 +33,8 @@ type CardBaseFields = {
   lore?: string;
   image_path?: string;
   image_position?: CardImagePosition;
+  /** Family heraldic crest asset path. */
+  crest_path?: string;
   custom_properties: Record<string, unknown>;
 };
 
@@ -230,6 +232,7 @@ export function buildWorldCard(
         ...base,
         card_type: "family",
         motto: typeFields.motto.trim() || undefined,
+        crest_path: base.crest_path?.trim() || undefined,
       } satisfies FamilyCard;
     case "group":
       return {

@@ -1,7 +1,7 @@
 import { Input } from "@heroui/react";
 import { CARD_TYPE_LABELS } from "@worldnote/shared";
 import type { WorldCard } from "@worldnote/shared";
-import { AnimatedModal, MaterialSymbol } from "@worldnote/ui";
+import { AnimatedModal, getHeadingProps, MaterialSymbol } from "@worldnote/ui";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { darkFieldInputClassNames } from "../Onboarding/fieldClassNames.js";
 import {
@@ -128,7 +128,7 @@ export function CanvasCommandPalette({
       <header className="flex flex-col gap-1">
         <h2
           id="canvas-command-palette-title"
-          className="text-lg font-semibold text-wn-mono-50"
+          {...getHeadingProps("h6", { tone: "inverse", weight: "semibold" })}
         >
           Jump to card
         </h2>

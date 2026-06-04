@@ -55,6 +55,8 @@ pub fn run() {
             cmd::card::duplicate_card,
             cmd::card::delete_card,
             cmd::card::save_card_image,
+            cmd::card::save_family_crest,
+            cmd::card::open_card_json,
             cmd::card::add_card_lore_image,
             cmd::canvas_image::save_canvas_image,
             cmd::canvas_image::save_canvas_image_bytes,

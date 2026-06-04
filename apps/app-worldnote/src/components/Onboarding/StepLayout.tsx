@@ -3,7 +3,7 @@ import {
   Button,
   contentItemVariants,
   contentStaggerVariants,
-  getHeadingStyle,
+  getHeadingProps,
 } from "@worldnote/ui";
 import { motion } from "framer-motion";
 import type { ReactNode } from "react";
@@ -29,6 +29,12 @@ export function StepLayout({
   onAction,
   actionDisabled = false,
 }: StepLayoutProps) {
+  const titleHeadingProps = getHeadingProps("h1", {
+    tone: "inverse",
+    weight: "semibold",
+    className: "mb-8",
+  });
+
   return (
     <main className="scrollbar-wn flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto px-6 py-10">
       <motion.div
@@ -50,14 +56,8 @@ export function StepLayout({
         </motion.div>
 
         <motion.h1
-          className="mb-8 text-wn-mono-50"
-          style={{
-            ...getHeadingStyle("h1"),
-            fontSize: "48px",
-            fontWeight: "var(--font-weight-wn-semibold)",
-            lineHeight: 1.1,
-            color: "var(--color-wn-mono-50)",
-          }}
+          className={titleHeadingProps.className}
+          style={{ ...titleHeadingProps.style, fontSize: "48px", lineHeight: 1.1 }}
           variants={contentItemVariants}
         >
           {title}

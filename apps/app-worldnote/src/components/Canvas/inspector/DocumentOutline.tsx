@@ -1,4 +1,5 @@
 import type { Editor } from "@tiptap/core";
+import { getHeadingProps } from "@worldnote/ui";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 const OUTLINE_HEADING_SELECTOR =
@@ -159,7 +160,13 @@ export function DocumentOutline({ editor, scrollElement }: DocumentOutlineProps)
       aria-label="Document outline"
     >
       <div className="my-auto flex w-full flex-col">
-        <h2 className="m-0 mb-4 text-center text-sm font-semibold text-wn-mono-50">
+        <h2
+          {...getHeadingProps("h6", {
+            tone: "inverse",
+            weight: "semibold",
+            className: "m-0 mb-4 text-center",
+          })}
+        >
           Content
         </h2>
         {headings.length === 0 ? (

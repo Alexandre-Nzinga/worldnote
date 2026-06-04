@@ -1,4 +1,5 @@
 pub mod canvas_image;
+pub mod image_optimize;
 pub mod card;
 pub mod library;
 pub mod link;

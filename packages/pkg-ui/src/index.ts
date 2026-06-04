@@ -15,6 +15,7 @@ export * from "./molecules/Accordion.js";
 export * from "./molecules/Card.js";
 export * from "./molecules/ActionMenu.js";
 export * from "./molecules/EnumComboBox.js";
+export * from "./molecules/CardReferenceComboBox.js";
 export * from "./molecules/Field.js";
 export * from "./molecules/fieldStyles.js";
 export * from "./molecules/Tabs.js";

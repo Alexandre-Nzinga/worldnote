@@ -1,5 +1,5 @@
 import { Input } from "@heroui/react";
-import { AnimatedModal, Button } from "@worldnote/ui";
+import { AnimatedModal, Button, getHeadingProps } from "@worldnote/ui";
 import { useCallback, useEffect, useState } from "react";
 import { useSettings } from "../../hooks/useSettings.js";
 import {
@@ -103,7 +103,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           <header className="flex flex-col gap-1">
             <h2
               id="settings-title"
-              className="text-xl font-semibold text-wn-mono-50"
+              {...getHeadingProps("h5", { tone: "inverse", weight: "semibold" })}
             >
               Settings
             </h2>

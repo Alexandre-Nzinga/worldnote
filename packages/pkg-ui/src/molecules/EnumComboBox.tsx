@@ -1,4 +1,5 @@
 import { Select, SelectItem } from "@heroui/react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export type EnumComboBoxOption = {
   value: string;
@@ -36,13 +37,34 @@ const fieldValueClassName =
 const inlineValueClassName =
   "w-full min-w-0 truncate text-left text-xs text-wn-mono-400 group-data-[has-value=true]:text-wn-mono-400";
 
-const popoverClassName =
-  "rounded-xl border border-wn-mono-700 bg-wn-mono-900 p-1 shadow-lg";
+const popoverSurfaceClassName =
+  "z-[250] rounded-xl border border-wn-mono-700 bg-wn-mono-900 p-1 shadow-lg";
 
-const listboxClassName = "max-h-60 gap-0.5";
+const listboxClassName = "max-h-60 gap-0.5 overflow-y-auto";
 
 const itemClassName =
-  "rounded-lg text-wn-mono-50 data-[hover=true]:bg-wn-mono-300 data-[hover=true]:text-wn-mono-950 data-[selectable=true]:focus:bg-wn-mono-300 data-[selectable=true]:focus:text-wn-mono-950 data-[selected=true]:bg-wn-mono-300 data-[selected=true]:text-wn-mono-950";
+  "rounded-lg text-wn-mono-100 data-[hover=true]:bg-wn-mono-700 data-[hover=true]:text-wn-mono-50 data-[selectable=true]:focus:bg-wn-mono-700 data-[selectable=true]:focus:text-wn-mono-50 data-[selected=true]:bg-wn-mono-600 data-[selected=true]:text-wn-mono-50";
+
+function resolveOverlayContainer(anchor: HTMLElement | null): HTMLElement {
+  if (typeof document === "undefined") {
+    return undefined as unknown as HTMLElement;
+  }
+  if (anchor) {
+    const modalWrapper = anchor.closest('[data-slot="wrapper"]');
+    if (modalWrapper instanceof HTMLElement) {
+      return modalWrapper;
+    }
+    const dialog = anchor.closest("dialog");
+    if (dialog instanceof HTMLElement) {
+      return dialog;
+    }
+  }
+  const openDialog = document.querySelector("dialog[open]");
+  if (openDialog instanceof HTMLElement) {
+    return openDialog;
+  }
+  return document.body;
+}
 
 /** Dark enum picker styled like HeroUI ComboBox (Select until HeroUI v3 migration). */
 export function EnumComboBox({
@@ -58,6 +80,14 @@ export function EnumComboBox({
   hideLabel = false,
   variant = "field",
 }: EnumComboBoxProps) {
+  const rootRef = useRef<HTMLDivElement>(null);
+  const overflowRestoreRef = useRef<{ el: HTMLElement; value: string } | null>(
+    null,
+  );
+  const [portalContainer, setPortalContainer] = useState<HTMLElement | undefined>(
+    undefined,
+  );
+
   const items: EnumComboBoxOption[] = allowEmpty
     ? [{ value: "", label: "—" }, ...options]
     : options;
@@ -66,8 +96,40 @@ export function EnumComboBox({
   const hasSelection = value.length > 0;
   const isInline = variant === "inline";
 
+  const releaseOverflow = useCallback(() => {
+    const saved = overflowRestoreRef.current;
+    if (saved) {
+      saved.el.style.overflow = saved.value;
+      overflowRestoreRef.current = null;
+    }
+  }, []);
+
+  const handleOpenChange = useCallback(
+    (isOpen: boolean) => {
+      if (!isOpen) {
+        releaseOverflow();
+        return;
+      }
+      const container = resolveOverlayContainer(rootRef.current);
+      setPortalContainer(container);
+      if (container !== document.body) {
+        overflowRestoreRef.current = {
+          el: container,
+          value: container.style.overflow,
+        };
+        container.style.overflow = "visible";
+      }
+    },
+    [releaseOverflow],
+  );
+
+  useEffect(() => () => releaseOverflow(), [releaseOverflow]);
+
   return (
-    <div className={`flex flex-col ${hideLabel ? "gap-0" : "gap-1"} ${className ?? ""}`}>
+    <div
+      ref={rootRef}
+      className={`flex flex-col ${hideLabel ? "gap-0" : "gap-1"} ${className ?? ""}`}
+    >
       {!hideLabel ? (
         <label htmlFor={id} className={fieldLabelClassName}>
           {label}
@@ -76,12 +138,12 @@ export function EnumComboBox({
       <Select
         id={id}
         aria-label={label}
-        label={hideLabel ? undefined : label}
         placeholder={hasSelection ? undefined : placeholder}
         items={items}
         selectedKeys={selectedKeys}
         isDisabled={disabled}
         disallowEmptySelection={!allowEmpty}
+        onOpenChange={handleOpenChange}
         renderValue={(selected) => {
           const item = selected[0];
           if (!item) {
@@ -103,15 +165,16 @@ export function EnumComboBox({
         }}
         classNames={{
           base: isInline ? "w-auto min-w-0 max-w-40 gap-0" : "w-full gap-0",
-          label: hideLabel ? "hidden" : undefined,
+          label: "hidden",
           trigger: isInline ? inlineTriggerClassName : fieldTriggerClassName,
           innerWrapper: "min-w-0 flex-1",
           value: isInline ? inlineValueClassName : fieldValueClassName,
           selectorIcon: isInline
             ? "pointer-events-none absolute right-1 top-1/2 -translate-y-1/2 text-base text-wn-mono-500"
             : "pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-wn-mono-400",
-          popoverContent: popoverClassName,
+          popoverContent: popoverSurfaceClassName,
           listbox: listboxClassName,
+          listboxWrapper: "max-h-60",
         }}
         listboxProps={{
           itemClasses: {
@@ -119,10 +182,13 @@ export function EnumComboBox({
           },
         }}
         popoverProps={{
-          placement: "top",
+          placement: isInline ? "top" : "bottom",
           offset: 8,
+          shouldFlip: true,
+          portalContainer,
           classNames: {
-            content: popoverClassName,
+            base: "z-[250]",
+            content: popoverSurfaceClassName,
           },
         }}
       >

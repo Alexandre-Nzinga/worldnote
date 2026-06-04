@@ -103,21 +103,19 @@ body.wn-canvas-card-external-drag * {
 }
 
 /* Inspector card lore editor (Tiptap) */
-.inspector-lore-editor-scroll .inspector-lore-editor-body,
-.inspector-lore-editor-scroll .inspector-lore-editor-body .ProseMirror,
-.inspector-lore-editor-scroll .inspector-lore-editor-body .inspector-lore-editor-prose {
-  min-height: 100%;
-}
-
 .inspector-lore-editor-body .ProseMirror,
 .inspector-lore-editor-body .inspector-lore-editor-prose {
   min-height: 10rem;
-  max-height: min(36vh, 18rem);
-  overflow-y: visible;
   padding: 0.75rem 1rem;
   color: var(--color-wn-mono-100);
   font-size: var(--text-wn-body);
   line-height: 1.65;
+}
+
+/* Sidebar / compact inspector: scroll inside the editor shell, not over siblings (e.g. tags). */
+.inspector-lore-editor:not(.inspector-lore-editor--fill)
+  .inspector-lore-editor-scroll {
+  max-height: min(36vh, 18rem);
 }
 
 .inspector-lore-editor--fill .inspector-lore-editor-body .ProseMirror,
@@ -177,7 +175,7 @@ body.wn-canvas-card-external-drag * {
 
 .inspector-lore-editor-body .inspector-lore-editor-prose code {
   border-radius: 0.25rem;
-  background: var(--color-wn-mono-900);
+  background: var(--color-wn-mono-800);
   padding: 0.1em 0.35em;
   font-size: 0.9em;
 }

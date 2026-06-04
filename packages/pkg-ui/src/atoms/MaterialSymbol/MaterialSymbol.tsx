@@ -16,7 +16,10 @@ export function MaterialSymbol({
 }: MaterialSymbolProps) {
   return (
     <span
-      className={clsx("material-symbols-outlined select-none leading-none", className)}
+      className={clsx(
+        "material-symbols-outlined inline-flex size-[1em] shrink-0 select-none items-center justify-center leading-none",
+        className,
+      )}
       style={{
         fontVariationSettings: `'FILL' ${filled ? 1 : 0}, 'wght' 400, 'GRAD' 0, 'opsz' 24`,
       }}

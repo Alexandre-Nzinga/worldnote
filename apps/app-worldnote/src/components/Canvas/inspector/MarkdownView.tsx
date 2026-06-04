@@ -1,5 +1,6 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { stripLeadingLoreHeading } from "./inspectorLoreMarkdown.js";
 
 type MarkdownViewProps = {
   content: string;
@@ -15,7 +16,7 @@ export function MarkdownView({
   content,
   emptyMessage = "No description yet.",
 }: MarkdownViewProps) {
-  const normalized = normalizeMarkdown(content);
+  const normalized = normalizeMarkdown(stripLeadingLoreHeading(content));
 
   if (!normalized.trim()) {
     return <p className="text-sm text-wn-mono-500">{emptyMessage}</p>;

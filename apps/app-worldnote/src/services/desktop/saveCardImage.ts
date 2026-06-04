@@ -48,6 +48,18 @@ export async function saveCardImage(
   });
 }
 
+export async function saveFamilyCrest(
+  vault: string,
+  cardId: string,
+  sourcePath: string,
+): Promise<string> {
+  return invoke<string>("save_family_crest", {
+    vault,
+    cardId,
+    sourcePath,
+  });
+}
+
 export async function addCardLoreImage(
   vault: string,
   cardId: string,

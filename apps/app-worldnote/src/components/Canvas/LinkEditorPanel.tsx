@@ -1,4 +1,4 @@
-import { AnimatedPanel, Button } from "@worldnote/ui";
+import { AnimatedPanel, Button, getHeadingProps } from "@worldnote/ui";
 import type { Link } from "@worldnote/shared";
 import { useCallback, useRef, useState } from "react";
 import { modalFieldLabelClassName } from "../Onboarding/fieldClassNames.js";
@@ -81,7 +81,9 @@ export function LinkEditorPanel({
           <p className="text-xs font-medium uppercase tracking-wide text-wn-mono-500">
             Link
           </p>
-          <h2 className="text-lg font-semibold text-wn-mono-50">Socket wire</h2>
+          <h2 {...getHeadingProps("h6", { tone: "inverse", weight: "semibold" })}>
+            Socket wire
+          </h2>
         </div>
         <button
           type="button"

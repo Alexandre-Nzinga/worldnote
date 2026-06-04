@@ -1,5 +1,10 @@
 import { Input } from "@heroui/react";
-import { AnimatedModal, Button, MaterialSymbol } from "@worldnote/ui";
+import {
+  AnimatedModal,
+  Button,
+  getHeadingProps,
+  MaterialSymbol,
+} from "@worldnote/ui";
 import { useCallback, useEffect, useState } from "react";
 import { useVault } from "../../hooks/useVault.js";
 import { useVaultCommands } from "../../hooks/useVaultCommands.js";
@@ -176,7 +181,7 @@ export function WorldSettingsModal({
         <div className="flex min-w-0 flex-col gap-1">
           <h2
             id="world-settings-title"
-            className="text-xl font-semibold text-wn-mono-50"
+            {...getHeadingProps("h5", { tone: "inverse", weight: "semibold" })}
           >
             World settings
           </h2>

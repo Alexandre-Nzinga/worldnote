@@ -289,16 +289,26 @@ fn copy_dir_all(source: &Path, destination: &Path) -> Result<(), String> {
     Ok(())
 }
 
-fn rewrite_image_path(card: &mut serde_json::Value, old_id: &str, new_id: &str) {
-    let Some(image_path) = card.get("image_path").and_then(|value| value.as_str()) else {
+fn rewrite_asset_path_field(
+    card: &mut serde_json::Value,
+    field: &str,
+    old_id: &str,
+    new_id: &str,
+) {
+    let Some(path) = card.get(field).and_then(|value| value.as_str()) else {
         return;
     };
     let old_fragment = format!(".worldnote/assets/{old_id}/");
     let new_fragment = format!(".worldnote/assets/{new_id}/");
-    let rewritten = image_path.replace('\\', "/").replace(&old_fragment, &new_fragment);
-    if rewritten != image_path {
-        card["image_path"] = serde_json::Value::String(rewritten);
+    let rewritten = path.replace('\\', "/").replace(&old_fragment, &new_fragment);
+    if rewritten != path {
+        card[field] = serde_json::Value::String(rewritten);
     }
+}
+
+fn rewrite_image_path(card: &mut serde_json::Value, old_id: &str, new_id: &str) {
+    rewrite_asset_path_field(card, "image_path", old_id, new_id);
+    rewrite_asset_path_field(card, "crest_path", old_id, new_id);
 }
 
 #[tauri::command]

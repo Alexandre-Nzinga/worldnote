@@ -1,8 +1,13 @@
 import type { Editor } from "@tiptap/core";
-import { EditorContent, useEditor } from "@tiptap/react";
+import { EditorContent, EditorContext, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Placeholder } from "@tiptap/extensions";
 import { Markdown } from "@tiptap/markdown";
+import {
+  BLOCKQUOTE_SHORTCUT_KEY,
+  useBlockquote,
+} from "@worldnote/shared/components/tiptap-ui/blockquote-button";
+import { parseShortcutKeys } from "@worldnote/shared/lib/tiptap-utils";
 import { MaterialSymbol } from "@worldnote/ui";
 import {
   forwardRef,
@@ -25,6 +30,8 @@ type InspectorLoreEditorProps = {
   placeholder?: string;
   /** When true, editor body fills available column height (modal layout). */
   fillHeight?: boolean;
+  /** When true, spans the inspector width (no side inset or corner radius). */
+  flushWidth?: boolean;
   onChange?: (markdown: string) => void;
   onEditorReady?: (editor: Editor | null) => void;
 };
@@ -32,6 +39,7 @@ type InspectorLoreEditorProps = {
 type ToolbarButtonProps = {
   label: string;
   icon: string;
+  title?: string;
   active?: boolean;
   disabled?: boolean;
   onClick: () => void;
@@ -40,6 +48,7 @@ type ToolbarButtonProps = {
 function ToolbarButton({
   label,
   icon,
+  title,
   active = false,
   disabled = false,
   onClick,
@@ -47,8 +56,9 @@ function ToolbarButton({
   return (
     <button
       type="button"
-      title={label}
+      title={title ?? label}
       aria-label={label}
+      aria-pressed={active}
       disabled={disabled}
       className={[
         "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-wn-mono-400 transition-colors",
@@ -76,7 +86,7 @@ function InspectorLoreToolbar({ editor }: { editor: NonNullable<ReturnType<typeo
 
   return (
     <div
-      className="inspector-lore-toolbar flex shrink-0 flex-wrap items-center gap-0.5 border-b border-wn-mono-800 bg-wn-mono-900/80 px-2 py-1.5"
+      className="inspector-lore-toolbar flex shrink-0 flex-wrap items-center gap-0.5 border-b border-wn-mono-800 bg-wn-mono-950 px-2 py-1.5"
       role="toolbar"
       aria-label="Formatting"
     >
@@ -144,13 +154,37 @@ function InspectorLoreToolbar({ editor }: { editor: NonNullable<ReturnType<typeo
         active={editor.isActive("orderedList")}
         onClick={() => run(() => editor.chain().focus().toggleOrderedList().run())}
       />
-      <ToolbarButton
-        label="Blockquote"
-        icon="format_quote"
-        active={editor.isActive("blockquote")}
-        onClick={() => run(() => editor.chain().focus().toggleBlockquote().run())}
-      />
+      <InspectorLoreBlockquoteButton editor={editor} />
     </div>
+  );
+}
+
+function InspectorLoreBlockquoteButton({
+  editor,
+}: {
+  editor: NonNullable<ReturnType<typeof useEditor>>;
+}) {
+  const { isVisible, isActive, canToggle, handleToggle, label } = useBlockquote({
+    editor,
+  });
+
+  const shortcutHint = parseShortcutKeys({
+    shortcutKeys: BLOCKQUOTE_SHORTCUT_KEY,
+  }).join("");
+
+  if (!isVisible) {
+    return null;
+  }
+
+  return (
+    <ToolbarButton
+      label={label}
+      icon="format_quote"
+      title={shortcutHint ? `${label} (${shortcutHint})` : label}
+      active={isActive}
+      disabled={!canToggle}
+      onClick={() => handleToggle()}
+    />
   );
 }
 
@@ -163,6 +197,7 @@ export const InspectorLoreEditor = forwardRef<
     editable = true,
     placeholder = "Write the lore…",
     fillHeight = false,
+    flushWidth = false,
     onChange,
     onEditorReady,
   },
@@ -239,10 +274,17 @@ export const InspectorLoreEditor = forwardRef<
   }, [editor, value]);
 
   const rootClassName = [
-    "inspector-lore-editor flex flex-col overflow-hidden bg-wn-mono-950",
+    "inspector-lore-editor flex w-full flex-col overflow-hidden bg-wn-mono-900",
     fillHeight
-      ? "inspector-lore-editor--fill min-h-0 flex-1 rounded-none border-0 border-t border-wn-mono-800"
-      : "min-h-[10rem] rounded-xl border border-wn-mono-800",
+      ? [
+          "inspector-lore-editor--fill min-h-0 flex-1 rounded-none border-0",
+          flushWidth
+            ? "border-y border-wn-mono-800"
+            : "border-t border-wn-mono-800",
+        ].join(" ")
+      : flushWidth
+        ? "min-h-[10rem] rounded-none border-0 border-y border-wn-mono-800"
+        : "min-h-[10rem] rounded-xl border border-wn-mono-800",
   ].join(" ");
 
   const scrollClassName = [
@@ -255,22 +297,25 @@ export const InspectorLoreEditor = forwardRef<
   if (!editor) {
     return (
       <div className={`${rootClassName} animate-pulse`}>
-        <div className="h-10 border-b border-wn-mono-800 bg-wn-mono-900/60" />
+        <div className="h-10 border-b border-wn-mono-800 bg-wn-mono-950" />
         <div className="min-h-[8rem] flex-1" />
       </div>
     );
   }
 
   return (
-    <div className={rootClassName}>
-      {editable ? <InspectorLoreToolbar editor={editor} /> : null}
-      <div ref={scrollContainerRef} className={scrollClassName}>
-        <EditorContent
-          editor={editor}
-          className="inspector-lore-editor-body"
-        />
+    <EditorContext.Provider value={{ editor }}>
+      <div className={rootClassName}>
+        {editable ? <InspectorLoreToolbar editor={editor} /> : null}
+        <div ref={scrollContainerRef} className={scrollClassName}>
+          <EditorContent
+            editor={editor}
+            role="presentation"
+            className="inspector-lore-editor-body"
+          />
+        </div>
       </div>
-    </div>
+    </EditorContext.Provider>
   );
 });
 
