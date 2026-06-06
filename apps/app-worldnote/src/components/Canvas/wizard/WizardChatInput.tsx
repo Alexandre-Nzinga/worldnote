@@ -11,6 +11,7 @@ import { EnumComboBox, MaterialSymbol } from "@worldnote/ui";
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -19,6 +20,7 @@ import {
 } from "react";
 
 import { cardImageSrc } from "../../../services/canvas/cardNodeData.js";
+import { primaryAccentFillClassName } from "../../../services/settings/primaryAccentStyles.js";
 import { cx } from "./cx.js";
 import { dragHasCard, readDraggedCardId } from "./dnd.js";
 
@@ -45,6 +47,12 @@ type WizardChatInputProps = {
 
 const toolbarIconClassName =
   "flex h-8 w-8 items-center justify-center rounded-lg text-wn-mono-400 transition-colors hover:bg-wn-mono-800 hover:text-wn-mono-50 disabled:cursor-not-allowed disabled:opacity-40";
+
+const textareaClassName =
+  "scrollbar-wn block w-full min-h-11 max-h-40 resize-none overflow-y-auto bg-transparent px-0 py-1.5 text-sm leading-normal text-wn-mono-100 outline-none placeholder:text-wn-mono-500 disabled:cursor-not-allowed";
+
+/** Matches Tailwind max-h-40 (10rem). */
+const TEXTAREA_MAX_HEIGHT_PX = 160;
 
 function CardToken({
   card,
@@ -139,6 +147,19 @@ export function WizardChatInput({
   const [isOver, setIsOver] = useState(false);
   const [previewCardId, setPreviewCardId] = useState<string | null>(null);
   const dropRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const syncTextareaHeight = useCallback(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) {
+      return;
+    }
+    textarea.style.height = "auto";
+    const nextHeight = Math.min(textarea.scrollHeight, TEXTAREA_MAX_HEIGHT_PX);
+    textarea.style.height = `${nextHeight}px`;
+    textarea.style.overflowY =
+      textarea.scrollHeight > TEXTAREA_MAX_HEIGHT_PX ? "auto" : "hidden";
+  }, []);
 
   const droppedCardIds = useMemo(
     () => new Set(cards.map((card) => card.id)),
@@ -278,6 +299,10 @@ export function WizardChatInput({
     [models],
   );
 
+  useLayoutEffect(() => {
+    syncTextareaHeight();
+  }, [value, cards.length, previewCard, syncTextareaHeight]);
+
   return (
     <div
       ref={dropRef}
@@ -313,13 +338,15 @@ export function WizardChatInput({
       ) : null}
 
       <textarea
+        ref={textareaRef}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         onKeyDown={onKeyDown}
         rows={1}
         placeholder={placeholder}
         disabled={disabled}
-        className="scrollbar-wn max-h-32 min-h-6 w-full resize-none bg-transparent text-sm leading-relaxed text-wn-mono-100 outline-none placeholder:text-wn-mono-500 disabled:cursor-not-allowed"
+        aria-label="WorldWizard message"
+        className={textareaClassName}
       />
 
       <div className="mt-3 flex items-center justify-between gap-3">
@@ -370,7 +397,7 @@ export function WizardChatInput({
               aria-label="Send"
               className={cx(
                 toolbarIconClassName,
-                canSend && "text-wn-mono-50 hover:bg-wn-mono-800",
+                canSend && `${primaryAccentFillClassName} hover:opacity-90`,
               )}
               onClick={onSubmit}
               disabled={!canSend}

@@ -1,7 +1,12 @@
-import { AnimatedPanel, Button, getHeadingProps } from "@worldnote/ui";
+import {
+  AnimatedPanel,
+  Button,
+  CloseIconButton,
+  fieldLabelClassName,
+  getHeadingProps,
+} from "@worldnote/ui";
 import type { Link } from "@worldnote/shared";
 import { useCallback, useRef, useState } from "react";
-import { modalFieldLabelClassName } from "../../Onboarding/fieldClassNames.js";
 import { usePanelHotkeys } from "../hooks/usePanelHotkeys.js";
 
 function formatSocketId(socketId: string): string {
@@ -76,36 +81,30 @@ export function LinkEditorPanel({
 
   return (
     <AnimatedPanel isOpen={isOpen} className={panelClassName}>
-      <header className="flex items-start justify-between gap-3 border-b border-wn-mono-800 px-4 py-3">
+      <header className="flex items-center justify-between gap-3 border-b border-wn-mono-800 px-4 py-3">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-wn-mono-500">
-            Link
-          </p>
           <h2 {...getHeadingProps("h6", { tone: "inverse", weight: "semibold" })}>
-            Socket wire
+            Link
           </h2>
         </div>
-        <button
-          type="button"
-          className="rounded-lg px-2 py-1 text-sm text-wn-mono-400 transition-colors hover:bg-wn-mono-800 hover:text-wn-mono-50"
-          onClick={onClose}
-          disabled={isDeleting}
-        >
-          Close
-        </button>
+        <CloseIconButton
+          aria-label="Close link editor"
+          isDisabled={isDeleting}
+          onPress={onClose}
+        />
       </header>
 
       <div className="scrollbar-wn min-h-0 flex-1 overflow-y-auto px-4 py-4">
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-1">
-            <span className={modalFieldLabelClassName}>Socket</span>
+            <span className={fieldLabelClassName}>Socket</span>
             <p className="rounded-xl border border-wn-mono-700 bg-wn-mono-950 px-3 py-2 text-sm text-wn-mono-50">
               {formatSocketId(activeLink.source_socket)} on {sourceCardName}
             </p>
           </div>
 
           <div className="flex flex-col gap-1">
-            <span className={modalFieldLabelClassName}>Plugged in</span>
+            <span className={fieldLabelClassName}>Linked card</span>
             <p className="rounded-xl border border-wn-mono-700 bg-wn-mono-950 px-3 py-2 text-sm text-wn-mono-50">
               {targetCardName}
             </p>

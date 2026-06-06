@@ -1,27 +1,23 @@
-/** Themed HeroUI field slots — surfaces/borders/text resolve per theme. */
-export const darkInputWrapperClassName =
-  "rounded-xl border border-wn-border-strong bg-wn-surface hover:!bg-wn-surface-raised data-[hover=true]:!bg-wn-surface-raised data-[hover=true]:!border-wn-mono-600 group-data-[focus=true]:!border-wn-mono-500 group-data-[focus=true]:!bg-wn-surface";
+import {
+  fieldInputClassName,
+  fieldInputClassNames,
+  fieldInputWrapperClassName,
+  fieldInnerWrapperClassName,
+} from "@worldnote/ui";
 
-export const darkInputClassName =
-  "!text-wn-text placeholder:!text-wn-text-subtle data-[hover=true]:!text-wn-text";
-
-/** HeroUI Input/Textarea slots for modals (no built-in label). */
-export const darkFieldInputClassNames = {
-  inputWrapper: darkInputWrapperClassName,
-  input: darkInputClassName,
-  innerWrapper: "bg-transparent data-[hover=true]:bg-transparent",
-};
-
-export const modalFieldLabelClassName = "text-sm font-medium text-wn-text";
+/** Themed HeroUI field slots — re-exported from @worldnote/ui for app modals. */
+export const darkInputWrapperClassName = fieldInputWrapperClassName;
+export const darkInputClassName = fieldInputClassName;
+export const darkFieldInputClassNames = fieldInputClassNames;
 
 export const modalPrimaryButtonClassName =
-  "min-w-26 rounded-full border-0 bg-wn-mono-50 font-semibold text-wn-mono-950 shadow-none hover:bg-wn-mono-100 data-[hover=true]:bg-wn-mono-100 data-[disabled=true]:bg-wn-mono-50/40 data-[disabled=true]:text-wn-mono-950/50";
+  "min-w-26 rounded-full border-0 !bg-wn-primary !text-wn-primary-foreground font-semibold shadow-none hover:!bg-wn-primary-hover data-[hover=true]:!bg-wn-primary-hover disabled:opacity-100 data-[disabled=true]:opacity-100 data-[disabled=true]:!bg-wn-primary/75 data-[disabled=true]:!text-wn-primary-foreground";
 
 export const onboardingFieldClassNames = {
   label: "text-wn-text",
   input: darkInputClassName,
   inputWrapper: darkInputWrapperClassName,
-  innerWrapper: darkFieldInputClassNames.innerWrapper,
+  innerWrapper: fieldInnerWrapperClassName,
   mainWrapper: "gap-1",
   errorMessage: "text-wn-red-400",
 };

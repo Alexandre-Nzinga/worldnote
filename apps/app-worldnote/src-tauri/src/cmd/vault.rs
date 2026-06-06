@@ -121,7 +121,10 @@ pub fn open_world(root: String) -> Result<String, String> {
         return Err("Vault is missing canvas_manifest.json".to_string());
     }
 
-    SqliteIndex::open(sqlite_path).map_err(|error| error.to_string())?;
+    let index = SqliteIndex::open(sqlite_path).map_err(|error| error.to_string())?;
+    index
+        .ensure_synced(&lore_dir)
+        .map_err(|error| error.to_string())?;
     Ok(root)
 }
 

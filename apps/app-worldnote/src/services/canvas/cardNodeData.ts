@@ -5,6 +5,7 @@ import type {
   CardNodeData,
   CardNodeScalars,
   CardNodeSelectModifiers,
+  CardViewMode,
   GroupMemberPreview,
 } from "@worldnote/canvas";
 
@@ -21,8 +22,13 @@ import {
 
 import { cardsInGroup } from "./groupMemberCards.js";
 import { makeCardDragStartHandler } from "./cardDragOut.js";
+import { withCardPatch } from "../crudWorldCard/withCardPatch.js";
 import { getSocketLinkLabels } from "../links/socketLinks.js";
-import type { VisibleSocketsByCardType } from "../settings/settings.js";
+import type {
+  CardTypeBadgeOverrides,
+  VisibleSocketsByCardType,
+} from "../settings/settings.js";
+import { resolveCardBadgeStyle } from "../settings/cardTypeBadgeSettings.js";
 import { getVisibleSocketsForCardType } from "../settings/visibleSocketSettings.js";
 
 export function cardImageSrc(
@@ -128,12 +134,42 @@ function subtitleForCard(card: WorldCard): string {
 
 export type WorldCardToNodeDataOptions = {
   visibleSocketsSettings?: VisibleSocketsByCardType;
+  cardTypeBadgeColors?: CardTypeBadgeOverrides;
   links?: Link[];
   cardsById?: Record<string, WorldCard>;
   onUpdate?: (partial: Record<string, unknown>) => void;
+  onViewModeChange?: (viewMode: CardViewMode) => void;
   onSelect?: (modifiers: CardNodeSelectModifiers) => void;
   onContextMenu?: (pointer: CardNodeContextMenuPointer) => void;
 };
+
+type SaveCardFn = (
+  card: WorldCard,
+  options?: { notify?: boolean },
+) => Promise<void>;
+
+/** Wires canvas card nodes to persist content edits vs silent view-mode toggles. */
+export function cardNodeSaveCallbacks(
+  card: WorldCard,
+  saveCard: SaveCardFn,
+): Pick<WorldCardToNodeDataOptions, "onUpdate" | "onViewModeChange"> {
+  return {
+    onViewModeChange: (viewMode) => {
+      void saveCard(
+        withCardPatch(card, {
+          custom_properties: {
+            ...(card.custom_properties ?? {}),
+            view_mode: viewMode,
+          },
+        }),
+        { notify: false },
+      );
+    },
+    onUpdate: (partial) => {
+      void saveCard(withCardPatch(card, partial));
+    },
+  };
+}
 
 export function cardNodeOnSelectHandler(
   cardId: string,
@@ -158,12 +194,16 @@ export function worldCardToNodeData(
 ): CardNodeData {
   const {
     visibleSocketsSettings,
+    cardTypeBadgeColors,
     links = [],
     cardsById = {},
     onUpdate,
+    onViewModeChange,
     onSelect = cardNodeOnSelectHandler(card.id),
     onContextMenu = cardNodeOnContextMenuHandler(card.id),
   } = options;
+
+  const badgeStyle = resolveCardBadgeStyle(card.card_type, cardTypeBadgeColors);
 
   const imageDisplay = normalizeCardImageDisplay(
     card.image_fit,
@@ -209,6 +249,8 @@ export function worldCardToNodeData(
     title: card.name,
     subtitle: subtitleForCard(card),
     cardType: card.card_type,
+    badgeClassName: badgeStyle.badgeClassName,
+    badgeTextColor: badgeStyle.badgeTextColor,
     description: cardDescriptionLine(card),
     imageUrl: cardImageSrc(vaultPath, card.image_path),
     crestUrl,
@@ -228,6 +270,7 @@ export function worldCardToNodeData(
     viewMode,
     customProperties: card.custom_properties,
     onUpdate,
+    onViewModeChange,
     onSelect,
     onContextMenu,
     onDragCardStart: makeCardDragStartHandler(card.id, card.name),

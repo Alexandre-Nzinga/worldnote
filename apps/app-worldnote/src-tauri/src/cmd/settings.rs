@@ -42,6 +42,48 @@ pub struct CanvasKeyboardShortcuts {
     pub redo: KeyboardShortcut,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct CardTypeBadgeOverride {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub badge_class_name: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub badge_text_color: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct WizardQuickCommandAvailability {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub min_cards: Option<u32>,
+    #[serde(default, skip_serializing_if = "HashMap::is_empty")]
+    pub require_types: HashMap<String, u32>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub require_any_of: Vec<HashMap<String, u32>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WizardQuickCommand {
+    pub id: String,
+    pub label: String,
+    pub icon: String,
+    pub kind: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub target_card_type: Option<String>,
+    pub prompt_template: String,
+    #[serde(default = "default_true")]
+    pub enabled: bool,
+    #[serde(default)]
+    pub built_in: bool,
+    #[serde(default)]
+    pub availability: WizardQuickCommandAvailability,
+}
+
+fn default_true() -> bool {
+    true
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WizardSettings {
@@ -49,6 +91,11 @@ pub struct WizardSettings {
     pub host: String,
     #[serde(default)]
     pub default_model: String,
+    /// Optional author instructions appended to the WorldWizard system prompt.
+    #[serde(default)]
+    pub guidelines: String,
+    #[serde(default)]
+    pub quick_commands: Vec<WizardQuickCommand>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -68,9 +115,18 @@ pub struct AppSettings {
     /// Appearance preference: "light", "dark", or "system". Defaults to "system".
     #[serde(default)]
     pub theme: Option<String>,
+    /// Accent color token for primary CTAs (e.g. "azure-500"). Defaults to "mono-50".
+    #[serde(default)]
+    pub primary_color: Option<String>,
     /// Canvas copy / paste / duplicate shortcuts.
     #[serde(default)]
     pub canvas_shortcuts: Option<CanvasKeyboardShortcuts>,
+    /// Per card-type badge color overrides.
+    #[serde(default)]
+    pub card_type_badge_colors: HashMap<String, CardTypeBadgeOverride>,
+    /// Measurement display: "metric" or "imperial". Stored values remain metric.
+    #[serde(default)]
+    pub unit_system: Option<String>,
 }
 
 fn settings_path(app: &tauri::AppHandle) -> Result<PathBuf, String> {

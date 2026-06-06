@@ -49,6 +49,7 @@ import {
 import { FamilyCrestOverlay } from "./FamilyCrestOverlay.js";
 import { GroupMembersVisual } from "./GroupMembersVisual.js";
 import type { GroupMemberPreview } from "./group-member-preview.js";
+import { useLazyImageVisible } from "./useLazyImageVisible.js";
 
 export type { GroupMemberPreview } from "./group-member-preview.js";
 
@@ -97,6 +98,8 @@ export type CardNodeData = {
   scalars?: CardNodeScalars;
   socketValues?: Record<string, string[]>;
   onUpdate?: (partial: Record<string, unknown>) => void;
+  /** Persists visual/node display preference without content-save feedback. */
+  onViewModeChange?: (viewMode: CardViewMode) => void;
   /** Canvas selection (shift/ctrl/meta for multi-select). */
   onSelect?: (modifiers: CardNodeSelectModifiers) => void;
   /** Opens the canvas card context menu. */
@@ -111,6 +114,9 @@ export type CardNodeData = {
   enterAnimation?: boolean;
   /** Member cards when this node is a group (`cardType` group). */
   groupMembers?: GroupMemberPreview[];
+  /** Optional user override from settings; falls back to `visualConfigFor`. */
+  badgeClassName?: string;
+  badgeTextColor?: string;
   /** @deprecated Grip uses pointer drag; kept for node data compatibility. */
   onDragCardStart?: unknown;
 };
@@ -423,7 +429,11 @@ function OverlayMediaCard({
   isSelected = false,
   onToggleView,
 }: OverlayMediaCardProps) {
-  const { isDark } = useImageLuminance(data.imageUrl);
+  const { ref: mediaRef, isVisible: mediaVisible } =
+    useLazyImageVisible<HTMLDivElement>(Boolean(data.imageUrl));
+  const { isDark } = useImageLuminance(data.imageUrl, {
+    enabled: mediaVisible,
+  });
   const titleColorClass = isDark === false ? "text-black" : "text-white"; // default to white on unknown
   const subtitleColorClass =
     isDark === false ? "text-black/70" : "text-white/80";
@@ -437,6 +447,7 @@ function OverlayMediaCard({
       isSelected={isSelected}
     >
       <div
+        ref={mediaRef}
         className={`relative w-full overflow-hidden bg-wn-mono-800 ${aspectClass}`}
       >
         {data.cardType === "group" &&
@@ -663,14 +674,16 @@ function CardNodeBody({
   onToggleView,
 }: CardNodeBodyProps) {
   const visual = visualConfigFor(data.cardType);
+  const badgeClassName = data.badgeClassName ?? visual.badgeClassName;
+  const badgeTextColor = data.badgeTextColor ?? visual.badgeTextColor;
 
   if (viewMode === "node") {
     return (
       <CardNodeView
         data={data}
         badgeLabel={visual.label}
-        badgeClassName={visual.badgeClassName}
-        badgeTextColor={visual.badgeTextColor}
+        badgeClassName={badgeClassName}
+        badgeTextColor={badgeTextColor}
         isSelected={isSelected}
         onToggleView={onToggleView}
       />
@@ -683,8 +696,8 @@ function CardNodeBody({
       widthClass={visual.widthClass}
       aspectClass={visual.aspectClass}
       badgeLabel={visual.label}
-      badgeClassName={visual.badgeClassName}
-      badgeTextColor={visual.badgeTextColor}
+      badgeClassName={badgeClassName}
+      badgeTextColor={badgeTextColor}
       titleClassName={visual.titleClassName}
       isSelected={isSelected}
       onToggleView={onToggleView}
@@ -715,15 +728,19 @@ function CardNodeInner({ data, selected = false }: NodeProps<CardFlowNode>) {
   const onToggleView = useCallback(() => {
     setViewMode((current) => {
       const next: CardViewMode = current === "visual" ? "node" : "visual";
-      data.onUpdate?.({
-        custom_properties: {
-          ...(data.customProperties ?? {}),
-          view_mode: next,
-        },
-      });
+      if (data.onViewModeChange) {
+        data.onViewModeChange(next);
+      } else {
+        data.onUpdate?.({
+          custom_properties: {
+            ...(data.customProperties ?? {}),
+            view_mode: next,
+          },
+        });
+      }
       return next;
     });
-  }, [data.customProperties, data.onUpdate]);
+  }, [data.customProperties, data.onUpdate, data.onViewModeChange]);
 
   const handles =
     viewMode === "visual" ? (

@@ -1,6 +1,7 @@
 import type { CanvasNodePlacement } from "@worldnote/canvas";
 import { invoke } from "@tauri-apps/api/core";
 import { WorldCardSchema, type WorldCard } from "@worldnote/shared";
+import { trackPersist } from "../../hooks/useSaveStatus.js";
 import { createCardTemplate, type NewCardType } from "./cardTemplates.js";
 import { updateCanvasManifestNode } from "../canvas/canvasManifest.js";
 
@@ -17,15 +18,17 @@ export async function createWorldCard({
   position,
   name,
 }: CreateWorldCardInput): Promise<WorldCard> {
-  const draft = createCardTemplate(cardType, position, name);
-  const card = WorldCardSchema.parse(draft);
+  return trackPersist(async () => {
+    const draft = createCardTemplate(cardType, position, name);
+    const card = WorldCardSchema.parse(draft);
 
-  await invoke<void>("upsert_card", { vault, card });
-  const placement: CanvasNodePlacement = {
-    cardId: card.id,
-    x: card.position.x,
-    y: card.position.y,
-  };
-  await updateCanvasManifestNode(vault, placement);
-  return card;
+    await invoke<void>("upsert_card", { vault, card });
+    const placement: CanvasNodePlacement = {
+      cardId: card.id,
+      x: card.position.x,
+      y: card.position.y,
+    };
+    await updateCanvasManifestNode(vault, placement);
+    return card;
+  });
 }

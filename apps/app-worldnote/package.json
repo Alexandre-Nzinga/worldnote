@@ -8,6 +8,7 @@
     "dev:web": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "generate:icons": "node src-tauri/scripts/generate-icons.cjs",
     "lint": "biome check .",
     "check-types": "tsc --noEmit",
     "test": "vitest run --passWithNoTests",
@@ -43,6 +44,7 @@
     "lodash.throttle": "^4.1.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-force-graph-2d": "^1.27.0",
     "react-hotkeys-hook": "^5.3.2",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
@@ -64,5 +66,7 @@
     "typescript": "^5.7.2",
     "vite": "^6.0.6",
     "vitest": "^3.0.5"
+    ,
+    "icon-gen": "^5.0.0"
   }
 }

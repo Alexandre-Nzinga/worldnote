@@ -1,17 +1,24 @@
 import { Input } from "@heroui/react";
-import { AnimatedModal, Button, getHeadingProps } from "@worldnote/ui";
+import {
+  AnimatedModal,
+  Button,
+  fieldLabelClassName,
+  getBodyTextStyle,
+  getHeadingProps,
+} from "@worldnote/ui";
 import { useCallback, useEffect, useState } from "react";
 import { useSettings } from "../../hooks/useSettings.js";
 import {
   normalizeCanvasKeyboardShortcuts,
   type CanvasKeyboardShortcuts,
 } from "../../services/settings/keyboardShortcuts.js";
+import { normalizeCardTypeBadgeOverrides } from "../../services/settings/cardTypeBadgeSettings.js";
 import { normalizeVisibleSocketsSettings } from "../../services/settings/visibleSocketSettings.js";
+import { CardTypeBadgeSettings } from "./CardTypeBadgeSettings.js";
 import { KeyboardShortcutsSettings } from "./KeyboardShortcutsSettings.js";
 import { SocketVisibilitySettings } from "./SocketVisibilitySettings.js";
 import {
   darkFieldInputClassNames,
-  modalFieldLabelClassName,
   modalPrimaryButtonClassName,
 } from "../Onboarding/fieldClassNames.js";
 
@@ -28,6 +35,9 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [visibleSockets, setVisibleSockets] = useState(
     normalizeVisibleSocketsSettings(undefined),
   );
+  const [cardTypeBadgeColors, setCardTypeBadgeColors] = useState(
+    normalizeCardTypeBadgeOverrides(undefined),
+  );
   const [canvasShortcuts, setCanvasShortcuts] =
     useState<CanvasKeyboardShortcuts>(
       normalizeCanvasKeyboardShortcuts(undefined),
@@ -42,6 +52,9 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     setUsername(settings.username);
     setVisibleSockets(
       normalizeVisibleSocketsSettings(settings.visibleSockets),
+    );
+    setCardTypeBadgeColors(
+      normalizeCardTypeBadgeOverrides(settings.cardTypeBadgeColors),
     );
     setCanvasShortcuts(
       normalizeCanvasKeyboardShortcuts(settings.canvasShortcuts),
@@ -76,6 +89,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         ...settings,
         username: username.trim(),
         visibleSockets,
+        cardTypeBadgeColors,
         canvasShortcuts,
       });
       onClose();
@@ -86,7 +100,15 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     } finally {
       setIsSaving(false);
     }
-  }, [canvasShortcuts, onClose, save, settings, username, visibleSockets]);
+  }, [
+    canvasShortcuts,
+    cardTypeBadgeColors,
+    onClose,
+    save,
+    settings,
+    username,
+    visibleSockets,
+  ]);
 
   const canSave = username.trim().length > 0 && !isSaving;
 
@@ -107,7 +129,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             >
               Settings
             </h2>
-            <p className="text-sm text-wn-mono-400">
+            <p style={getBodyTextStyle("small")}>
               Update your profile and view where your worlds are stored.
             </p>
           </header>
@@ -116,7 +138,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             <div className="flex flex-col gap-1">
               <label
                 htmlFor="settings-username"
-                className={modalFieldLabelClassName}
+                className={fieldLabelClassName}
               >
                 Username <span className="text-wn-red-500">*</span>
               </label>
@@ -132,7 +154,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             </div>
 
             <div className="flex flex-col gap-1">
-              <span className={modalFieldLabelClassName}>WorldNote folder</span>
+              <span className={fieldLabelClassName}>WorldNote folder</span>
               <p className="rounded-xl border border-wn-mono-700 bg-wn-mono-950 px-3 py-2 text-sm text-wn-mono-50">
                 {settings.worldnoteRoot}
               </p>
@@ -141,6 +163,12 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             <SocketVisibilitySettings
               value={visibleSockets}
               onChange={setVisibleSockets}
+              disabled={isSaving}
+            />
+
+            <CardTypeBadgeSettings
+              value={cardTypeBadgeColors}
+              onChange={setCardTypeBadgeColors}
               disabled={isSaving}
             />
 

@@ -167,7 +167,8 @@ export function keyboardShortcutFromEvent(
 
   return {
     key: event.key.length === 1 ? event.key.toLowerCase() : event.key,
-    ctrl: hasMod ? true : undefined,
+    ctrl: event.ctrlKey ? true : undefined,
+    meta: event.metaKey ? true : undefined,
     alt: event.altKey ? true : undefined,
     shift: event.shiftKey ? true : undefined,
   };

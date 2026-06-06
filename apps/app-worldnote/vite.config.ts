@@ -39,13 +39,17 @@ export default defineConfig({
     },
   },
   resolve: {
-    alias: {
-      "@": path.join(rootDir, "src"),
-      "@worldnote/shared/components": path.join(sharedSrcDir, "components"),
-      "@worldnote/shared/hooks": path.join(sharedSrcDir, "hooks"),
-      "@worldnote/shared/lib": path.join(sharedSrcDir, "lib"),
-      "@worldnote/shared/styles": path.join(sharedSrcDir, "styles"),
-    },
+    alias: [
+      { find: "@", replacement: path.join(rootDir, "src") },
+      {
+        find: /^@worldnote\/shared(\/.*)?$/,
+        replacement: `${sharedSrcDir.replace(/\\/g, "/")}$1`,
+      },
+      {
+        find: /^@worldnote\/ui(\/.*)?$/,
+        replacement: `${path.join(rootDir, "../../packages/pkg-ui/src").replace(/\\/g, "/")}$1`,
+      },
+    ],
   },
   envPrefix: ["VITE_", "TAURI_"],
   build: {

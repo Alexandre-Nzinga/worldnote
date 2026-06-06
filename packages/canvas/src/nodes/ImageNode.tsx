@@ -2,6 +2,7 @@ import type { Node, NodeProps } from "@xyflow/react";
 import { NodeResizer, useInternalNode } from "@xyflow/react";
 import { DEFAULT_CARD_IMAGE_POSITION } from "@worldnote/shared";
 import { motion } from "framer-motion";
+import type { SyntheticEvent } from "react";
 import { memo, useEffect, useRef, useState } from "react";
 import { useCanvasImageInteraction } from "./CanvasImageInteractionContext.js";
 import { CardImageView } from "./CardImageView.js";
@@ -44,22 +45,20 @@ function ImageNodeInner({
   } | null>(null);
   const syncedAspectRef = useRef(false);
 
+  const handleImageLoad = (event: SyntheticEvent<HTMLImageElement>) => {
+    syncedAspectRef.current = false;
+    const img = event.currentTarget;
+    if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+      setNaturalSize({
+        width: img.naturalWidth,
+        height: img.naturalHeight,
+      });
+    }
+  };
+
   useEffect(() => {
     syncedAspectRef.current = false;
     setNaturalSize(null);
-    if (!data.imageSrc) {
-      return;
-    }
-    const probe = new Image();
-    probe.onload = () => {
-      if (probe.naturalWidth > 0 && probe.naturalHeight > 0) {
-        setNaturalSize({
-          width: probe.naturalWidth,
-          height: probe.naturalHeight,
-        });
-      }
-    };
-    probe.src = data.imageSrc;
   }, [data.imageSrc]);
 
   const nodeWidth =
@@ -134,6 +133,7 @@ function ImageNodeInner({
         fit="fill"
         position={data.imagePosition ?? DEFAULT_CARD_IMAGE_POSITION}
         className="block h-full w-full"
+        onLoad={handleImageLoad}
       />
       {resizeSize ? (
         <div className="pointer-events-none absolute bottom-1.5 right-1.5 rounded-md bg-wn-mono-950/80 px-1.5 py-0.5 font-mono text-[10px] leading-none text-wn-mono-50 shadow-sm backdrop-blur-sm">

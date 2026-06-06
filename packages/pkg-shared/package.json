@@ -7,7 +7,11 @@
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./components/tiptap-templates/simple/lore-simple-editor": "./src/components/tiptap-templates/simple/lore-simple-editor.tsx"
+    "./lib/*": "./src/lib/*.ts",
+    "./hooks/*": "./src/hooks/*.ts",
+    "./styles/*": "./src/styles/*.scss",
+    "./components/tiptap-ui/blockquote-button": "./src/components/tiptap-ui/blockquote-button/index.tsx",
+    "./components/*": "./src/components/*"
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",

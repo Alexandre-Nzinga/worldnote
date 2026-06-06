@@ -1,4 +1,9 @@
-import type { Link, WorldCard } from "@worldnote/shared";
+import {
+  listEmptyGeneratableFields,
+  listGeneratableFields,
+  type Link,
+  type WorldCard,
+} from "@worldnote/shared";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
@@ -7,17 +12,20 @@ import {
   type AppSettings,
 } from "../../../services/settings/settings.js";
 import {
+  buildPatchContextMessage,
   buildSystemPrompt,
   buildWorldContextMessage,
   checkOllamaHealth,
   DEFAULT_OLLAMA_HOST,
   fetchWorldCardIndex,
   generateCard,
+  generateCardPatch,
   listOllamaModels,
   streamWizardChat,
   type CardIndexRow,
   type WizardActionPreset,
   type WizardChatMessage,
+  type WizardContextScope,
 } from "../../../services/wizard/index.js";
 
 export type WizardStatus = "idle" | "connecting" | "generating";
@@ -27,8 +35,10 @@ export type WizardMessage = {
   role: "user" | "assistant";
   content: string;
   streaming?: boolean;
-  /** A generated card awaiting "Spawn onto Canvas". */
+  /** A generated card awaiting spawn or apply. */
   generatedCard?: WorldCard;
+  /** Whether the generated card should be spawned (new) or applied (patch). */
+  generatedCardAction?: "spawn" | "apply";
   error?: boolean;
 };
 
@@ -38,6 +48,8 @@ type UseWorldWizardArgs = {
   cardsById: Record<string, WorldCard>;
   links: Link[];
   isOpen: boolean;
+  /** Seeds focus cards and restricts context to them when opening from a selection. */
+  seedCardIds?: string[] | null;
 };
 
 function makeId(): string {
@@ -50,8 +62,10 @@ export function useWorldWizard({
   cardsById,
   links,
   isOpen,
+  seedCardIds = null,
 }: UseWorldWizardArgs) {
   const [droppedCardIds, setDroppedCardIds] = useState<string[]>([]);
+  const [contextScope, setContextScope] = useState<WizardContextScope>("world");
   const [messages, setMessages] = useState<WizardMessage[]>([]);
   const [status, setStatus] = useState<WizardStatus>("idle");
   const [host, setHost] = useState(DEFAULT_OLLAMA_HOST);
@@ -63,6 +77,7 @@ export function useWorldWizard({
   const settingsRef = useRef<AppSettings | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const sessionVaultRef = useRef<string | null>(null);
+  const wasOpenRef = useRef(false);
 
   const droppedCards = useMemo(
     () =>
@@ -85,9 +100,10 @@ export function useWorldWizard({
             links,
             indexRows,
             focusedCardIds: droppedCardIds,
+            contextScope,
           })
         : "",
-    [vaultPath, worldName, cardsById, links, indexRows, droppedCardIds],
+    [vaultPath, worldName, cardsById, links, indexRows, droppedCardIds, contextScope],
   );
 
   const refreshConnection = useCallback(async (nextHost: string) => {
@@ -119,15 +135,34 @@ export function useWorldWizard({
     if (sessionVaultRef.current !== null && sessionVaultRef.current !== vaultPath) {
       setMessages([]);
       setDroppedCardIds([]);
+      setContextScope("world");
     }
     sessionVaultRef.current = vaultPath;
   }, [isOpen, vaultPath]);
 
   useEffect(() => {
     if (!isOpen) {
+      wasOpenRef.current = false;
       sessionVaultRef.current = null;
+      return;
     }
-  }, [isOpen]);
+    if (!vaultPath) return;
+
+    const justOpened = !wasOpenRef.current;
+    wasOpenRef.current = true;
+
+    if (seedCardIds && seedCardIds.length > 0) {
+      setDroppedCardIds([...seedCardIds]);
+      setContextScope("focused");
+      setMessages([]);
+      return;
+    }
+
+    if (justOpened) {
+      setContextScope("world");
+      setDroppedCardIds([]);
+    }
+  }, [isOpen, vaultPath, seedCardIds]);
 
   useEffect(() => {
     if (!isOpen || !vaultPath) return;
@@ -187,6 +222,7 @@ export function useWorldWizard({
     setDroppedCardIds((current) =>
       current.includes(cardId) ? current : [...current, cardId],
     );
+    setContextScope("focused");
   }, []);
 
   const removeCard = useCallback((cardId: string) => {
@@ -208,13 +244,18 @@ export function useWorldWizard({
     [],
   );
 
+  const wizardGuidelines = useCallback(
+    () => settingsRef.current?.wizard?.guidelines?.trim() || "",
+    [],
+  );
+
   const buildChatMessages = useCallback(
     (
       userPrompt: string,
       priorMessages: WizardMessage[],
     ): WizardChatMessage[] => {
       const chatMessages: WizardChatMessage[] = [
-        { role: "system", content: buildSystemPrompt() },
+        { role: "system", content: buildSystemPrompt(wizardGuidelines()) },
       ];
       if (worldContextMessage) {
         chatMessages.push({ role: "user", content: worldContextMessage });
@@ -231,7 +272,7 @@ export function useWorldWizard({
       chatMessages.push({ role: "user", content: userPrompt });
       return chatMessages;
     },
-    [worldContextMessage],
+    [worldContextMessage, wizardGuidelines],
   );
 
   const sendChat = useCallback(
@@ -285,6 +326,95 @@ export function useWorldWizard({
     [model, status, host, messages, buildChatMessages, updateMessage],
   );
 
+  const runPatchCard = useCallback(
+    async (preset: WizardActionPreset) => {
+      if (!model || status === "generating" || !preset.patchMode) return;
+      const targetCard = droppedCards[0];
+      if (!targetCard) return;
+
+      const userMessage: WizardMessage = {
+        id: makeId(),
+        role: "user",
+        content: preset.buildPrompt(droppedCards),
+      };
+      const assistantId = makeId();
+      setMessages((current) => [
+        ...current,
+        userMessage,
+        {
+          id: assistantId,
+          role: "assistant",
+          content: "Updating card…",
+          streaming: true,
+        },
+      ]);
+
+      setStatus("generating");
+      const mode = preset.patchMode;
+      const fields =
+        mode === "fill-gaps"
+          ? listEmptyGeneratableFields(targetCard)
+          : listGeneratableFields(targetCard.card_type);
+
+      if (fields.length === 0) {
+        updateMessage(assistantId, {
+          streaming: false,
+          error: true,
+          content: "No fields to generate on this card.",
+        });
+        setStatus("idle");
+        return;
+      }
+
+      const contextMessage = buildPatchContextMessage(
+        [targetCard],
+        cardsById,
+        links,
+        worldName,
+      );
+
+      try {
+        const card = await generateCardPatch({
+          host,
+          model,
+          card: targetCard,
+          mode,
+          systemPrompt: buildSystemPrompt(wizardGuidelines()),
+          contextMessage,
+          fields,
+        });
+        updateMessage(assistantId, {
+          streaming: false,
+          content: `Updated **${card.name}**.`,
+          generatedCard: card,
+          generatedCardAction: "apply",
+        });
+      } catch (error) {
+        updateMessage(assistantId, {
+          streaming: false,
+          error: true,
+          content:
+            error instanceof Error
+              ? error.message
+              : "The wizard could not update the card.",
+        });
+      } finally {
+        setStatus("idle");
+      }
+    },
+    [
+      model,
+      status,
+      host,
+      droppedCards,
+      cardsById,
+      links,
+      worldName,
+      updateMessage,
+      wizardGuidelines,
+    ],
+  );
+
   const runGenerateCard = useCallback(
     async (preset: WizardActionPreset) => {
       if (!model || status === "generating" || !preset.targetCardType) return;
@@ -313,7 +443,7 @@ export function useWorldWizard({
           host,
           model,
           cardType: preset.targetCardType,
-          systemPrompt: buildSystemPrompt(),
+          systemPrompt: buildSystemPrompt(wizardGuidelines()),
           contextMessage: worldContextMessage,
           userPrompt,
           position: { x: 0, y: 0 },
@@ -322,6 +452,7 @@ export function useWorldWizard({
           streaming: false,
           content: `Generated **${card.name}**.`,
           generatedCard: card,
+          generatedCardAction: "spawn",
         });
       } catch (error) {
         updateMessage(assistantId, {
@@ -343,6 +474,7 @@ export function useWorldWizard({
       droppedCards,
       worldContextMessage,
       updateMessage,
+      wizardGuidelines,
     ],
   );
 
@@ -350,11 +482,13 @@ export function useWorldWizard({
     (preset: WizardActionPreset) => {
       if (preset.kind === "generate-card") {
         void runGenerateCard(preset);
+      } else if (preset.kind === "patch-card") {
+        void runPatchCard(preset);
       } else {
         void sendChat(preset.buildPrompt(droppedCards));
       }
     },
-    [runGenerateCard, sendChat, droppedCards],
+    [runGenerateCard, runPatchCard, sendChat, droppedCards],
   );
 
   const stop = useCallback(() => {
@@ -364,6 +498,7 @@ export function useWorldWizard({
   return {
     droppedCardIds,
     droppedCards,
+    contextScope,
     messages,
     status,
     host,

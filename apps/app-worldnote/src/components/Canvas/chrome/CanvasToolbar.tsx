@@ -7,6 +7,8 @@ import {
 } from "@worldnote/shared";
 import {
   AnimatedPopover,
+  fieldLabelClassName,
+  getBodyTextStyle,
   getHeadingProps,
   MaterialSymbol,
   MotionPressable,
@@ -14,6 +16,11 @@ import {
 } from "@worldnote/ui";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { NewCardType } from "../../../services/crudWorldCard/cardTemplates.js";
+import {
+  dockInactiveClassName,
+  primaryAccentFillClassName,
+} from "../../../services/settings/primaryAccentStyles.js";
+import { surfacePanelClassName } from "../../shell/pageShellStyles.js";
 import { DockTabs, type DockTabItem } from "../../ui/DockTabs.js";
 
 export type CreateOption = NewCardType;
@@ -79,11 +86,16 @@ const createMenuIcons: Record<CreateOption, string> = {
   combat_style: "swords",
 };
 
-const createSearchFieldClassName =
-  "relative flex w-full items-center rounded-full bg-wn-mono-800 transition-colors hover:bg-wn-mono-700 focus-within:bg-wn-mono-700";
+const createSearchFieldClassName = "relative flex w-full items-center";
 
 const createSearchInputClassName =
-  "w-full rounded-full border-0 bg-transparent py-2.5 pl-10 pr-11 text-sm text-wn-mono-100 shadow-none ring-0 outline-none transition-colors placeholder:text-wn-mono-500 focus:outline-none focus:ring-0";
+  "w-full rounded-xl border-0 bg-wn-surface-raised py-2.5 pl-10 pr-10 text-sm text-wn-text shadow-none outline-none transition-colors placeholder:text-wn-text-subtle hover:bg-wn-mono-800 focus:bg-wn-mono-800 focus:ring-2 focus:ring-wn-mono-600";
+
+const createColumnPanelClassName =
+  "min-w-0 rounded-xl bg-wn-surface-sunken px-3 py-3";
+
+const createOptionClassName =
+  "flex w-full items-center gap-2.5 rounded-xl px-2 py-2 text-left transition-colors hover:bg-wn-surface-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wn-mono-600";
 
 function matchesCreateQuery(type: CreateOption, normalizedQuery: string): boolean {
   if (!normalizedQuery) {
@@ -108,9 +120,13 @@ type CanvasToolbarProps = {
   onToggleAllCardViews?: () => void;
   onToggleWizard?: () => void;
   isWizardOpen?: boolean;
+  onToggleGraphView?: () => void;
+  isGraphViewOpen?: boolean;
   /** Renders above the dock (e.g. sticky note controls). */
   noteToolbar?: ReactNode;
   imageToolbar?: ReactNode;
+  /** Multi-select layout and bulk actions above the dock. */
+  selectionToolbar?: ReactNode;
 };
 
 export function CanvasToolbar({
@@ -125,8 +141,11 @@ export function CanvasToolbar({
   onToggleAllCardViews,
   onToggleWizard,
   isWizardOpen = false,
+  onToggleGraphView,
+  isGraphViewOpen = false,
   noteToolbar,
   imageToolbar,
+  selectionToolbar,
 }: CanvasToolbarProps) {
   const [createMenuOpen, setCreateMenuOpen] = useState(false);
   const [createQuery, setCreateQuery] = useState("");
@@ -209,6 +228,8 @@ export function CanvasToolbar({
     onCreate?.(option);
   };
 
+  const dockActiveClassName = primaryAccentFillClassName;
+
   const dockItems = useMemo<DockTabItem[]>(
     () => [
       {
@@ -217,9 +238,7 @@ export function CanvasToolbar({
         icon: "near_me",
         iconClassName: "-scale-x-100",
         colorClassName:
-          activeTool === "select"
-            ? "bg-wn-mono-50 text-wn-mono-950"
-            : "bg-wn-mono-800 text-wn-mono-50",
+          activeTool === "select" ? dockActiveClassName : dockInactiveClassName,
         isActive: activeTool === "select",
       },
       {
@@ -227,9 +246,7 @@ export function CanvasToolbar({
         name: "Text",
         icon: "title",
         colorClassName:
-          activeTool === "text"
-            ? "bg-wn-mono-50 text-wn-mono-950"
-            : "bg-wn-mono-800 text-wn-mono-50",
+          activeTool === "text" ? dockActiveClassName : dockInactiveClassName,
         isActive: activeTool === "text",
         disabled: !supportsTextTool,
         onPress: onTextTool,
@@ -239,9 +256,7 @@ export function CanvasToolbar({
         name: "Image tool",
         icon: "image",
         colorClassName:
-          activeTool === "image"
-            ? "bg-wn-mono-50 text-wn-mono-950"
-            : "bg-wn-mono-800 text-wn-mono-50",
+          activeTool === "image" ? dockActiveClassName : dockInactiveClassName,
         isActive: activeTool === "image",
         disabled: !supportsImageTool,
         onPress: onImageTool,
@@ -259,17 +274,28 @@ export function CanvasToolbar({
           />
         ),
         colorClassName: isWizardOpen
-          ? "bg-wn-mono-50 text-wn-mono-950"
-          : "bg-wn-mono-800 text-wn-mono-50",
+          ? dockActiveClassName
+          : dockInactiveClassName,
         isActive: isWizardOpen,
         disabled: !onToggleWizard,
         onPress: onToggleWizard,
       },
       {
+        id: "graph-view",
+        name: "Graph view",
+        icon: "hub",
+        colorClassName: isGraphViewOpen
+          ? dockActiveClassName
+          : dockInactiveClassName,
+        isActive: isGraphViewOpen,
+        disabled: !onToggleGraphView,
+        onPress: onToggleGraphView,
+      },
+      {
         id: "vault",
         name: "Vault",
         icon: "layers",
-        colorClassName: "bg-wn-mono-800 text-wn-mono-50",
+        colorClassName: dockInactiveClassName,
         disabled: !supportsVault,
         onPress: onOpenVault,
       },
@@ -277,7 +303,7 @@ export function CanvasToolbar({
         id: "toggle-views",
         name: "Toggle card view",
         icon: "view_quilt",
-        colorClassName: "bg-wn-mono-800 text-wn-mono-50",
+        colorClassName: dockInactiveClassName,
         disabled: !supportsBulkViewToggle,
         onPress: onToggleAllCardViews,
       },
@@ -285,7 +311,9 @@ export function CanvasToolbar({
         id: "create",
         name: "Create card",
         icon: "add",
-        colorClassName: "bg-wn-mono-800 text-wn-mono-50",
+        colorClassName: createMenuOpen
+          ? dockActiveClassName
+          : dockInactiveClassName,
         isActive: createMenuOpen,
         disabled: !supportsCreate,
         onPress: () => {
@@ -302,12 +330,14 @@ export function CanvasToolbar({
       closeCreateMenu,
       createMenuOpen,
       isWizardOpen,
+      isGraphViewOpen,
       onImageTool,
       onTextTool,
       onOpenVault,
       supportsTextTool,
       onToggleAllCardViews,
       onToggleWizard,
+      onToggleGraphView,
       supportsBulkViewToggle,
       supportsCreate,
       supportsImageTool,
@@ -319,10 +349,13 @@ export function CanvasToolbar({
     <footer
       className={`pointer-events-none absolute inset-x-0 bottom-4 z-20 flex flex-col items-center gap-2 px-4 ${className ?? ""}`}
     >
-      {noteToolbar || imageToolbar ? (
+      {noteToolbar || imageToolbar || selectionToolbar ? (
         <div className="pointer-events-auto flex flex-col items-center gap-2">
           {noteToolbar ? <div className="flex justify-center">{noteToolbar}</div> : null}
           {imageToolbar ? <div className="flex justify-center">{imageToolbar}</div> : null}
+          {selectionToolbar ? (
+            <div className="flex justify-center">{selectionToolbar}</div>
+          ) : null}
         </div>
       ) : null}
       <div
@@ -333,22 +366,14 @@ export function CanvasToolbar({
 
         <AnimatedPopover
           isOpen={createMenuOpen}
-          className="scrollbar-wn absolute bottom-full left-1/2 z-50 mb-3 max-h-[60vh] w-136 max-w-[calc(100vw-2rem)] -translate-x-1/2 overflow-y-auto rounded-xl border border-wn-mono-700 bg-wn-mono-900 p-3 shadow-lg"
+          className={`scrollbar-wn absolute bottom-full left-1/2 z-50 mb-3 max-h-[60vh] w-136 max-w-[calc(100vw-2rem)] -translate-x-1/2 overflow-y-auto ${surfacePanelClassName} shadow-lg`}
         >
-          <div className="mb-3 space-y-2">
-            <h2
-              {...getHeadingProps("h5", {
-                tone: "subtle",
-                weight: "bold",
-                className: "px-1",
-              })}
-            >
-              Create card
-            </h2>
+          <div className="flex flex-col gap-4">
+            <h2 {...getHeadingProps("h5", { tone: "inverse" })}>Create card</h2>
             <div className={createSearchFieldClassName}>
               <MaterialSymbol
                 name="search"
-                className="pointer-events-none absolute left-3.5 text-[20px] text-wn-mono-500"
+                className="pointer-events-none absolute left-3.5 text-[20px] text-wn-text-subtle"
                 aria-hidden
               />
               <input
@@ -364,7 +389,7 @@ export function CanvasToolbar({
                 <button
                   type="button"
                   aria-label="Clear search"
-                  className="absolute right-2 flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-wn-mono-700 text-wn-mono-300 transition-colors hover:bg-wn-mono-600 hover:text-wn-mono-50"
+                  className="absolute right-2 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-wn-surface text-wn-text-muted transition-colors hover:bg-wn-mono-800 hover:text-wn-text"
                   onClick={() => {
                     setCreateQuery("");
                     createSearchRef.current?.focus();
@@ -374,24 +399,27 @@ export function CanvasToolbar({
                 </button>
               ) : null}
             </div>
-          </div>
 
-          {hasCreateResults ? (
-            <div className="grid grid-cols-3 gap-3">
-              {groupedCreateOptions.map(({ cardClass, types }) => (
-                <CreateCardClassColumn
-                  key={cardClass}
-                  cardClass={cardClass}
-                  types={types}
-                  onSelect={handleSelectCreateOption}
-                />
-              ))}
-            </div>
-          ) : (
-            <p className="px-1 py-4 text-center text-sm text-wn-mono-500">
-              No matching cards
-            </p>
-          )}
+            {hasCreateResults ? (
+              <div className="grid grid-cols-3 gap-3">
+                {groupedCreateOptions.map(({ cardClass, types }) => (
+                  <CreateCardClassColumn
+                    key={cardClass}
+                    cardClass={cardClass}
+                    types={types}
+                    onSelect={handleSelectCreateOption}
+                  />
+                ))}
+              </div>
+            ) : (
+              <p
+                className="py-4 text-center"
+                style={getBodyTextStyle("small")}
+              >
+                No matching cards
+              </p>
+            )}
+          </div>
         </AnimatedPopover>
       </div>
     </footer>
@@ -410,30 +438,24 @@ function CreateCardClassColumn({
   onSelect,
 }: CreateCardClassColumnProps) {
   return (
-    <div className="min-w-0">
-      <h3
-        {...getHeadingProps("h6", {
-          tone: "subtle",
-          weight: "bold",
-          className: "mb-1.5 px-1",
-        })}
-      >
+    <div className={createColumnPanelClassName}>
+      <span className={`${fieldLabelClassName} mb-2 block`}>
         {CARD_CLASS_LABELS[cardClass]}
-      </h3>
+      </span>
       <div className="flex flex-col gap-0.5">
         {types.map((type) => (
           <MotionPressable
             key={type}
-            className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-wn-mono-200 outline-none ring-0 hover:bg-wn-mono-800 focus:outline-none focus-visible:outline-none"
+            className={createOptionClassName}
             onClick={() => onSelect(type)}
           >
-            <span className="shrink-0 text-wn-mono-400">
+            <span className="shrink-0 text-wn-text-muted">
               <MaterialSymbol
                 name={createMenuIcons[type]}
                 className="text-[20px]"
               />
             </span>
-            <span className="truncate text-sm font-semibold text-wn-mono-100">
+            <span className="truncate text-sm font-medium text-wn-text">
               {CARD_TYPE_LABELS[type]}
             </span>
           </MotionPressable>

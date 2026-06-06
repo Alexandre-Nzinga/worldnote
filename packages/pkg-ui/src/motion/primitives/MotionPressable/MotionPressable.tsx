@@ -1,0 +1,41 @@
+import { motion } from "framer-motion";
+import clsx from "clsx";
+import type { ComponentProps, ReactNode } from "react";
+import { pressableHover, pressableTap } from "../../foundation/presets.js";
+import { tapTransition } from "../../foundation/tokens.js";
+import { usePrefersReducedMotion } from "../../foundation/usePrefersReducedMotion.js";
+
+export type MotionPressableProps = ComponentProps<typeof motion.button> & {
+  children: ReactNode;
+  /** Enable subtle hover scale (default true for card-like surfaces). */
+  enableHover?: boolean;
+};
+
+/**
+ * Native button with tap (and optional hover) scale feedback.
+ * Use for custom press targets; prefer {@link Button} for HeroUI-styled actions.
+ */
+export function MotionPressable({
+  children,
+  className,
+  disabled,
+  enableHover = false,
+  ...props
+}: MotionPressableProps) {
+  const reducedMotion = usePrefersReducedMotion();
+  const canAnimate = !disabled && !reducedMotion;
+
+  return (
+    <motion.button
+      type="button"
+      disabled={disabled}
+      className={clsx(className)}
+      whileTap={canAnimate ? pressableTap : undefined}
+      whileHover={canAnimate && enableHover ? pressableHover : undefined}
+      transition={tapTransition}
+      {...props}
+    >
+      {children}
+    </motion.button>
+  );
+}

@@ -2,11 +2,27 @@ import { Autocomplete, AutocompleteItem } from "@heroui/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MaterialSymbol } from "../../../atoms/MaterialSymbol/MaterialSymbol.js";
 import { resolveOverlayContainer } from "../../../overlay/resolveOverlayContainer.js";
+import {
+  comboboxHeaderItemClassName,
+  comboboxInputWrapperClassName,
+  fieldClearButtonClassName,
+  fieldInputClassName,
+  fieldInnerWrapperClassName,
+  fieldLabelClassName,
+  fieldLabelRowClassName,
+  fieldStackClassName,
+  selectItemClassName,
+  selectListboxClassName,
+  selectPopoverClassName,
+} from "../fieldStyles.js";
 
 export type CardReferenceOption = {
   id: string;
   name: string;
   typeLabel: string;
+  typeIcon?: string;
+  badgeClassName?: string;
+  badgeTextColor?: string;
 };
 
 export type CardReferenceCreateOption = {
@@ -22,42 +38,31 @@ export type CardReferenceComboBoxProps = {
   onSelect: (cardId: string) => void;
   onClear?: () => void;
   createOptions?: CardReferenceCreateOption[];
+  /** Shown at the top when the search field is empty. */
+  recentSuggestions?: CardReferenceOption[];
   disabled?: boolean;
   placeholder?: string;
   className?: string;
   /** Hides the visible label while keeping it for assistive tech. */
   hideLabel?: boolean;
+  /** Override label typography (e.g. inspector subtle labels). */
+  labelClassName?: string;
 };
 
 const CREATE_KEY_PREFIX = "__create__:";
+const HEADER_KEY_PREFIX = "__header__:";
 
-const fieldLabelClassName = "text-xs font-medium text-wn-text-subtle";
-
-const inputWrapperClassName =
-  "flex min-h-0 h-auto min-h-10 items-center gap-0 rounded-lg border border-wn-mono-700 bg-transparent pl-3 pr-1 shadow-none ring-0 outline-none hover:!bg-transparent data-[hover=true]:!border-wn-mono-600 data-[hover=true]:!bg-transparent group-data-[focus=true]:!border-wn-mono-50 group-data-[focus=true]:!bg-transparent group-data-[focus=true]:ring-0";
-
-const innerWrapperClassName =
-  "flex min-h-0 min-w-0 flex-1 items-center bg-transparent pe-0 data-[hover=true]:bg-transparent";
-
-const inputClassName =
-  "!pe-0 !text-sm text-wn-mono-200 placeholder:!text-wn-mono-600 data-[hover=true]:!text-wn-mono-200";
-
-const endContentWrapperClassName =
-  "!mr-0 flex h-10 w-9 shrink-0 items-center justify-center self-center p-0";
-
-const selectorButtonClassName =
-  "!m-0 flex h-full min-h-0 w-full min-w-0 items-center justify-center !rounded-none bg-transparent !p-0 text-wn-mono-500 shadow-none data-[hover=true]:bg-transparent";
-
-const popoverSurfaceClassName =
-  "z-[250] rounded-xl border-0 bg-wn-mono-900 p-1 shadow-none";
-
-const listboxClassName = "max-h-60 gap-0.5 overflow-y-auto";
-
-const itemClassName =
-  "rounded-lg text-wn-mono-100 data-[hover=true]:bg-wn-mono-700 data-[hover=true]:text-wn-mono-50 data-[selectable=true]:focus:bg-wn-mono-700 data-[selectable=true]:focus:text-wn-mono-50 data-[selected=true]:bg-wn-mono-600 data-[selected=true]:text-wn-mono-50";
+type CardListItemFields = {
+  name: string;
+  typeLabel: string;
+  typeIcon?: string;
+  badgeClassName?: string;
+  badgeTextColor?: string;
+};
 
 type ListItem =
-  | { kind: "card"; key: string; name: string; typeLabel: string }
+  | ({ kind: "card"; key: string } & CardListItemFields)
+  | { kind: "header"; key: string; label: string }
   | { kind: "create"; key: string; label: string; onCreate: () => void };
 
 function filterOptions(
@@ -75,6 +80,120 @@ function filterOptions(
   );
 }
 
+function toCardListItem(option: CardReferenceOption): ListItem {
+  return {
+    kind: "card",
+    key: option.id,
+    name: option.name,
+    typeLabel: option.typeLabel,
+    typeIcon: option.typeIcon,
+    badgeClassName: option.badgeClassName,
+    badgeTextColor: option.badgeTextColor,
+  };
+}
+
+function buildListItems(
+  options: CardReferenceOption[],
+  recentSuggestions: CardReferenceOption[],
+  inputValue: string,
+  createOptions: CardReferenceCreateOption[],
+): ListItem[] {
+  const query = inputValue.trim();
+  const filtered = filterOptions(options, inputValue);
+  const items: ListItem[] = [];
+
+  if (!query && recentSuggestions.length > 0) {
+    items.push({
+      kind: "header",
+      key: `${HEADER_KEY_PREFIX}recent`,
+      label: "Recently linked",
+    });
+    for (const option of recentSuggestions) {
+      items.push(toCardListItem(option));
+    }
+    const recentIds = new Set(recentSuggestions.map((option) => option.id));
+    const remaining = filtered.filter((option) => !recentIds.has(option.id));
+    if (remaining.length > 0) {
+      items.push({
+        kind: "header",
+        key: `${HEADER_KEY_PREFIX}all`,
+        label: "All cards",
+      });
+      for (const option of remaining) {
+        items.push(toCardListItem(option));
+      }
+    }
+  } else {
+    for (const option of filtered) {
+      items.push(toCardListItem(option));
+    }
+  }
+
+  if (query.length > 0 && createOptions.length > 0) {
+    const exactMatch = options.some(
+      (option) => option.name.toLowerCase() === query.toLowerCase(),
+    );
+    if (!exactMatch) {
+      for (const [index, create] of createOptions.entries()) {
+        items.push({
+          kind: "create",
+          key: `${CREATE_KEY_PREFIX}${index}`,
+          label: create.label.replace("{name}", query),
+          onCreate: () => create.onCreate(query),
+        });
+      }
+    }
+  }
+
+  return items;
+}
+
+function CardTypeIconBadge({
+  typeIcon,
+  badgeClassName,
+  badgeTextColor,
+}: {
+  typeIcon?: string;
+  badgeClassName?: string;
+  badgeTextColor?: string;
+}) {
+  if (!typeIcon) {
+    return null;
+  }
+  const badgeClass = badgeClassName ?? "bg-wn-mono-700";
+  const textClass = badgeTextColor ?? "text-wn-mono-50";
+  return (
+    <span
+      className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${badgeClass}`}
+      aria-hidden
+    >
+      <MaterialSymbol name={typeIcon} className={`text-base ${textClass}`} />
+    </span>
+  );
+}
+
+function CardOptionRow({
+  name,
+  typeLabel,
+  typeIcon,
+  badgeClassName,
+  badgeTextColor,
+}: CardListItemFields) {
+  return (
+    <div className="flex min-w-0 items-center gap-2.5">
+      <CardTypeIconBadge
+        typeIcon={typeIcon}
+        badgeClassName={badgeClassName}
+        badgeTextColor={badgeTextColor}
+      />
+      <div className="flex min-w-0 flex-col">
+        <span className="truncate text-sm text-wn-mono-50">{name}</span>
+        <span className="truncate text-xs text-wn-mono-500">{typeLabel}</span>
+      </div>
+    </div>
+  );
+}
+
 /** Searchable card picker for inspector socket connections. */
 export function CardReferenceComboBox({
   id,
@@ -84,10 +203,12 @@ export function CardReferenceComboBox({
   onSelect,
   onClear,
   createOptions = [],
+  recentSuggestions = [],
   disabled = false,
   placeholder = "Search cards…",
   className,
   hideLabel = false,
+  labelClassName = fieldLabelClassName,
 }: CardReferenceComboBoxProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const overflowRestoreRef = useRef<{ el: HTMLElement; value: string } | null>(
@@ -111,34 +232,10 @@ export function CardReferenceComboBox({
     }
   }, [selectedOption, value]);
 
-  const listItems = useMemo((): ListItem[] => {
-    const filtered = filterOptions(options, inputValue);
-    const items: ListItem[] = filtered.map((option) => ({
-      kind: "card",
-      key: option.id,
-      name: option.name,
-      typeLabel: option.typeLabel,
-    }));
-
-    const query = inputValue.trim();
-    if (query.length > 0 && createOptions.length > 0) {
-      const exactMatch = options.some(
-        (option) => option.name.toLowerCase() === query.toLowerCase(),
-      );
-      if (!exactMatch) {
-        for (const [index, create] of createOptions.entries()) {
-          items.push({
-            kind: "create",
-            key: `${CREATE_KEY_PREFIX}${index}`,
-            label: create.label.replace("{name}", query),
-            onCreate: () => create.onCreate(query),
-          });
-        }
-      }
-    }
-
-    return items;
-  }, [createOptions, inputValue, options]);
+  const listItems = useMemo(
+    () => buildListItems(options, recentSuggestions, inputValue, createOptions),
+    [createOptions, inputValue, options, recentSuggestions],
+  );
 
   const releaseOverflow = useCallback(() => {
     const saved = overflowRestoreRef.current;
@@ -175,21 +272,21 @@ export function CardReferenceComboBox({
   return (
     <div
       ref={rootRef}
-      className={`flex flex-col ${hideLabel ? "gap-0" : "gap-1"} ${className ?? ""}`}
+      className={`${fieldStackClassName} ${hideLabel ? "gap-0" : ""} ${className ?? ""}`}
     >
       {hideLabel ? (
         <label htmlFor={id} className="sr-only">
           {label}
         </label>
       ) : (
-        <div className="flex items-center justify-between gap-2">
-          <label htmlFor={id} className={fieldLabelClassName}>
+        <div className={fieldLabelRowClassName}>
+          <label htmlFor={id} className={labelClassName}>
             {label}
           </label>
           {value && onClear && !disabled ? (
             <button
               type="button"
-              className="rounded-lg p-1 text-wn-mono-500 transition-colors hover:bg-wn-mono-800 hover:text-wn-mono-200"
+              className={fieldClearButtonClassName}
               aria-label={`Clear ${label}`}
               onClick={() => {
                 onClear();
@@ -217,6 +314,9 @@ export function CardReferenceComboBox({
             return;
           }
           const keyStr = String(key);
+          if (keyStr.startsWith(HEADER_KEY_PREFIX)) {
+            return;
+          }
           if (keyStr.startsWith(CREATE_KEY_PREFIX)) {
             const item = listItems.find(
               (entry) => entry.kind === "create" && entry.key === keyStr,
@@ -234,27 +334,25 @@ export function CardReferenceComboBox({
           }
         }}
         placeholder={placeholder}
-        selectorIcon={
-          <MaterialSymbol
-            name="keyboard_arrow_down"
-            className="text-base text-current"
-          />
+        startContent={
+          selectedOption?.typeIcon ? (
+            <CardTypeIconBadge
+              typeIcon={selectedOption.typeIcon}
+              badgeClassName={selectedOption.badgeClassName}
+              badgeTextColor={selectedOption.badgeTextColor}
+            />
+          ) : null
         }
-        selectorButtonProps={{
-          size: "sm",
-          variant: "light",
-          isIconOnly: true,
-        }}
         classNames={{
           base: "w-full gap-0",
-          endContentWrapper: endContentWrapperClassName,
-          selectorButton: selectorButtonClassName,
-          listbox: listboxClassName,
-          popoverContent: popoverSurfaceClassName,
+          endContentWrapper: "hidden",
+          selectorButton: "hidden",
+          listbox: selectListboxClassName,
+          popoverContent: selectPopoverClassName,
         }}
         listboxProps={{
           itemClasses: {
-            base: itemClassName,
+            base: selectItemClassName,
           },
           emptyContent: (
             <p className="px-2 py-1.5 text-sm text-wn-mono-500">
@@ -269,39 +367,57 @@ export function CardReferenceComboBox({
           portalContainer,
           classNames: {
             base: "z-[250]",
-            content: popoverSurfaceClassName,
+            content: selectPopoverClassName,
           },
         }}
         inputProps={{
           classNames: {
-            inputWrapper: inputWrapperClassName,
-            innerWrapper: innerWrapperClassName,
-            input: inputClassName,
+            inputWrapper: comboboxInputWrapperClassName,
+            innerWrapper: `${fieldInnerWrapperClassName} pe-0`,
+            input: `${fieldInputClassName} !pe-0`,
           },
         }}
       >
-        {(item) => (
-          <AutocompleteItem
-            key={item.key}
-            textValue={item.kind === "card" ? item.name : item.label}
-            classNames={{
-              base: itemClassName,
-            }}
-          >
-            {item.kind === "card" ? (
-              <div className="flex min-w-0 flex-col">
-                <span className="truncate text-sm text-wn-mono-50">
-                  {item.name}
+        {(item) => {
+          if (item.kind === "header") {
+            return (
+              <AutocompleteItem
+                key={item.key}
+                textValue={item.label}
+                isDisabled
+                classNames={{
+                  base: comboboxHeaderItemClassName,
+                }}
+              >
+                <span className="text-wn-xs font-medium uppercase tracking-wide text-wn-mono-500">
+                  {item.label}
                 </span>
-                <span className="truncate text-xs text-wn-mono-500">
-                  {item.typeLabel}
-                </span>
-              </div>
-            ) : (
-              <span className="text-sm text-wn-mono-50">{item.label}</span>
-            )}
-          </AutocompleteItem>
-        )}
+              </AutocompleteItem>
+            );
+          }
+
+          return (
+            <AutocompleteItem
+              key={item.key}
+              textValue={item.kind === "card" ? item.name : item.label}
+              classNames={{
+                base: selectItemClassName,
+              }}
+            >
+              {item.kind === "card" ? (
+                <CardOptionRow
+                  name={item.name}
+                  typeLabel={item.typeLabel}
+                  typeIcon={item.typeIcon}
+                  badgeClassName={item.badgeClassName}
+                  badgeTextColor={item.badgeTextColor}
+                />
+              ) : (
+                <span className="text-sm text-wn-mono-50">{item.label}</span>
+              )}
+            </AutocompleteItem>
+          );
+        }}
       </Autocomplete>
     </div>
   );

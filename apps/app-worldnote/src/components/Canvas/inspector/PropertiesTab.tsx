@@ -1,14 +1,28 @@
 import { Input } from "@heroui/react";
-import { MaterialSymbol } from "@worldnote/ui";
-import type { Link, SocketDescriptor, WorldCard } from "@worldnote/shared";
+import { Eyebrow, MaterialSymbol } from "@worldnote/ui";
+import {
+  detectMeasurementKind,
+  formatMeasurementPropertyValue,
+  measurementEditorValue,
+  measurementFieldLabel,
+  measurementInputPlaceholder,
+  measurementStoredValue,
+  type Link,
+  type SocketDescriptor,
+  type WorldCard,
+} from "@worldnote/shared";
+import { useSettings } from "../../../hooks/useSettings.js";
+import { normalizeUnitSystem } from "../../../services/settings/unitSystem.js";
 import { CardTypeFields } from "../card-editor/CardTypeFields.js";
 import type { TypeSpecificEditorState } from "../card-editor/cardEditorTypes.js";
 import {
   inspectorFieldLabelClassName,
   inspectorFieldValueClassName,
   inspectorInlineInputClassNames,
-  inspectorConnectionsSectionLabelClassName,
-  inspectorSectionLabelClassName,
+  inspectorHeaderIconActionClassName,
+  inspectorSectionClassName,
+  inspectorSectionEyebrowClassName,
+  inspectorSectionStackClassName,
   inspectorTabPaddingXClassName,
 } from "./inspectorFieldStyles.js";
 import { FamilyCrestBlock } from "./FamilyCrestBlock.js";
@@ -61,6 +75,34 @@ function PropertyField({
   );
 }
 
+function propertyLabel(key: string, unitSystem: ReturnType<typeof normalizeUnitSystem>) {
+  const kind = detectMeasurementKind(key);
+  if (!kind) {
+    return key;
+  }
+  return measurementFieldLabel(kind, unitSystem);
+}
+
+function propertyDisplayValue(
+  key: string,
+  value: string,
+  unitSystem: ReturnType<typeof normalizeUnitSystem>,
+) {
+  return formatMeasurementPropertyValue(key, value, unitSystem);
+}
+
+function propertyEditorValue(
+  key: string,
+  value: string,
+  unitSystem: ReturnType<typeof normalizeUnitSystem>,
+) {
+  const kind = detectMeasurementKind(key);
+  if (!kind) {
+    return value;
+  }
+  return measurementEditorValue(value, kind, unitSystem);
+}
+
 export function PropertiesTab({
   readOnly,
   tags,
@@ -85,6 +127,9 @@ export function PropertiesTab({
   onPickCrest,
   onRemoveCrest,
 }: PropertiesTabProps) {
+  const unitSystem = normalizeUnitSystem(
+    useSettings((state) => state.settings?.unitSystem),
+  );
   const hasSockets = socketEntries.length > 0;
   const hasCustomProperties = propertyRows.length > 0;
   const canEditConnections =
@@ -99,8 +144,8 @@ export function PropertiesTab({
         {propertyRows.map((row, index) => (
           <PropertyField
             key={`${row.key}-${index}`}
-            label={row.key}
-            value={row.value}
+            label={propertyLabel(row.key, unitSystem)}
+            value={propertyDisplayValue(row.key, row.value, unitSystem)}
           />
         ))}
       </div>
@@ -146,16 +191,28 @@ export function PropertiesTab({
         </div>
         <Input
           aria-label="Property value"
-          placeholder="Value"
-          value={row.value}
+          placeholder={
+            detectMeasurementKind(row.key)
+              ? measurementInputPlaceholder(
+                  detectMeasurementKind(row.key) ?? "weight",
+                  unitSystem,
+                )
+              : "Value"
+          }
+          value={propertyEditorValue(row.key, row.value, unitSystem)}
           variant="flat"
-          onValueChange={(next) =>
+          onValueChange={(next) => {
+            const kind = detectMeasurementKind(row.key);
+            const storedValue =
+              kind !== null
+                ? measurementStoredValue(next, kind, unitSystem)
+                : next;
             onPropertyRowsChange(
               propertyRows.map((entry, rowIndex) =>
-                rowIndex === index ? { ...entry, value: next } : entry,
+                rowIndex === index ? { ...entry, value: storedValue } : entry,
               ),
-            )
-          }
+            );
+          }}
           classNames={inspectorInlineInputClassNames}
         />
       </div>
@@ -165,7 +222,9 @@ export function PropertiesTab({
   );
 
   return (
-    <div className={`flex flex-col gap-6 ${inspectorTabPaddingXClassName}`}>
+    <div
+      className={`${inspectorSectionStackClassName} ${inspectorTabPaddingXClassName}`}
+    >
       {cardType === "family" && onPickCrest && onRemoveCrest ? (
         <FamilyCrestBlock
           embedded
@@ -182,13 +241,18 @@ export function PropertiesTab({
         onTagsChange={onTagsChange}
       />
 
-      <section className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <span className={inspectorSectionLabelClassName}>Properties</span>
+      <section className={inspectorSectionClassName}>
+        <div className="flex items-center justify-between gap-2">
+          <Eyebrow
+            as="h3"
+            className={inspectorSectionEyebrowClassName}
+          >
+            Properties
+          </Eyebrow>
           {!readOnly ? (
             <button
               type="button"
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-wn-mono-500 transition-colors hover:bg-wn-mono-800 hover:text-wn-mono-50 disabled:opacity-40"
+              className={inspectorHeaderIconActionClassName}
               aria-label="Add property"
               disabled={isBusy}
               onClick={() =>
@@ -225,10 +289,14 @@ export function PropertiesTab({
             onCreateAndLinkCard={onCreateAndLinkCard}
           />
         ) : (
-          <section className="flex flex-col gap-3">
-            <span className={inspectorConnectionsSectionLabelClassName}>
+          <section className={inspectorSectionClassName}>
+            <Eyebrow
+              as="h3"
+              showDot={false}
+              className={inspectorSectionEyebrowClassName}
+            >
               Connections
-            </span>
+            </Eyebrow>
             <div className="flex flex-col gap-3">
               {socketEntries.map(({ id }) => (
                 <PropertyField

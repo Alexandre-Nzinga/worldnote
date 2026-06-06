@@ -11,7 +11,6 @@ type WorldCardProps = {
   disabled?: boolean;
   isPinned?: boolean;
   canPin?: boolean;
-  pinError?: string | null;
   onTogglePin?: (world: WorldSummary) => void;
   onOpen: (world: WorldSummary) => void;
   onManage?: (world: WorldSummary) => void;
@@ -41,7 +40,6 @@ export function WorldCard({
   disabled,
   isPinned = false,
   canPin = true,
-  pinError,
   onTogglePin,
   onOpen,
   onManage,
@@ -65,8 +63,7 @@ export function WorldCard({
           type="button"
           disabled={pinDisabled}
           title={
-            pinError ??
-            (isPinned ? "Unpin from home" : canPin ? "Pin to home" : "Pin limit reached (3)")
+            isPinned ? "Unpin from home" : canPin ? "Pin to home" : "Pin limit reached (3)"
           }
           aria-label={
             isPinned ? `Unpin ${world.name}` : `Pin ${world.name} to home`

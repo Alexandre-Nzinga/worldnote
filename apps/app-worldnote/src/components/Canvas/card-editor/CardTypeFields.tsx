@@ -1,6 +1,14 @@
 import {
   VEHICLE_SUB_TYPE_LABELS,
   VEHICLE_SUB_TYPE_VALUES,
+  formatMeasurementStringValue,
+  formatMeasurementValue,
+  measurementEditorValue,
+  measurementFieldLabel,
+  measurementInputPlaceholder,
+  measurementStoredValue,
+  parseMeasurementInput,
+  toDisplayValue,
   type FaunaCard,
   type FloraCard,
   type ItemCard,
@@ -10,6 +18,8 @@ import {
 } from "@worldnote/shared";
 import { EnumComboBox } from "@worldnote/ui";
 import { Input } from "@heroui/react";
+import { useSettings } from "../../../hooks/useSettings.js";
+import { normalizeUnitSystem } from "../../../services/settings/unitSystem.js";
 import {
   inspectorFieldLabelClassName,
   inspectorFieldValueClassName,
@@ -83,28 +93,51 @@ export function CardTypeFields({
   disabled = false,
   readOnly = false,
 }: CardTypeFieldsProps) {
+  const unitSystem = normalizeUnitSystem(
+    useSettings((state) => state.settings?.unitSystem),
+  );
   const patch = (partial: Partial<TypeSpecificEditorState>) =>
     onChange({ ...fields, ...partial });
 
   switch (cardType) {
     case "character":
       if (readOnly) {
-        return <ReadOnlyField label="Birthdate" value={fields.birthdate} />;
+        return (
+          <>
+            <ReadOnlyField label="Birthdate" value={fields.birthdate} />
+            <ReadOnlyField label="Deathdate" value={fields.deathdate} />
+          </>
+        );
       }
       return (
-        <div className="flex flex-col gap-1">
-          <label htmlFor="card-birthdate" className={inspectorFieldLabelClassName}>
-            Birthdate
-          </label>
-          <Input
-            id="card-birthdate"
-            placeholder="Year 402"
-            value={fields.birthdate}
-            isDisabled={disabled}
-            onValueChange={(birthdate) => patch({ birthdate })}
-            classNames={inspectorInlineInputClassNames}
-          />
-        </div>
+        <>
+          <div className="flex flex-col gap-1">
+            <label htmlFor="card-birthdate" className={inspectorFieldLabelClassName}>
+              Birthdate
+            </label>
+            <Input
+              id="card-birthdate"
+              placeholder="Year 402"
+              value={fields.birthdate}
+              isDisabled={disabled}
+              onValueChange={(birthdate) => patch({ birthdate })}
+              classNames={inspectorInlineInputClassNames}
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label htmlFor="card-deathdate" className={inspectorFieldLabelClassName}>
+              Deathdate
+            </label>
+            <Input
+              id="card-deathdate"
+              placeholder="Year 450"
+              value={fields.deathdate}
+              isDisabled={disabled}
+              onValueChange={(deathdate) => patch({ deathdate })}
+              classNames={inspectorInlineInputClassNames}
+            />
+          </div>
+        </>
       );
     case "location":
       if (readOnly) {
@@ -125,11 +158,25 @@ export function CardTypeFields({
           />
         </div>
       );
-    case "item":
+    case "item": {
+      const canonicalWeight = fields.itemWeight
+        ? Number(fields.itemWeight)
+        : Number.NaN;
+      const hasCanonicalWeight = Number.isFinite(canonicalWeight);
+      const weightDisplayValue = hasCanonicalWeight
+        ? String(toDisplayValue(canonicalWeight, "weight", unitSystem))
+        : fields.itemWeight;
+      const weightReadOnlyValue = hasCanonicalWeight
+        ? formatMeasurementValue(canonicalWeight, "weight", unitSystem)
+        : fields.itemWeight;
+
       if (readOnly) {
         return (
           <>
-            <ReadOnlyField label="Weight" value={fields.itemWeight} />
+            <ReadOnlyField
+              label={measurementFieldLabel("weight", unitSystem)}
+              value={weightReadOnlyValue}
+            />
             <ReadOnlyField
               label="Rarity"
               value={
@@ -145,20 +192,34 @@ export function CardTypeFields({
         <>
           <div className="flex flex-col gap-1">
             <label htmlFor="card-weight" className={inspectorFieldLabelClassName}>
-              Weight
+              {measurementFieldLabel("weight", unitSystem)}
             </label>
             <Input
               id="card-weight"
               type="number"
-              value={fields.itemWeight}
+              placeholder={measurementInputPlaceholder("weight", unitSystem)}
+              value={weightDisplayValue}
               isDisabled={disabled}
-              onValueChange={(itemWeight) => patch({ itemWeight })}
+              onValueChange={(displayWeight) => {
+                const nextCanonical = parseMeasurementInput(
+                  displayWeight,
+                  "weight",
+                  unitSystem,
+                );
+                patch({
+                  itemWeight:
+                    nextCanonical !== undefined
+                      ? String(nextCanonical)
+                      : displayWeight.trim(),
+                });
+              }}
               classNames={inspectorInlineInputClassNames}
             />
           </div>
           <EnumComboBox<NonNullable<ItemCard["rarity"]>>
             id="card-rarity"
             label="Rarity"
+            labelClassName={inspectorFieldLabelClassName}
             value={fields.itemRarity ?? ""}
             options={[...itemRarityOptions]}
             allowEmpty
@@ -167,6 +228,7 @@ export function CardTypeFields({
           />
         </>
       );
+    }
     case "vehicle":
       if (readOnly) {
         return (
@@ -175,7 +237,14 @@ export function CardTypeFields({
               label="Sub type"
               value={labelForOption(vehicleSubTypeOptions, fields.vehicleSubType)}
             />
-            <ReadOnlyField label="Max speed" value={fields.maxSpeed} />
+            <ReadOnlyField
+              label={measurementFieldLabel("speed", unitSystem, "Max speed")}
+              value={formatMeasurementStringValue(
+                fields.maxSpeed,
+                "speed",
+                unitSystem,
+              )}
+            />
           </>
         );
       }
@@ -184,24 +253,30 @@ export function CardTypeFields({
           <EnumComboBox<VehicleCard["sub_type"]>
             id="card-sub-type"
             label="Sub type"
+            labelClassName={inspectorFieldLabelClassName}
             value={fields.vehicleSubType}
             options={[...vehicleSubTypeOptions]}
             disabled={disabled}
-            onChange={(vehicleSubType) => {
-              if (vehicleSubType !== "") {
-                patch({ vehicleSubType });
-              }
-            }}
+            onChange={(vehicleSubType) => patch({ vehicleSubType })}
           />
           <div className="flex flex-col gap-1">
             <label htmlFor="card-max-speed" className={inspectorFieldLabelClassName}>
-              Max speed
+              {measurementFieldLabel("speed", unitSystem, "Max speed")}
             </label>
             <Input
               id="card-max-speed"
-              value={fields.maxSpeed}
+              placeholder={measurementInputPlaceholder("speed", unitSystem)}
+              value={measurementEditorValue(fields.maxSpeed, "speed", unitSystem)}
               isDisabled={disabled}
-              onValueChange={(maxSpeed) => patch({ maxSpeed })}
+              onValueChange={(displaySpeed) =>
+                patch({
+                  maxSpeed: measurementStoredValue(
+                    displaySpeed,
+                    "speed",
+                    unitSystem,
+                  ),
+                })
+              }
               classNames={inspectorInlineInputClassNames}
             />
           </div>
@@ -220,14 +295,11 @@ export function CardTypeFields({
         <EnumComboBox<FloraCard["toxicity_level"]>
           id="card-toxicity"
           label="Toxicity"
+          labelClassName={inspectorFieldLabelClassName}
           value={fields.floraToxicity}
           options={[...floraToxicityOptions]}
           disabled={disabled}
-          onChange={(floraToxicity) => {
-            if (floraToxicity !== "") {
-              patch({ floraToxicity });
-            }
-          }}
+          onChange={(floraToxicity) => patch({ floraToxicity })}
         />
       );
     case "fauna":
@@ -247,6 +319,7 @@ export function CardTypeFields({
         <EnumComboBox<NonNullable<FaunaCard["diet"]>>
           id="card-diet"
           label="Diet"
+          labelClassName={inspectorFieldLabelClassName}
           value={fields.faunaDiet ?? ""}
           options={[...faunaDietOptions]}
           allowEmpty
@@ -270,14 +343,11 @@ export function CardTypeFields({
         <EnumComboBox<StructureCard["condition"]>
           id="card-condition"
           label="Condition"
+          labelClassName={inspectorFieldLabelClassName}
           value={fields.structureCondition}
           options={[...structureConditionOptions]}
           disabled={disabled}
-          onChange={(structureCondition) => {
-            if (structureCondition !== "") {
-              patch({ structureCondition });
-            }
-          }}
+          onChange={(structureCondition) => patch({ structureCondition })}
         />
       );
     case "species":

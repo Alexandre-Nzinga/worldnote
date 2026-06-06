@@ -1,7 +1,10 @@
-import { MaterialSymbol, Pill, type PillTone } from "@worldnote/ui";
+import { Eyebrow, MaterialSymbol, Pill, type PillTone } from "@worldnote/ui";
 import { cx } from "../wizard/cx.js";
 import { useCallback, useRef, useState } from "react";
-import { inspectorSectionLabelClassName } from "./inspectorFieldStyles.js";
+import {
+  inspectorSectionClassName,
+  inspectorSectionEyebrowClassName,
+} from "./inspectorFieldStyles.js";
 
 const TAG_TONES: PillTone[] = [
   "azure",
@@ -109,8 +112,13 @@ export function TagsSection({
   const isDrafting = draft.length > 0;
 
   return (
-    <section className="relative flex w-full shrink-0 flex-col gap-2">
-      <span className={inspectorSectionLabelClassName}>Tags</span>
+    <section className={`${inspectorSectionClassName} relative w-full shrink-0`}>
+      <Eyebrow
+        as="h2"
+        className={inspectorSectionEyebrowClassName}
+      >
+        Tags
+      </Eyebrow>
       {readOnly ? (
         tags.length > 0 ? (
           <div className="flex flex-wrap gap-2">

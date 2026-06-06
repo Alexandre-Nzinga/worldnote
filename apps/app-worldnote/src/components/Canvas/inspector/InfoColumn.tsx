@@ -1,9 +1,11 @@
 import { Input } from "@heroui/react";
 import type { Editor } from "@tiptap/core";
 import type { WorldCard } from "@worldnote/shared";
-import { CardTypePill, visualConfigFor } from "@worldnote/canvas";
+import { CardTypePill } from "@worldnote/canvas";
+import { useSettings } from "../../../hooks/useSettings.js";
+import { resolveCardBadgeStyle } from "../../../services/settings/cardTypeBadgeSettings.js";
 import { getHeadingProps, WorldNoteLogo } from "@worldnote/ui";
-import type { Ref } from "react";
+import type { ReactNode, Ref } from "react";
 import {
   InspectorLoreEditor,
   type InspectorLoreEditorHandle,
@@ -13,6 +15,7 @@ import {
   inspectorSubtitleFieldClassNames,
 } from "./inspectorFieldStyles.js";
 import { InspectorCardMoreMenu } from "./InspectorCardMoreMenu.js";
+import { LoreEditorSkeleton } from "./LoreEditorSkeleton.js";
 
 type InfoColumnProps = {
   readOnly: boolean;
@@ -28,6 +31,8 @@ type InfoColumnProps = {
   onLoreChange: (markdown: string) => void;
   onEditorReady?: (editor: Editor | null) => void;
   onViewJson: () => void;
+  wizardSection?: ReactNode;
+  isLoreGenerating?: boolean;
 };
 
 export function InfoColumn({
@@ -44,12 +49,17 @@ export function InfoColumn({
   onLoreChange,
   onEditorReady,
   onViewJson,
+  wizardSection,
+  isLoreGenerating = false,
 }: InfoColumnProps) {
-  const typeVisual = visualConfigFor(cardType);
+  const cardTypeBadgeColors = useSettings(
+    (state) => state.settings?.cardTypeBadgeColors,
+  );
+  const typeVisual = resolveCardBadgeStyle(cardType, cardTypeBadgeColors);
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-      <div className="shrink-0 px-6 pb-4 pt-6">
+      <div className="shrink-0 px-6 pb-2 pt-6">
         <div className="flex items-start gap-4">
           <WorldNoteLogo
             variant="icon"
@@ -113,7 +123,19 @@ export function InfoColumn({
         </div>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col">
+      {wizardSection}
+
+      <div className="relative flex min-h-0 flex-1 flex-col">
+        {isLoreGenerating ? (
+          <div className="pointer-events-none absolute inset-0 z-10 flex flex-col overflow-hidden bg-wn-mono-900">
+            {readOnly ? null : (
+              <div className="h-10 shrink-0 border-b border-wn-mono-800 bg-wn-mono-950" />
+            )}
+            <div className="scrollbar-wn min-h-0 flex-1 overflow-hidden">
+              <LoreEditorSkeleton className="px-4 py-3" />
+            </div>
+          </div>
+        ) : null}
         <InspectorLoreEditor
           ref={loreEditorRef}
           value={lore}

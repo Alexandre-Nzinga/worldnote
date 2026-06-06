@@ -1,7 +1,8 @@
-import { MaterialSymbol } from "@worldnote/ui";
+import { MaterialSymbol, getBodyTextStyle } from "@worldnote/ui";
 import { useCallback } from "react";
 import { useSettings } from "../../hooks/useSettings.js";
 import type { ThemePreference } from "../../services/settings/settings.js";
+import { settingsPanelClassName } from "./settingsStyles.js";
 
 type ThemeOption = {
   value: ThemePreference;
@@ -36,12 +37,11 @@ export function ThemeSetting({ disabled = false }: ThemeSettingProps) {
   );
 
   return (
-    <div className="flex flex-col gap-2">
-      <span className="text-sm font-medium text-wn-text">Appearance</span>
-      <p className="text-sm text-wn-text-muted">
+    <section className={settingsPanelClassName}>
+      <p style={getBodyTextStyle("small")}>
         Choose how WorldNote looks. System follows your operating system.
       </p>
-      <div className="mt-1 inline-flex w-fit gap-1 rounded-full border border-wn-border bg-wn-surface-sunken p-1">
+      <div className="mt-4 inline-flex w-fit gap-1 rounded-full bg-wn-surface-sunken p-1">
         {THEME_OPTIONS.map((option) => {
           const isActive = option.value === current;
           return (
@@ -52,7 +52,7 @@ export function ThemeSetting({ disabled = false }: ThemeSettingProps) {
               disabled={disabled}
               onClick={() => handleSelect(option.value)}
               className={[
-                "flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
+                "flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors",
                 "disabled:cursor-not-allowed disabled:opacity-50",
                 isActive
                   ? "bg-wn-surface-raised text-wn-text shadow-sm"
@@ -65,6 +65,6 @@ export function ThemeSetting({ disabled = false }: ThemeSettingProps) {
           );
         })}
       </div>
-    </div>
+    </section>
   );
 }

@@ -40,14 +40,15 @@ type CardBaseFields = {
 
 export type TypeSpecificEditorState = {
   birthdate: string;
+  deathdate: string;
   coordinates: string;
   itemWeight: string;
   itemRarity: ItemCard["rarity"] | "";
-  vehicleSubType: VehicleCard["sub_type"];
+  vehicleSubType: VehicleCard["sub_type"] | "";
   maxSpeed: string;
-  floraToxicity: FloraCard["toxicity_level"];
+  floraToxicity: FloraCard["toxicity_level"] | "";
   faunaDiet: FaunaCard["diet"] | "";
-  structureCondition: StructureCard["condition"];
+  structureCondition: StructureCard["condition"] | "";
   averageLifespan: string;
   planetType: string;
   foundingDate: string;
@@ -66,14 +67,15 @@ export function defaultTypeFields(
 ): TypeSpecificEditorState {
   return {
     birthdate: "",
+    deathdate: "",
     coordinates: "",
     itemWeight: "",
     itemRarity: "",
-    vehicleSubType: "other",
+    vehicleSubType: "",
     maxSpeed: "",
-    floraToxicity: "harmless",
+    floraToxicity: "",
     faunaDiet: "",
-    structureCondition: "intact",
+    structureCondition: "",
     averageLifespan: "",
     planetType: "",
     foundingDate: "",
@@ -92,7 +94,11 @@ export function typeFieldsFromCard(card: WorldCard): TypeSpecificEditorState {
   const defaults = defaultTypeFields(card.card_type);
   switch (card.card_type) {
     case "character":
-      return { ...defaults, birthdate: card.birthdate ?? "" };
+      return {
+        ...defaults,
+        birthdate: card.birthdate ?? "",
+        deathdate: card.deathdate ?? "",
+      };
     case "location":
       return { ...defaults, coordinates: card.coordinates ?? "" };
     case "item":
@@ -151,6 +157,7 @@ export function buildWorldCard(
         ...base,
         card_type: "character",
         birthdate: typeFields.birthdate.trim() || undefined,
+        deathdate: typeFields.deathdate.trim() || undefined,
       } satisfies CharacterCard;
     case "location":
       return {
@@ -171,14 +178,14 @@ export function buildWorldCard(
       return {
         ...base,
         card_type: "vehicle",
-        sub_type: typeFields.vehicleSubType,
+        sub_type: typeFields.vehicleSubType || "other",
         max_speed: typeFields.maxSpeed.trim() || undefined,
       } satisfies VehicleCard;
     case "flora":
       return {
         ...base,
         card_type: "flora",
-        toxicity_level: typeFields.floraToxicity,
+        toxicity_level: typeFields.floraToxicity || "harmless",
       } satisfies FloraCard;
     case "fauna":
       return {
@@ -195,7 +202,7 @@ export function buildWorldCard(
       return {
         ...base,
         card_type: "structure",
-        condition: typeFields.structureCondition,
+        condition: typeFields.structureCondition || "intact",
       } satisfies StructureCard;
     case "species":
       return {

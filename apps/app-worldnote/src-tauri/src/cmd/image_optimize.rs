@@ -19,7 +19,8 @@ fn extension_lower(path: &Path) -> Option<String> {
 
 fn should_copy_without_optimization(ext: &str) -> bool {
     // Vector assets: preserve format (no rasterization here).
-    ext == "svg"
+    // AVIF: decoding needs native libdav1d; copy through and let the webview render it.
+    matches!(ext, "svg" | "avif")
 }
 
 fn resize_to_max_edge(image: DynamicImage, max_edge: u32) -> DynamicImage {
@@ -99,5 +100,10 @@ mod tests {
             DynamicImage::ImageRgba8(RgbaImage::new(2000, 1000));
         let out = resize_to_max_edge(img, 1200);
         assert_eq!(out.dimensions(), (1200, 600));
+    }
+
+    #[test]
+    fn avif_is_copied_without_optimization() {
+        assert!(should_copy_without_optimization("avif"));
     }
 }

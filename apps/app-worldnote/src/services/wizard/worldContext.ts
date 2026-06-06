@@ -39,6 +39,8 @@ function catalogLine(
   return `- ${typeLabel}: ${name}${tagPart}${extraPart}`;
 }
 
+export type WizardContextScope = "world" | "focused";
+
 export type BuildWorldContextInput = {
   worldName: string;
   vaultPath: string;
@@ -47,6 +49,8 @@ export type BuildWorldContextInput = {
   indexRows: CardIndexRow[];
   /** Cards explicitly loaded into the wizard drop zone (full detail). */
   focusedCardIds?: string[];
+  /** When `focused`, only focused cards are sent — not the full world catalog. */
+  contextScope?: WizardContextScope;
 };
 
 /**
@@ -61,7 +65,43 @@ export function buildWorldContextMessage(input: BuildWorldContextInput): string 
     links,
     indexRows,
     focusedCardIds = [],
+    contextScope = "world",
   } = input;
+
+  const serializeCtx: SerializeCardContext = { cardsById, links };
+  const focusedCards = focusedCardIds
+    .map((id) => cardsById[id])
+    .filter((card): card is WorldCard => Boolean(card));
+
+  if (contextScope === "focused" && focusedCards.length > 0) {
+    const focusedIdSet = new Set(focusedCardIds);
+    const focusedLinks = links.filter(
+      (link) =>
+        focusedIdSet.has(link.source_card) &&
+        focusedIdSet.has(link.target_card),
+    );
+
+    const sections = [
+      "[CURRENT WORLD]",
+      `World: "${worldName}"`,
+      `Vault: ${vaultPath}`,
+      `Context scope: ${focusedCards.length} focus card(s) only. The full world catalog is not included.`,
+      "The user may add more cards to the wizard or provide extra context in chat.",
+      "",
+      "--- Focus cards (full detail) ---",
+      serializeCardsForLlm(focusedCards, serializeCtx),
+    ];
+
+    if (focusedLinks.length > 0) {
+      sections.push(
+        "",
+        `--- Relationships between focus cards (${focusedLinks.length}) ---`,
+        "Use the card names above when reasoning about these connections.",
+      );
+    }
+
+    return sections.join("\n");
+  }
 
   const indexById = new Map(indexRows.map((row) => [row.id, row]));
   const allIds = new Set<string>([
@@ -80,11 +120,6 @@ export function buildWorldContextMessage(input: BuildWorldContextInput): string 
     catalogLine(cardsById[id], indexById.get(id)),
   );
   const truncated = sortedIds.length > MAX_CATALOG_LINES;
-
-  const serializeCtx: SerializeCardContext = { cardsById, links };
-  const focusedCards = focusedCardIds
-    .map((id) => cardsById[id])
-    .filter((card): card is WorldCard => Boolean(card));
 
   const sections = [
     "[CURRENT WORLD]",

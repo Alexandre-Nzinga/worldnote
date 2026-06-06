@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
+import { trackPersist } from "../../hooks/useSaveStatus.js";
 
 export type StickyNoteMarkdownEntry = {
   id: string;
@@ -10,7 +11,9 @@ export async function writeStickyNoteMarkdown(
   id: string,
   markdown: string,
 ): Promise<void> {
-  await invoke("write_sticky_note_markdown", { vault, id, markdown });
+  return trackPersist(async () => {
+    await invoke("write_sticky_note_markdown", { vault, id, markdown });
+  });
 }
 
 export async function listStickyNoteMarkdown(
@@ -40,7 +43,9 @@ export async function deleteStickyNoteMarkdown(
   vault: string,
   id: string,
 ): Promise<void> {
-  await invoke("delete_sticky_note_markdown", { vault, id });
+  return trackPersist(async () => {
+    await invoke("delete_sticky_note_markdown", { vault, id });
+  });
 }
 
 /** Serialize heading + body into a single markdown file. */

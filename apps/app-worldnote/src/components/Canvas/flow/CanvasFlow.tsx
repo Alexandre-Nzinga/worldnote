@@ -36,11 +36,10 @@ import {
 } from "../context-menus/CanvasStickyNoteContextMenu.js";
 import type { Link, WorldCard } from "@worldnote/shared";
 import type { NewCardType } from "../../../services/crudWorldCard/cardTemplates.js";
-import type { VisibleSocketsByCardType } from "../../../services/settings/settings.js";
-import {
-  BulkSelectionToolbar,
-  type BulkSelectionKind,
-} from "../toolbars/BulkSelectionToolbar.js";
+import type {
+  CardTypeBadgeOverrides,
+  VisibleSocketsByCardType,
+} from "../../../services/settings/settings.js";
 import { CanvasExternalImageDropBridge } from "./bridges/CanvasExternalImageDropBridge.js";
 import { CanvasFitViewBridge } from "./bridges/CanvasFitViewBridge.js";
 import { CanvasFocusBridge } from "./bridges/CanvasFocusBridge.js";
@@ -52,7 +51,9 @@ import { useCanvasConnectionEnd } from "../hooks/useCanvasConnectionEnd.js";
 import { useCanvasPointerTracking } from "../hooks/useCanvasPointerTracking.js";
 import type { CanvasPointerApi } from "../hooks/useCanvasPointerTracking.js";
 import type { CanvasFlowPointer } from "../../../services/canvas/canvasSpawnPosition.js";
+import { CANVAS_SNAP_GRID_SIZE } from "../../../services/canvas/canvasLayout.js";
 import { useResolvedTheme } from "../../../theme/ThemeProvider.js";
+import { CANVAS_VIRTUALIZE_NODE_THRESHOLD } from "../helpers/canvasSelectionHelpers.js";
 
 type CanvasFlowProps = {
   nodeTypes: NodeTypes;
@@ -99,6 +100,7 @@ type CanvasFlowProps = {
   cardsByIdRef: RefObject<Record<string, WorldCard>>;
   linksByIdRef: RefObject<Record<string, Link>>;
   visibleSocketsSettingsRef: RefObject<VisibleSocketsByCardType | undefined>;
+  cardTypeBadgeColorsRef: RefObject<CardTypeBadgeOverrides | undefined>;
   setNodes: React.Dispatch<React.SetStateAction<CanvasFlowNode[]>>;
   setEdges: React.Dispatch<React.SetStateAction<Edge[]>>;
   setCardsById: React.Dispatch<React.SetStateAction<Record<string, WorldCard>>>;
@@ -108,9 +110,8 @@ type CanvasFlowProps = {
   setInspectorMode: React.Dispatch<React.SetStateAction<"read" | "edit">>;
   selectedCardIds: string[];
   selectedImageIds: string[];
-  onDuplicateSelection: () => Promise<void>;
-  onDeleteSelection: () => Promise<void>;
-  onCreateGroupFromSelection?: () => Promise<void>;
+  onOpenWizardWithCards: (cardIds: string[]) => void;
+  selectedCardIdsForWizard: string[];
   focusCardRef: MutableRefObject<((cardId: string) => void) | undefined>;
   lastCanvasPointerRef: MutableRefObject<CanvasFlowPointer | null>;
   canvasPointerApiRef: MutableRefObject<CanvasPointerApi | null>;
@@ -166,6 +167,7 @@ export function CanvasFlow({
   cardsByIdRef,
   linksByIdRef,
   visibleSocketsSettingsRef,
+  cardTypeBadgeColorsRef,
   setNodes,
   setEdges,
   setCardsById,
@@ -175,9 +177,8 @@ export function CanvasFlow({
   setInspectorMode,
   selectedCardIds,
   selectedImageIds,
-  onDuplicateSelection,
-  onDeleteSelection,
-  onCreateGroupFromSelection,
+  onOpenWizardWithCards,
+  selectedCardIdsForWizard,
   focusCardRef,
   lastCanvasPointerRef,
   canvasPointerApiRef,
@@ -188,12 +189,6 @@ export function CanvasFlow({
     pointerApiRef: canvasPointerApiRef,
   });
 
-  const bulkSelection: { kind: BulkSelectionKind; ids: string[] } | null =
-    selectedCardIds.length > 1
-      ? { kind: "card", ids: selectedCardIds }
-      : selectedImageIds.length > 1
-        ? { kind: "image", ids: selectedImageIds }
-        : null;
   const {
     onConnectStart,
     onConnectEnd,
@@ -204,6 +199,7 @@ export function CanvasFlow({
     cardsByIdRef,
     linksByIdRef,
     visibleSocketsSettingsRef,
+    cardTypeBadgeColorsRef,
     onConnect,
     setNodes,
     setEdges,
@@ -219,6 +215,8 @@ export function CanvasFlow({
   const onNodeMouseLeave = onCardMouseLeave as NodeMouseHandler<Node>;
 
   const resolvedTheme = useResolvedTheme();
+  const onlyRenderVisibleElements =
+    nodes.length >= CANVAS_VIRTUALIZE_NODE_THRESHOLD;
 
   return (
     <CanvasStickyNoteInteractionProvider value={{ onResizeEnd: onStickyNoteResizeEnd }}>
@@ -243,7 +241,7 @@ export function CanvasFlow({
       className="h-full w-full rounded-none border-0"
       backgroundVariant={BackgroundVariant.Dots}
       backgroundColor="var(--color-wn-mono-700)"
-      backgroundGap={16}
+      backgroundGap={CANVAS_SNAP_GRID_SIZE}
       colorMode={resolvedTheme}
       panOnDrag={[1, 2]}
       panOnScroll={false}
@@ -258,6 +256,7 @@ export function CanvasFlow({
       selectionKeyCode="Shift"
       multiSelectionKeyCode="Shift"
       panActivationKeyCode="Space"
+      onlyRenderVisibleElements={onlyRenderVisibleElements}
       minZoom={0.15}
       maxZoom={4}
       onNodeDragStart={onNodeDragStart}
@@ -279,15 +278,6 @@ export function CanvasFlow({
         vaultPath={vaultPath}
         onImportImage={onImportCanvasImage}
       />
-      {bulkSelection ? (
-        <BulkSelectionToolbar
-          selectedIds={bulkSelection.ids}
-          selectionKind={bulkSelection.kind}
-          onDuplicate={onDuplicateSelection}
-          onDelete={onDeleteSelection}
-          onCreateGroup={onCreateGroupFromSelection}
-        />
-      ) : null}
     </WorldNoteCanvas>
     <CanvasImageContextMenu
       menu={imageContextMenu}
@@ -313,6 +303,7 @@ export function CanvasFlow({
       onBackToActions={onCardContextBackToActions}
       onChangeType={onCardChangeType}
       onDelete={onCardContextDelete}
+      onOpenWizard={() => onOpenWizardWithCards(selectedCardIdsForWizard)}
     />
     <CanvasStickyNoteContextMenu
       menu={stickyNoteContextMenu}

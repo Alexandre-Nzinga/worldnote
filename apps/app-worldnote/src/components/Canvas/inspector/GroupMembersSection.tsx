@@ -4,8 +4,12 @@ import {
   type WorldCard,
 } from "@worldnote/shared";
 import { CardTypePlaceholder } from "@worldnote/canvas";
+import { Eyebrow } from "@worldnote/ui";
 import { cardImageSrc } from "../../../services/canvas/cardNodeData.js";
-import { inspectorSectionLabelClassName } from "./inspectorFieldStyles.js";
+import {
+  inspectorSectionClassName,
+  inspectorSectionEyebrowClassName,
+} from "./inspectorFieldStyles.js";
 
 type GroupMembersSectionProps = {
   members: WorldCard[];
@@ -58,8 +62,13 @@ export function GroupMembersSection({
   }
 
   return (
-    <section className="flex shrink-0 flex-col gap-3">
-      <span className={inspectorSectionLabelClassName}>Cards in group</span>
+    <section className={`${inspectorSectionClassName} shrink-0`}>
+      <Eyebrow
+        as="h3"
+        className={inspectorSectionEyebrowClassName}
+      >
+        Cards in group
+      </Eyebrow>
       <ul className="flex flex-col gap-3">
         {members.map((member) => {
           const typeLabel = CARD_TYPE_LABELS[member.card_type];

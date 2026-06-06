@@ -1,5 +1,5 @@
-import { Button } from "@worldnote/ui";
-import { useCallback, useState } from "react";
+import { Button, getBodyTextStyle, getHeadingProps } from "@worldnote/ui";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   DEFAULT_CANVAS_KEYBOARD_SHORTCUTS,
   formatKeyboardShortcut,
@@ -7,8 +7,14 @@ import {
   normalizeCanvasKeyboardShortcuts,
   type CanvasKeyboardShortcuts,
 } from "../../services/settings/keyboardShortcuts.js";
-import { modalFieldLabelClassName } from "../Onboarding/fieldClassNames.js";
 import { objectKeys } from "../../services/objectKeys.js";
+import {
+  settingsPanelClassName,
+  settingsRowClassName,
+  settingsRowListClassName,
+  settingsShortcutKeyClassName,
+  settingsShortcutKeyRecordingClassName,
+} from "./settingsStyles.js";
 
 type ShortcutAction = keyof CanvasKeyboardShortcuts;
 
@@ -27,37 +33,64 @@ type KeyboardShortcutsSettingsProps = {
   value: CanvasKeyboardShortcuts;
   onChange: (next: CanvasKeyboardShortcuts) => void;
   disabled?: boolean;
+  showHeading?: boolean;
 };
 
 export function KeyboardShortcutsSettings({
   value,
   onChange,
   disabled = false,
+  showHeading = true,
 }: KeyboardShortcutsSettingsProps) {
   const shortcuts = normalizeCanvasKeyboardShortcuts(value);
+  const shortcutsRef = useRef(shortcuts);
+  shortcutsRef.current = shortcuts;
+
   const [recordingAction, setRecordingAction] = useState<ShortcutAction | null>(
     null,
   );
 
-  const handleRecordKeyDown = useCallback(
-    (event: React.KeyboardEvent, action: ShortcutAction) => {
+  useEffect(() => {
+    if (!recordingAction) {
+      return;
+    }
+
+    const onKeyDown = (event: KeyboardEvent) => {
       event.preventDefault();
       event.stopPropagation();
+      event.stopImmediatePropagation();
+
       if (event.key === "Escape") {
         setRecordingAction(null);
         return;
       }
-      const recorded = keyboardShortcutFromEvent(event.nativeEvent);
+
+      const recorded = keyboardShortcutFromEvent(event);
       if (!recorded) {
         return;
       }
+
       onChange({
-        ...shortcuts,
-        [action]: recorded,
+        ...shortcutsRef.current,
+        [recordingAction]: recorded,
       });
       setRecordingAction(null);
+    };
+
+    window.addEventListener("keydown", onKeyDown, true);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown, true);
+    };
+  }, [onChange, recordingAction]);
+
+  const startRecording = useCallback(
+    (action: ShortcutAction) => {
+      if (disabled) {
+        return;
+      }
+      setRecordingAction((current) => (current === action ? null : action));
     },
-    [onChange, shortcuts],
+    [disabled],
   );
 
   const resetToDefaults = useCallback(() => {
@@ -66,54 +99,50 @@ export function KeyboardShortcutsSettings({
 
   return (
     <div className="flex flex-col gap-4">
-      <div>
-        <span className={modalFieldLabelClassName}>Canvas shortcuts</span>
-        <p className="text-xs text-wn-mono-500">
-          Keyboard shortcuts for editing on the world canvas (copy, paste, undo,
-          and more).
-          Click a shortcut field and press the key combination you want to use.
-        </p>
-      </div>
+      {showHeading ? (
+        <div>
+          <h3 {...getHeadingProps("h5", { tone: "inverse" })}>Canvas shortcuts</h3>
+          <p className="mt-1.5" style={getBodyTextStyle("small")}>
+            Keyboard shortcuts for editing on the world canvas. Click a field and
+            press the key combination you want to use.
+          </p>
+        </div>
+      ) : null}
 
-      <ul className="flex flex-col gap-2">
-        {objectKeys(SHORTCUT_LABELS).map((action) => {
-          const shortcut = shortcuts[action];
-          const isRecording = recordingAction === action;
-          return (
-            <li
-              key={action}
-              className="flex items-center justify-between gap-3 rounded-xl border border-wn-mono-700 bg-wn-mono-950 px-3 py-2"
-            >
-              <span className="text-sm text-wn-mono-100">
-                {SHORTCUT_LABELS[action]}
-              </span>
-              <button
-                type="button"
-                disabled={disabled}
-                aria-label={`${SHORTCUT_LABELS[action]} shortcut`}
-                className={[
-                  "min-w-28 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors",
-                  "disabled:cursor-not-allowed disabled:opacity-40",
-                  isRecording
-                    ? "border-wn-mono-500 bg-wn-mono-800 text-wn-mono-50"
-                    : "border-wn-mono-600 bg-wn-mono-900 text-wn-mono-200 hover:border-wn-mono-500 hover:text-wn-mono-50",
-                ].join(" ")}
-                onFocus={() => setRecordingAction(action)}
-                onBlur={() => {
-                  if (recordingAction === action) {
-                    setRecordingAction(null);
-                  }
-                }}
-                onKeyDown={(event) => handleRecordKeyDown(event, action)}
+      <section className={settingsPanelClassName}>
+        <ul className={settingsRowListClassName}>
+          {objectKeys(SHORTCUT_LABELS).map((action) => {
+            const shortcut = shortcuts[action];
+            const isRecording = recordingAction === action;
+            return (
+              <li
+                key={action}
+                className={`${settingsRowClassName} flex items-center justify-between gap-4`}
               >
-                {isRecording
-                  ? "Press keys…"
-                  : formatKeyboardShortcut(shortcut)}
-              </button>
-            </li>
-          );
-        })}
-      </ul>
+                <span className="text-sm font-medium text-wn-text">
+                  {SHORTCUT_LABELS[action]}
+                </span>
+                <button
+                  type="button"
+                  disabled={disabled}
+                  aria-pressed={isRecording}
+                  aria-label={`${SHORTCUT_LABELS[action]} shortcut`}
+                  className={
+                    isRecording
+                      ? settingsShortcutKeyRecordingClassName
+                      : settingsShortcutKeyClassName
+                  }
+                  onClick={() => startRecording(action)}
+                >
+                  {isRecording
+                    ? "Press keys…"
+                    : formatKeyboardShortcut(shortcut)}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
 
       <Button
         variant="secondary"

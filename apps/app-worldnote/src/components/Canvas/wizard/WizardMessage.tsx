@@ -3,6 +3,10 @@ import { MaterialSymbol } from "@worldnote/ui";
 import { motion } from "framer-motion";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import {
+  primaryAccentFillClassName,
+  primaryAccentInteractiveClassName,
+} from "../../../services/settings/primaryAccentStyles.js";
 import { MarkdownView } from "../inspector/MarkdownView.js";
 import { cx } from "./cx.js";
 import type { WizardMessage as WizardMessageData } from "./useWorldWizard.js";
@@ -86,7 +90,7 @@ function WizardMessageCopyButton({
       className={cx(
         "absolute right-1.5 top-1.5 rounded-md p-1 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100",
         variant === "user"
-          ? "text-wn-mono-700 hover:bg-wn-mono-200 hover:text-wn-mono-950"
+          ? "text-wn-primary-foreground/70 hover:bg-wn-primary-hover hover:text-wn-primary-foreground"
           : "text-wn-mono-400 hover:bg-wn-mono-700 hover:text-wn-mono-50",
       )}
     >
@@ -101,16 +105,22 @@ function WizardMessageCopyButton({
 type WizardMessageProps = {
   message: WizardMessageData;
   onSpawn: (card: WorldCard) => void;
+  onApply?: (card: WorldCard) => void;
 };
 
 function GeneratedCardPreview({
   card,
+  action,
   onSpawn,
+  onApply,
 }: {
   card: WorldCard;
+  action: "spawn" | "apply";
   onSpawn: (card: WorldCard) => void;
+  onApply?: (card: WorldCard) => void;
 }) {
   const typeLabel = CARD_TYPE_LABELS[card.card_type] ?? card.card_type;
+  const isApply = action === "apply";
   return (
     <div className="mt-2 rounded-xl border border-wn-mono-700 bg-wn-mono-950 p-3">
       <div className="flex items-center justify-between gap-2">
@@ -124,11 +134,16 @@ function GeneratedCardPreview({
         </div>
         <button
           type="button"
-          onClick={() => onSpawn(card)}
-          className="flex items-center gap-1 rounded-full bg-wn-mono-50 px-3 py-1.5 text-xs font-semibold text-wn-mono-950 transition-colors hover:bg-wn-mono-100"
+          onClick={() =>
+            isApply ? onApply?.(card) : onSpawn(card)
+          }
+          className={`flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${primaryAccentInteractiveClassName}`}
         >
-          <MaterialSymbol name="add_circle" className="text-sm" />
-          Spawn onto Canvas
+          <MaterialSymbol
+            name={isApply ? "check_circle" : "add_circle"}
+            className="text-sm"
+          />
+          {isApply ? "Apply to card" : "Spawn onto Canvas"}
         </button>
       </div>
       {card.description ? (
@@ -140,7 +155,11 @@ function GeneratedCardPreview({
   );
 }
 
-export function WizardMessage({ message, onSpawn }: WizardMessageProps) {
+export function WizardMessage({
+  message,
+  onSpawn,
+  onApply,
+}: WizardMessageProps) {
   const isUser = message.role === "user";
   const canCopy = !message.streaming && message.content.trim().length > 0;
 
@@ -151,7 +170,7 @@ export function WizardMessage({ message, onSpawn }: WizardMessageProps) {
           "group relative max-w-[90%] rounded-2xl px-3 py-2 text-sm",
           canCopy && "pr-8",
           isUser
-            ? "bg-wn-mono-50 text-wn-mono-950"
+            ? primaryAccentFillClassName
             : message.error
               ? "border border-wn-red-500/60 bg-wn-red-500/10 text-wn-red-300"
               : "bg-wn-mono-800 text-wn-mono-100",
@@ -183,7 +202,9 @@ export function WizardMessage({ message, onSpawn }: WizardMessageProps) {
             {message.generatedCard ? (
               <GeneratedCardPreview
                 card={message.generatedCard}
+                action={message.generatedCardAction ?? "spawn"}
                 onSpawn={onSpawn}
+                onApply={onApply}
               />
             ) : null}
           </>

@@ -9,12 +9,14 @@ type CanvasHeaderProps = {
   worldName: string;
   onBackToHome: () => void;
   onOpenVault?: () => void;
+  onOpenSettings?: () => void;
 };
 
 export function CanvasHeader({
   worldName,
   onBackToHome,
   onOpenVault,
+  onOpenSettings,
 }: CanvasHeaderProps) {
   const menuItems = [
     {
@@ -28,6 +30,15 @@ export function CanvasHeader({
             id: "vault",
             label: "Vault",
             icon: <MaterialSymbol name="layers" className="text-[20px]" />,
+          },
+        ]
+      : []),
+    ...(onOpenSettings
+      ? [
+          {
+            id: "settings",
+            label: "Settings",
+            icon: <MaterialSymbol name="settings" className="text-[20px]" />,
           },
         ]
       : []),
@@ -46,6 +57,10 @@ export function CanvasHeader({
             }
             if (key === "vault") {
               onOpenVault?.();
+              return;
+            }
+            if (key === "settings") {
+              onOpenSettings?.();
             }
           }}
           items={menuItems}

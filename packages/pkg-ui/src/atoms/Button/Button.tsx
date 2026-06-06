@@ -4,9 +4,11 @@ import { motion } from "framer-motion";
 import type { ComponentProps, ReactNode } from "react";
 
 type HeroUIButtonProps = ComponentProps<typeof import("@heroui/react").Button>;
-import { pressableTap } from "../../motion/presets.js";
-import { tapTransition } from "../../motion/tokens.js";
-import { usePrefersReducedMotion } from "../../motion/usePrefersReducedMotion.js";
+import {
+  pressableTap,
+  tapTransition,
+  usePrefersReducedMotion,
+} from "../../motion/foundation/index.js";
 
 export type ButtonVariant =
   | "primary"
@@ -54,8 +56,9 @@ const variantConfig: Record<ButtonVariant, VariantConfig> = {
   },
   white: {
     heroVariant: "solid",
+    heroColor: "default",
     className:
-      "border-0 bg-wn-mono-50 font-semibold text-wn-mono-950 shadow-none hover:bg-wn-mono-100 data-[hover=true]:bg-wn-mono-100",
+      "border-0 !bg-wn-primary !text-wn-primary-foreground font-semibold shadow-none hover:!bg-wn-primary-hover data-[hover=true]:!bg-wn-primary-hover disabled:opacity-100 data-[disabled=true]:opacity-100 data-[disabled=true]:!bg-wn-primary/75 data-[disabled=true]:!text-wn-primary-foreground",
   },
   secondary: {
     heroVariant: "bordered",

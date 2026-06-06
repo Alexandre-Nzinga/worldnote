@@ -68,7 +68,23 @@ body.wn-canvas-card-external-drag * {
 }
 
 .inspector-markdown :where(ul, ol) {
-  padding-inline-start: 1.25rem;
+  padding-inline-start: 1.5rem;
+}
+
+.inspector-markdown :where(ul) {
+  list-style-type: disc;
+}
+
+.inspector-markdown :where(ol) {
+  list-style-type: decimal;
+}
+
+.inspector-markdown :where(li) {
+  display: list-item;
+}
+
+.inspector-markdown :where(li)::marker {
+  color: var(--color-wn-mono-400);
 }
 
 .inspector-markdown :where(a) {
@@ -163,7 +179,27 @@ body.wn-canvas-card-external-drag * {
 .inspector-lore-editor-body .inspector-lore-editor-prose ul,
 .inspector-lore-editor-body .inspector-lore-editor-prose ol {
   margin: 0.5em 0;
-  padding-left: 1.25rem;
+  padding-left: 1.5rem;
+}
+
+.inspector-lore-editor-body .inspector-lore-editor-prose ul {
+  list-style-type: disc;
+}
+
+.inspector-lore-editor-body .inspector-lore-editor-prose ol {
+  list-style-type: decimal;
+}
+
+.inspector-lore-editor-body .inspector-lore-editor-prose li {
+  display: list-item;
+}
+
+.inspector-lore-editor-body .inspector-lore-editor-prose li::marker {
+  color: var(--color-wn-mono-400);
+}
+
+.inspector-lore-editor-body .inspector-lore-editor-prose li > p {
+  margin: 0;
 }
 
 .inspector-lore-editor-body .inspector-lore-editor-prose blockquote {
@@ -200,6 +236,33 @@ body.wn-canvas-card-external-drag * {
   line-height: 1.6;
   font-family: inherit;
   font-size: inherit;
+}
+
+.markdown-editor-prose .ProseMirror ul,
+.markdown-editor-prose .ProseMirror ol {
+  margin: 0.5em 0;
+  padding-left: 1.5rem;
+}
+
+.markdown-editor-prose .ProseMirror ul {
+  list-style-type: disc;
+}
+
+.markdown-editor-prose .ProseMirror ol {
+  list-style-type: decimal;
+}
+
+.markdown-editor-prose .ProseMirror li {
+  display: list-item;
+}
+
+.markdown-editor-prose .ProseMirror li::marker {
+  color: currentColor;
+  opacity: 0.65;
+}
+
+.markdown-editor-prose .ProseMirror li > p {
+  margin: 0;
 }
 
 .markdown-editor-prose .ProseMirror p.is-editor-empty:first-child::before {

@@ -1,12 +1,17 @@
 import { Input, Textarea } from "@heroui/react";
-import { AnimatedModal, Button, getHeadingProps } from "@worldnote/ui";
+import {
+  AnimatedModal,
+  Button,
+  fieldLabelClassName,
+  getBodyTextStyle,
+  getHeadingProps,
+} from "@worldnote/ui";
 import { useCallback, useEffect, useState } from "react";
 import { useVault } from "../hooks/useVault.js";
 import { useVaultCommands } from "../hooks/useVaultCommands.js";
 import { pickDirectory } from "../services/desktop/pickDirectory.js";
 import {
   darkFieldInputClassNames,
-  modalFieldLabelClassName,
   modalPrimaryButtonClassName,
 } from "./Onboarding/fieldClassNames.js";
 
@@ -126,7 +131,7 @@ export function CreateWorldModal({
         >
           Create new world
         </h2>
-        <p className="text-sm text-wn-mono-400">
+        <p style={getBodyTextStyle("small")}>
           Name your world, add an optional description, and choose where to
           store it on your machine.
         </p>
@@ -136,7 +141,7 @@ export function CreateWorldModal({
         <div className="flex flex-col gap-1">
           <label
             htmlFor="create-world-name"
-            className={modalFieldLabelClassName}
+            className={fieldLabelClassName}
           >
             Name <span className="text-wn-red-500">*</span>
           </label>
@@ -155,7 +160,7 @@ export function CreateWorldModal({
         <div className="flex flex-col gap-1">
           <label
             htmlFor="create-world-description"
-            className={modalFieldLabelClassName}
+            className={fieldLabelClassName}
           >
             Description
           </label>
@@ -172,7 +177,7 @@ export function CreateWorldModal({
 
         {!forcedRoot ? (
           <div className="flex flex-col gap-1">
-            <span className={modalFieldLabelClassName}>
+            <span className={fieldLabelClassName}>
               Location <span className="text-wn-red-500">*</span>
             </span>
             <div className="flex gap-2">

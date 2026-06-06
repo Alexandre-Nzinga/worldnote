@@ -1,5 +1,6 @@
 import { MaterialSymbol } from "@worldnote/ui";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { primaryAccentRingOnSurfaceClassName } from "../../services/settings/primaryAccentStyles.js";
 import {
   worldCoverPaletteKey,
   type WorldCoverPaletteKey,
@@ -19,7 +20,7 @@ type WorldFilterPillsProps = {
 };
 
 const pillBaseClassName =
-  "inline-flex shrink-0 items-center rounded-full px-5 py-2.5 text-sm font-semibold transition-all";
+  "inline-flex shrink-0 items-center rounded-full px-5 py-2 text-sm font-medium transition-all";
 
 const palettePillClassNames: Record<WorldCoverPaletteKey, string> = {
   mono: "bg-wn-mono-200 text-wn-mono-950",
@@ -34,7 +35,7 @@ function pillClassName(worldName: string | null, isActive: boolean): string {
   if (worldName === null) {
     return isActive
       ? `${pillBaseClassName} bg-wn-mono-300 text-wn-mono-950`
-      : `${pillBaseClassName} border border-wn-mono-700 bg-wn-mono-950 text-wn-mono-400 hover:border-wn-mono-600 hover:text-wn-mono-200`;
+      : `${pillBaseClassName} bg-wn-surface-raised text-wn-text-muted hover:text-wn-text`;
   }
 
   const palette = worldCoverPaletteKey(worldName);
@@ -45,7 +46,7 @@ function pillClassName(worldName: string | null, isActive: boolean): string {
 }
 
 const activePillButtonClassName =
-  "rounded-full ring-2 ring-wn-mono-50 ring-offset-2 ring-offset-wn-mono-950";
+  `rounded-full ${primaryAccentRingOnSurfaceClassName}`;
 
 function PillButton({
   label,
@@ -74,9 +75,9 @@ function PillButton({
 }
 
 const arrowButtonClassName = [
-  "flex h-11 w-11 shrink-0 items-center justify-center rounded-full",
-  "border border-wn-mono-700 bg-wn-mono-950 text-wn-mono-300",
-  "transition-colors hover:border-wn-mono-600 hover:text-wn-mono-50",
+  "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
+  "bg-wn-surface-raised text-wn-text-muted",
+  "transition-colors hover:bg-wn-mono-800 hover:text-wn-text",
   "disabled:cursor-not-allowed disabled:opacity-40",
 ].join(" ");
 
@@ -134,7 +135,7 @@ export function WorldFilterPills({
   };
 
   return (
-    <div className="flex items-center gap-3 border-b border-wn-mono-800 py-1 pb-5">
+    <div className="flex items-center gap-3 pt-1">
       <button
         type="button"
         className={arrowButtonClassName}
@@ -147,7 +148,7 @@ export function WorldFilterPills({
 
       <div
         ref={scrollRef}
-        className="scrollbar-wn flex min-w-0 flex-1 items-center gap-3 overflow-x-auto px-1 py-2"
+        className="scrollbar-wn flex min-w-0 flex-1 items-center gap-2.5 overflow-x-auto px-1 py-1"
         onScroll={updateScrollState}
       >
         <PillButton

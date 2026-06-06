@@ -77,16 +77,17 @@ async function computeLuminance(src: string): Promise<number | null> {
 
 export function useImageLuminance(
   src: string | undefined,
-  options?: { threshold?: number },
+  options?: { threshold?: number; enabled?: boolean },
 ): LuminanceResult {
   const threshold = options?.threshold ?? DEFAULT_THRESHOLD;
+  const enabled = options?.enabled ?? true;
   const [luminance, setLuminance] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     setLuminance(null);
 
-    if (!src) {
+    if (!src || !enabled) {
       return;
     }
 
@@ -99,7 +100,7 @@ export function useImageLuminance(
     return () => {
       cancelled = true;
     };
-  }, [src]);
+  }, [enabled, src]);
 
   return useMemo(() => {
     if (luminance == null) {

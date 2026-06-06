@@ -19,6 +19,33 @@ fn sqlite_path(vault: &str) -> PathBuf {
     PathBuf::from(vault).join(".worldnote").join("index.db")
 }
 
+fn extract_tags(card: &serde_json::Value) -> Vec<String> {
+    card.get("tags")
+        .and_then(|value| value.as_array())
+        .map(|array| {
+            array
+                .iter()
+                .filter_map(|item| item.as_str().map(ToString::to_string))
+                .collect::<Vec<_>>()
+        })
+        .unwrap_or_default()
+}
+
+fn extract_lore(card: &serde_json::Value) -> String {
+    card.get("lore")
+        .and_then(|value| value.as_str())
+        .unwrap_or_default()
+        .to_string()
+}
+
+fn open_search_index(vault: &str) -> Result<SqliteIndex, String> {
+    let index = SqliteIndex::open(sqlite_path(vault)).map_err(|error| error.to_string())?;
+    index
+        .ensure_synced(&lore_root(vault))
+        .map_err(|error| error.to_string())?;
+    Ok(index)
+}
+
 fn card_assets_dir(vault: &str, card_id: &str) -> PathBuf {
     PathBuf::from(vault)
         .join(".worldnote")
@@ -175,20 +202,12 @@ pub fn duplicate_card(
         .get("name")
         .and_then(|value| value.as_str())
         .unwrap_or("Untitled");
-    let tags = card
-        .get("tags")
-        .and_then(|value| value.as_array())
-        .map(|array| {
-            array
-                .iter()
-                .filter_map(|item| item.as_str().map(ToString::to_string))
-                .collect::<Vec<_>>()
-        })
-        .unwrap_or_default();
+    let tags = extract_tags(&card);
+    let lore = extract_lore(&card);
 
     let index = SqliteIndex::open(sqlite_path(&vault)).map_err(|error| error.to_string())?;
     index
-        .upsert(&new_id, name, &tags)
+        .upsert(&new_id, name, &tags, &lore)
         .map_err(|error| error.to_string())?;
 
     if register_on_canvas {
@@ -216,23 +235,15 @@ pub fn upsert_card(vault: String, card: serde_json::Value) -> Result<(), String>
         .get("name")
         .and_then(|value| value.as_str())
         .ok_or_else(|| "Card payload is missing required 'name'".to_string())?;
-    let tags = card
-        .get("tags")
-        .and_then(|value| value.as_array())
-        .map(|array| {
-            array
-                .iter()
-                .filter_map(|item| item.as_str().map(ToString::to_string))
-                .collect::<Vec<_>>()
-        })
-        .unwrap_or_default();
+    let tags = extract_tags(&card);
+    let lore = extract_lore(&card);
 
     let repo = JsonCardRepository::new(lore_root(&vault));
     repo.upsert(id, &card).map_err(|error| error.to_string())?;
 
     let index = SqliteIndex::open(sqlite_path(&vault)).map_err(|error| error.to_string())?;
     index
-        .upsert(id, name, &tags)
+        .upsert(id, name, &tags, &lore)
         .map_err(|error| error.to_string())?;
     Ok(())
 }
@@ -248,11 +259,45 @@ pub struct CardIndexRow {
 /// Lists card metadata from the world's SQLite search index (`.worldnote/index.db`).
 #[tauri::command]
 pub fn list_card_index(vault: String) -> Result<Vec<CardIndexRow>, String> {
-    let index = SqliteIndex::open(sqlite_path(&vault)).map_err(|error| error.to_string())?;
+    let index = open_search_index(&vault)?;
     let rows = index.list_all().map_err(|error| error.to_string())?;
     Ok(rows
         .into_iter()
         .map(|(id, name, tags)| CardIndexRow { id, name, tags })
+        .collect())
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CardIndexSearchHit {
+    pub id: String,
+    pub name: String,
+    pub tags: Vec<String>,
+    pub match_kind: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub match_detail: Option<String>,
+}
+
+/// Searches card metadata in the world's SQLite index (name, tags, lore).
+#[tauri::command]
+pub fn search_card_index(
+    vault: String,
+    query: String,
+    limit: Option<u32>,
+) -> Result<Vec<CardIndexSearchHit>, String> {
+    let index = open_search_index(&vault)?;
+    let hits = index
+        .search(&query, limit.unwrap_or(20) as usize)
+        .map_err(|error| error.to_string())?;
+    Ok(hits
+        .into_iter()
+        .map(|hit| CardIndexSearchHit {
+            id: hit.id,
+            name: hit.name,
+            tags: hit.tags,
+            match_kind: hit.match_kind,
+            match_detail: hit.match_detail,
+        })
         .collect())
 }
 

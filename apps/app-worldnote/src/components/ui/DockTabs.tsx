@@ -1,4 +1,5 @@
 import { MaterialSymbol, usePrefersReducedMotion } from "@worldnote/ui";
+import { primaryAccentRingOnDarkClassName } from "../../services/settings/primaryAccentStyles.js";
 import {
   motion,
   useMotionValue,
@@ -87,7 +88,7 @@ function DockIcon({ item, mouseX, itemRef }: DockIconProps) {
         disabled={item.disabled}
         onClick={item.onPress}
         className={`relative flex h-full w-full items-center justify-center overflow-hidden rounded-2xl shadow-lg disabled:cursor-not-allowed disabled:opacity-40 ${item.colorClassName} ${
-          item.isActive ? "ring-2 ring-wn-mono-50 ring-offset-2 ring-offset-wn-mono-900" : ""
+          item.isActive ? primaryAccentRingOnDarkClassName : ""
         }`}
         animate={{
           y: isClicked ? 2 : isHovered && !item.disabled ? -6 : 0,

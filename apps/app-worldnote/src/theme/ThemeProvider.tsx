@@ -6,6 +6,10 @@ import {
   type ReactNode,
 } from "react";
 import { useSettings } from "../hooks/useSettings.js";
+import {
+  applyPrimaryColorToDocument,
+  normalizePrimaryColor,
+} from "../services/settings/primaryColorSettings.js";
 import type { ThemePreference } from "../services/settings/settings.js";
 
 export type ResolvedTheme = "light" | "dark";
@@ -46,6 +50,7 @@ function applyThemeClass(resolved: ResolvedTheme) {
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const preference = useSettings((state) => state.settings?.theme) ?? "system";
+  const primaryColor = useSettings((state) => state.settings?.primaryColor);
   const [systemDark, setSystemDark] = useState(systemPrefersDark);
 
   useEffect(() => {
@@ -67,6 +72,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     applyThemeClass(resolved);
   }, [resolved]);
+
+  useEffect(() => {
+    applyPrimaryColorToDocument(normalizePrimaryColor(primaryColor));
+  }, [primaryColor]);
 
   useEffect(() => {
     try {

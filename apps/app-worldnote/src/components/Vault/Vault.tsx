@@ -2,23 +2,32 @@ import { Input } from "@heroui/react";
 import {
   Button,
   MaterialSymbol,
-  WorldNoteLogo,
   getBodyTextStyle,
   getHeadingProps,
 } from "@worldnote/ui";
-import { motion } from "framer-motion";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { LibraryCard } from "../../services/library/listAllCards.js";
 import { listAllCards } from "../../services/library/listAllCards.js";
+import { searchAllCards } from "../../services/library/searchAllCards.js";
 import { useSettings } from "../../hooks/useSettings.js";
 import {
   listWorlds,
   type WorldSummary,
 } from "../../services/worlds/listWorlds.js";
-import { useResolvedTheme } from "../../theme/ThemeProvider.js";
-import { darkFieldInputClassNames } from "../Onboarding/fieldClassNames.js";
+import {
+  pageBackdropClassName,
+  pageShellClassName,
+  panelFieldInputClassNames,
+  segmentButtonClassName,
+  segmentTrackClassName,
+  surfacePanelClassName,
+  surfacePanelStackClassName,
+} from "../shell/pageShellStyles.js";
+import { RichEmptyState } from "../ui/RichEmptyState.js";
+import { toast } from "../../services/notifications/toast.js";
 import { VaultCardChip } from "./VaultCardChip.js";
 import { VaultFilterButton } from "./VaultFilterButton.js";
+import { VaultLoadingSkeleton, VaultPageSkeleton } from "./VaultLoadingSkeleton.js";
 import {
   ALL_WORLDS_PATH,
   WorldFilterPills,
@@ -31,29 +40,37 @@ type VaultProps = {
   onBack: () => void;
   worldnoteRoot: string;
   currentWorldPath?: string;
+  onCreateWorld?: () => void;
+  onTrySampleWorld?: () => void;
+  onAddCharacter?: () => void;
 };
 
 const cardGridClassName =
   "grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5";
 
-function VaultWorldEmpty({ message }: { message: string }) {
-  return (
-    <div className="flex h-28 items-center justify-center rounded-2xl border border-dashed border-wn-mono-800 bg-wn-mono-950/20 text-sm text-wn-mono-500">
-      {message}
-    </div>
-  );
-}
+const SORT_OPTIONS: { id: SortMode; label: string }[] = [
+  { id: "az", label: "A–Z" },
+  { id: "newest", label: "Newest" },
+  { id: "oldest", label: "Oldest" },
+];
 
-export function Vault({ onBack, worldnoteRoot, currentWorldPath }: VaultProps) {
+export function Vault({
+  onBack,
+  worldnoteRoot,
+  currentWorldPath,
+  onCreateWorld,
+  onTrySampleWorld,
+  onAddCharacter,
+}: VaultProps) {
   const settings = useSettings((state) => state.settings);
-  const theme = useResolvedTheme();
 
   const [items, setItems] = useState<LibraryCard[]>([]);
   const [worlds, setWorlds] = useState<WorldSummary[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const [query, setQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<LibraryCard[] | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
   const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set());
   const [selectedWorldPath, setSelectedWorldPath] = useState(ALL_WORLDS_PATH);
   const [sortMode, setSortMode] = useState<SortMode>("az");
@@ -67,7 +84,6 @@ export function Vault({ onBack, worldnoteRoot, currentWorldPath }: VaultProps) {
       return;
     }
     setIsLoading(true);
-    setError(null);
     try {
       const [cards, worldSummaries] = await Promise.all([
         listAllCards(worldnoteRoot),
@@ -76,7 +92,9 @@ export function Vault({ onBack, worldnoteRoot, currentWorldPath }: VaultProps) {
       setItems(cards);
       setWorlds(worldSummaries);
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : String(loadError));
+      toast.error(
+        loadError instanceof Error ? loadError.message : String(loadError),
+      );
       setItems([]);
       setWorlds([]);
     } finally {
@@ -87,6 +105,42 @@ export function Vault({ onBack, worldnoteRoot, currentWorldPath }: VaultProps) {
   useEffect(() => {
     void refresh();
   }, [refresh]);
+
+  useEffect(() => {
+    const trimmed = query.trim();
+    if (!trimmed || !worldnoteRoot?.trim()) {
+      setSearchResults(null);
+      setIsSearching(false);
+      return;
+    }
+
+    let cancelled = false;
+    setIsSearching(true);
+
+    const timer = window.setTimeout(() => {
+      void searchAllCards(worldnoteRoot, trimmed)
+        .then((cards) => {
+          if (!cancelled) {
+            setSearchResults(cards);
+          }
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setSearchResults([]);
+          }
+        })
+        .finally(() => {
+          if (!cancelled) {
+            setIsSearching(false);
+          }
+        });
+    }, 150);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [query, worldnoteRoot]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -131,19 +185,16 @@ export function Vault({ onBack, worldnoteRoot, currentWorldPath }: VaultProps) {
   }, [selectedWorldPath, worldList]);
 
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
     const hasTypeFilter = selectedTypes.size > 0;
     const hasWorldFilter = selectedWorldPath !== ALL_WORLDS_PATH;
+    const source = query.trim() ? (searchResults ?? []) : items;
 
-    const next = items.filter((card) => {
+    const next = source.filter((card) => {
       if (hasWorldFilter && card.worldPath !== selectedWorldPath) {
         return false;
       }
       if (hasTypeFilter && !selectedTypes.has(card.cardType)) {
         return false;
-      }
-      if (q) {
-        return card.name.toLowerCase().includes(q);
       }
       return true;
     });
@@ -157,7 +208,7 @@ export function Vault({ onBack, worldnoteRoot, currentWorldPath }: VaultProps) {
 
     next.sort(sortFn);
     return next;
-  }, [items, query, selectedTypes, selectedWorldPath, sortMode]);
+  }, [items, query, searchResults, selectedTypes, selectedWorldPath, sortMode]);
 
   const grouped = useMemo(() => {
     const cardsByPath = new Map<string, LibraryCard[]>();
@@ -176,20 +227,42 @@ export function Vault({ onBack, worldnoteRoot, currentWorldPath }: VaultProps) {
     }));
   }, [filtered, worldList]);
 
-  const emptyResultsMessage = useMemo(() => {
-    if (
-      selectedWorldPath !== ALL_WORLDS_PATH &&
-      selectedWorld &&
-      !hasActiveFilters
-    ) {
-      return `No cards in ${selectedWorld.name} yet.`;
-    }
-    return "No cards found.";
-  }, [hasActiveFilters, selectedWorld, selectedWorldPath]);
+  const showGlobalEmpty =
+    !isLoading && items.length === 0 && !hasActiveFilters;
 
-  const emptyWorldSectionMessage = hasActiveFilters
-    ? "No cards match your filters."
-    : "No cards yet.";
+  const vaultEmptyActions = useMemo(() => {
+    if (worldList.length === 0) {
+      const actions = [];
+      if (onCreateWorld) {
+        actions.push({
+          label: "Create world",
+          icon: "add",
+          variant: "white" as const,
+          onPress: onCreateWorld,
+        });
+      }
+      if (onTrySampleWorld) {
+        actions.push({
+          label: "Try sample world",
+          icon: "auto_stories",
+          variant: "secondary" as const,
+          onPress: onTrySampleWorld,
+        });
+      }
+      return actions;
+    }
+    if (onAddCharacter) {
+      return [
+        {
+          label: "Add Character",
+          icon: "person",
+          variant: "white" as const,
+          onPress: onAddCharacter,
+        },
+      ];
+    }
+    return [];
+  }, [onAddCharacter, onCreateWorld, onTrySampleWorld, worldList.length]);
 
   const toggleType = (type: string) => {
     setSelectedTypes((prev) => {
@@ -208,32 +281,15 @@ export function Vault({ onBack, worldnoteRoot, currentWorldPath }: VaultProps) {
   };
 
   if (!settings) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-wn-mono-950">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{
-            duration: 2,
-            repeat: Number.POSITIVE_INFINITY,
-            ease: "linear",
-          }}
-        >
-          <WorldNoteLogo
-            variant="icon"
-            tone={theme === "dark" ? "white" : "black"}
-            className="h-12 w-12 opacity-60"
-            alt="Loading"
-          />
-        </motion.div>
-      </div>
-    );
+    return <VaultPageSkeleton />;
   }
 
   const showGroupedByWorld = selectedWorldPath === ALL_WORLDS_PATH;
 
   return (
-    <div className="relative flex h-screen flex-col overflow-hidden bg-wn-mono-950 text-wn-mono-100">
-      <header className="relative flex shrink-0 items-center justify-between px-[46px] pt-7">
+    <div className={pageShellClassName}>
+      <div aria-hidden className={pageBackdropClassName} />
+      <header className="relative z-10 flex shrink-0 items-center justify-between px-[46px] py-5">
         <div className="flex items-center gap-3">
           <Button
             isIconOnly
@@ -245,60 +301,40 @@ export function Vault({ onBack, worldnoteRoot, currentWorldPath }: VaultProps) {
           >
             <MaterialSymbol name="arrow_back" className="text-lg" />
           </Button>
-          <span
-            className="text-wn-mono-50"
-            style={{
-              ...getBodyTextStyle("small"),
-              fontSize: "24px",
-              fontWeight: "var(--font-weight-wn-semibold)",
-            }}
-          >
-            Vault
-          </span>
+          <h2 {...getHeadingProps("h3", { tone: "inverse" })}>Vault</h2>
         </div>
       </header>
 
-      <main className="relative flex min-h-0 flex-1 flex-col overflow-hidden px-[46px] pb-8 pt-10">
-        <div className="scrollbar-wn mx-auto flex w-full max-w-6xl min-h-0 flex-1 flex-col overflow-y-auto">
-          <div className="flex flex-col gap-6 pb-6">
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center justify-between gap-4 overflow-visible pr-1">
-                <h1
-                  {...getHeadingProps("h2", {
-                    tone: "inverse",
-                    className: "shrink-0",
-                  })}
-                >
-                  All cards
-                </h1>
-                <div className="flex shrink-0 items-center gap-2">
-                  <Button
-                    variant={sortMode === "az" ? "white" : "secondary"}
-                    size="sm"
-                    onPress={() => setSortMode("az")}
-                  >
-                    A–Z
-                  </Button>
-                  <Button
-                    variant={sortMode === "newest" ? "white" : "secondary"}
-                    size="sm"
-                    onPress={() => setSortMode("newest")}
-                  >
-                    Newest
-                  </Button>
-                  <Button
-                    variant={sortMode === "oldest" ? "white" : "secondary"}
-                    size="sm"
-                    onPress={() => setSortMode("oldest")}
-                  >
-                    Oldest
-                  </Button>
-                  <VaultFilterButton
-                    selectedTypes={selectedTypes}
-                    onToggle={toggleType}
-                    onClear={clearTypeFilters}
-                  />
+      <main className="relative z-10 flex min-h-0 flex-1 overflow-hidden px-[46px] pb-8 pt-2">
+        <div className="scrollbar-wn mx-auto flex w-full max-w-6xl min-h-0 flex-1 flex-col overflow-y-auto scroll-pb-8">
+          <div className={`${surfacePanelStackClassName} pb-6`}>
+            <div className="flex flex-col gap-1">
+              <h1 {...getHeadingProps("h2", { tone: "inverse" })}>All cards</h1>
+              <p style={getBodyTextStyle("small")}>
+                Browse and search every card across your worlds.
+              </p>
+            </div>
+
+            <section className={`${surfacePanelClassName} flex flex-col gap-4`}>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className={segmentTrackClassName}>
+                  {SORT_OPTIONS.map((option) => (
+                    <button
+                      key={option.id}
+                      type="button"
+                      aria-pressed={sortMode === option.id}
+                      className={segmentButtonClassName(sortMode === option.id)}
+                      onClick={() => setSortMode(option.id)}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
                 </div>
+                <VaultFilterButton
+                  selectedTypes={selectedTypes}
+                  onToggle={toggleType}
+                  onClear={clearTypeFilters}
+                />
               </div>
 
               <Input
@@ -307,7 +343,7 @@ export function Vault({ onBack, worldnoteRoot, currentWorldPath }: VaultProps) {
                 placeholder="Search by card name…"
                 value={query}
                 onValueChange={setQuery}
-                classNames={darkFieldInputClassNames}
+                classNames={panelFieldInputClassNames}
               />
 
               <WorldFilterPills
@@ -315,76 +351,129 @@ export function Vault({ onBack, worldnoteRoot, currentWorldPath }: VaultProps) {
                 selected={selectedWorldPath}
                 onSelect={setSelectedWorldPath}
               />
-            </div>
+            </section>
 
-            <div className="flex items-center gap-3">
-              <span className="text-xs text-wn-mono-400">
-                {isLoading
-                  ? "Loading…"
+            <p style={getBodyTextStyle("xs")}>
+              {isLoading
+                ? "Loading…"
+                : isSearching
+                  ? "Searching…"
                   : `${filtered.length} card${filtered.length === 1 ? "" : "s"}`}
-              </span>
-            </div>
-
-            {error ? (
-              <p className="text-sm text-wn-red-400" role="alert">
-                {error}
-              </p>
-            ) : null}
+            </p>
 
             {isLoading ? (
-              <div className="flex h-40 items-center justify-center rounded-2xl border border-wn-mono-800 bg-wn-mono-950/20 text-wn-mono-500">
-                Loading cards…
-              </div>
+              <VaultLoadingSkeleton />
+            ) : showGlobalEmpty ? (
+              <section className={surfacePanelClassName}>
+                <RichEmptyState
+                  title={
+                    worldList.length === 0
+                      ? "No worlds yet"
+                      : !showGroupedByWorld && selectedWorld
+                        ? `No cards in ${selectedWorld.name}`
+                        : "No cards yet"
+                  }
+                  description={
+                    worldList.length === 0
+                      ? "Create a world or try the sample world to start building your library."
+                      : "Add your first card on the canvas — characters, locations, and lore all show up here."
+                  }
+                  actions={vaultEmptyActions}
+                />
+              </section>
             ) : showGroupedByWorld ? (
-              worldList.length === 0 ? (
-                <VaultWorldEmpty message="No worlds yet." />
-              ) : (
-                <div className="flex flex-col gap-6">
-                  {grouped.map((group) => (
-                    <section key={group.worldPath} className="flex flex-col gap-3">
-                      <div className="flex items-baseline justify-between gap-3">
-                        <h2
-                          {...getHeadingProps("h6", {
-                            tone: "inverse",
-                            weight: "semibold",
-                          })}
+              <div className={surfacePanelStackClassName}>
+                {grouped.map((group) => (
+                  <section key={group.worldPath} className={surfacePanelClassName}>
+                    <div className="mb-4 flex items-baseline justify-between gap-3">
+                      <h2 {...getHeadingProps("h5", { tone: "inverse" })}>
+                        {group.worldName}
+                      </h2>
+                      <span style={getBodyTextStyle("xs")}>
+                        {group.cards.length} card
+                        {group.cards.length === 1 ? "" : "s"}
+                      </span>
+                    </div>
+                    {group.cards.length === 0 ? (
+                      hasActiveFilters ? (
+                        <p
+                          className="py-6 text-center text-wn-mono-400"
+                          style={getBodyTextStyle("small")}
                         >
-                          {group.worldName}
-                        </h2>
-                        <span className="text-xs text-wn-mono-500">
-                          {group.cards.length} card
-                          {group.cards.length === 1 ? "" : "s"}
-                        </span>
-                      </div>
-                      {group.cards.length === 0 ? (
-                        <VaultWorldEmpty message={emptyWorldSectionMessage} />
+                          No cards match your filters.
+                        </p>
                       ) : (
-                        <div className={cardGridClassName}>
-                          {group.cards.map((card) => (
-                            <VaultCardChip
-                              key={`${card.worldPath}:${card.cardId}`}
-                              card={card}
-                              draggable={isDragEnabled}
-                            />
-                          ))}
-                        </div>
-                      )}
-                    </section>
-                  ))}
-                </div>
-              )
-            ) : filtered.length === 0 ? (
-              <VaultWorldEmpty message={emptyResultsMessage} />
-            ) : (
-              <div className={cardGridClassName}>
-                {filtered.map((card) => (
-                  <VaultCardChip
-                    key={`${card.worldPath}:${card.cardId}`}
-                    card={card}
-                    draggable={isDragEnabled}
-                  />
+                        <RichEmptyState
+                          compact
+                          title="No cards yet"
+                          description="Open this world on the canvas to add cards."
+                          actions={
+                            onAddCharacter && group.worldPath === currentWorldPath
+                              ? [
+                                  {
+                                    label: "Add Character",
+                                    icon: "person",
+                                    variant: "white" as const,
+                                    onPress: onAddCharacter,
+                                  },
+                                ]
+                              : []
+                          }
+                        />
+                      )
+                    ) : (
+                      <div className={cardGridClassName}>
+                        {group.cards.map((card) => (
+                          <VaultCardChip
+                            key={`${card.worldPath}:${card.cardId}`}
+                            card={card}
+                            draggable={isDragEnabled}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </section>
                 ))}
               </div>
+            ) : filtered.length === 0 ? (
+              <section className={surfacePanelClassName}>
+                <RichEmptyState
+                  compact
+                  title="No cards found"
+                  description={
+                    hasActiveFilters
+                      ? "Try a different search or clear your filters."
+                      : "No cards match the current view."
+                  }
+                  actions={
+                    hasActiveFilters
+                      ? [
+                          {
+                            label: "Clear filters",
+                            icon: "filter_alt_off",
+                            variant: "secondary" as const,
+                            onPress: () => {
+                              setQuery("");
+                              clearTypeFilters();
+                            },
+                          },
+                        ]
+                      : vaultEmptyActions
+                  }
+                />
+              </section>
+            ) : (
+              <section className={surfacePanelClassName}>
+                <div className={cardGridClassName}>
+                  {filtered.map((card) => (
+                    <VaultCardChip
+                      key={`${card.worldPath}:${card.cardId}`}
+                      card={card}
+                      draggable={isDragEnabled}
+                    />
+                  ))}
+                </div>
+              </section>
             )}
           </div>
         </div>

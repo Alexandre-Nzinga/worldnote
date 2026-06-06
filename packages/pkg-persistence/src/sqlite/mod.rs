@@ -1,3 +1,3 @@
 mod index;
 
-pub use index::SqliteIndex;
+pub use index::{CardSearchHit, SqliteIndex};

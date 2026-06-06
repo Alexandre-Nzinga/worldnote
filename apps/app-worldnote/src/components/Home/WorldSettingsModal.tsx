@@ -2,17 +2,20 @@ import { Input } from "@heroui/react";
 import {
   AnimatedModal,
   Button,
+  CloseIconButton,
+  fieldLabelClassName,
+  getBodyTextStyle,
   getHeadingProps,
   MaterialSymbol,
 } from "@worldnote/ui";
 import { useCallback, useEffect, useState } from "react";
 import { useVault } from "../../hooks/useVault.js";
 import { useVaultCommands } from "../../hooks/useVaultCommands.js";
+import { toast } from "../../services/notifications/toast.js";
 import { pickCardImageFile } from "../../services/desktop/saveCardImage.js";
 import type { WorldSummary } from "../../services/worlds/listWorlds.js";
 import {
   darkFieldInputClassNames,
-  modalFieldLabelClassName,
   modalPrimaryButtonClassName,
 } from "../Onboarding/fieldClassNames.js";
 
@@ -41,21 +44,18 @@ export function WorldSettingsModal({
   const [worldPath, setWorldPath] = useState("");
   const [isBusy, setIsBusy] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isOpen || !world) {
       setName("");
-      setWorldPath("");
-      setConfirmDelete(false);
-      setError(null);
-      setIsBusy(false);
+    setWorldPath("");
+    setConfirmDelete(false);
+    setIsBusy(false);
       return;
     }
     setName(world.name);
     setWorldPath(world.path);
     setConfirmDelete(false);
-    setError(null);
   }, [isOpen, world]);
 
   useEffect(() => {
@@ -80,7 +80,6 @@ export function WorldSettingsModal({
       return;
     }
     setIsBusy(true);
-    setError(null);
     try {
       const oldPath = worldPath;
       const newPath = await renameWorld(worldPath, trimmed);
@@ -90,9 +89,10 @@ export function WorldSettingsModal({
       setWorldPath(newPath);
       onWorldRenamed?.(oldPath, newPath);
       onWorldsChanged();
+      toast.success("World renamed");
       onClose();
     } catch (renameError) {
-      setError(
+      toast.error(
         renameError instanceof Error
           ? renameError.message
           : String(renameError),
@@ -117,7 +117,6 @@ export function WorldSettingsModal({
       return;
     }
     setIsBusy(true);
-    setError(null);
     try {
       const sourcePath = await pickCardImageFile();
       if (!sourcePath) {
@@ -125,9 +124,10 @@ export function WorldSettingsModal({
       }
       await saveWorldCover(worldPath, sourcePath);
       onWorldsChanged();
+      toast.success("Cover image updated");
       onClose();
     } catch (coverError) {
-      setError(
+      toast.error(
         coverError instanceof Error ? coverError.message : String(coverError),
       );
     } finally {
@@ -140,18 +140,19 @@ export function WorldSettingsModal({
       return;
     }
     setIsBusy(true);
-    setError(null);
     try {
       const deletedPath = worldPath;
+      const deletedName = world?.name ?? "World";
       await deleteWorld(worldPath);
       if (currentVaultPath === worldPath) {
         setCurrentVault(null);
       }
       onWorldDeleted?.(deletedPath);
       onWorldsChanged();
+      toast.success(`"${deletedName}" deleted`);
       onClose();
     } catch (deleteError) {
-      setError(
+      toast.error(
         deleteError instanceof Error ? deleteError.message : String(deleteError),
       );
     } finally {
@@ -164,6 +165,7 @@ export function WorldSettingsModal({
     onWorldDeleted,
     onWorldsChanged,
     setCurrentVault,
+    world?.name,
     worldPath,
   ]);
 
@@ -185,25 +187,21 @@ export function WorldSettingsModal({
           >
             World settings
           </h2>
-          <p className="text-sm text-wn-mono-400">
+          <p style={getBodyTextStyle("small")}>
             Rename this world, change its cover image, or delete it from your
             vault.
           </p>
         </div>
-        <button
-          type="button"
+        <CloseIconButton
           aria-label="Close world settings"
-          className="shrink-0 rounded-lg px-2 py-1 text-sm text-wn-mono-400 transition-colors hover:bg-wn-mono-800 hover:text-wn-mono-50 disabled:opacity-50"
-          disabled={isBusy}
-          onClick={onClose}
-        >
-          <MaterialSymbol name="close" className="text-base" />
-        </button>
+          isDisabled={isBusy}
+          onPress={onClose}
+        />
       </header>
 
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-1">
-          <label htmlFor="world-settings-name" className={modalFieldLabelClassName}>
+          <label htmlFor="world-settings-name" className={fieldLabelClassName}>
             Rename
           </label>
           <Input
@@ -219,7 +217,7 @@ export function WorldSettingsModal({
         </div>
 
         <div className="flex flex-col gap-1">
-          <span className={modalFieldLabelClassName}>Edit cover image</span>
+          <span className={fieldLabelClassName}>Edit cover image</span>
           <div className="self-start">
             <Button
               variant="secondary"
@@ -241,12 +239,6 @@ export function WorldSettingsModal({
           <p className="text-sm text-wn-mono-400">
             Delete &ldquo;{world?.name}&rdquo; and all of its cards? This cannot
             be undone.
-          </p>
-        ) : null}
-
-        {error ? (
-          <p className="text-sm text-wn-red-400" role="alert">
-            {error}
           </p>
         ) : null}
       </div>

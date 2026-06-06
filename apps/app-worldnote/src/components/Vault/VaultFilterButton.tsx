@@ -1,11 +1,15 @@
+import { CardTypePill, type WorldNoteCardType } from "@worldnote/canvas";
 import {
-  CARD_VISUAL_CONFIG,
-  CardTypePill,
-  type WorldNoteCardType,
-} from "@worldnote/canvas";
-import { AnimatedPopover, Button, MaterialSymbol } from "@worldnote/ui";
+  AnimatedPopover,
+  Button,
+  getHeadingProps,
+  MaterialSymbol,
+} from "@worldnote/ui";
+import { useSettings } from "../../hooks/useSettings.js";
+import { resolveCardBadgeStyle } from "../../services/settings/cardTypeBadgeSettings.js";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { modalFieldLabelClassName } from "../Onboarding/fieldClassNames.js";
+import { primaryAccentRingOnSurfaceClassName } from "../../services/settings/primaryAccentStyles.js";
+import { surfacePanelClassName } from "../shell/pageShellStyles.js";
 
 const cardTypes: WorldNoteCardType[] = [
   "character",
@@ -37,8 +41,7 @@ const cardTypes: WorldNoteCardType[] = [
   "combat_style",
 ];
 
-const activeTypePillButtonClassName =
-  "rounded-full ring-2 ring-wn-mono-50 ring-offset-2 ring-offset-wn-mono-900";
+const activeTypePillButtonClassName = `rounded-full ${primaryAccentRingOnSurfaceClassName}`;
 
 type VaultFilterButtonProps = {
   selectedTypes: Set<string>;
@@ -52,6 +55,9 @@ export function VaultFilterButton({
   onClear,
 }: VaultFilterButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const cardTypeBadgeColors = useSettings(
+    (state) => state.settings?.cardTypeBadgeColors,
+  );
   const rootRef = useRef<HTMLDivElement>(null);
   const hasActiveFilters = selectedTypes.size > 0;
 
@@ -89,34 +95,30 @@ export function VaultFilterButton({
 
   return (
     <div ref={rootRef} className="relative shrink-0">
-      <div className="flex items-center gap-2 rounded-full border border-wn-mono-600 bg-wn-mono-50 py-1 pl-4 pr-1">
-        <span className="select-none text-sm font-medium text-wn-mono-700">
-          filter
-        </span>
-        <button
-          type="button"
-          onClick={toggleOpen}
-          aria-label="Filter by card type"
-          aria-expanded={isOpen}
-          className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-wn-mono-950 text-wn-mono-50 transition-colors hover:bg-wn-mono-800"
-        >
-          <MaterialSymbol name="filter_list" className="text-base" />
-          {hasActiveFilters ? (
-            <span
-              className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-wn-azure-400"
-              aria-hidden
-            />
-          ) : null}
-        </button>
-      </div>
+      <button
+        type="button"
+        onClick={toggleOpen}
+        aria-label="Filter by card type"
+        aria-expanded={isOpen}
+        className="relative flex h-10 items-center gap-2 rounded-full bg-wn-surface-raised px-4 text-sm font-medium text-wn-text transition-colors hover:bg-wn-mono-800"
+      >
+        <MaterialSymbol name="filter_list" className="text-base" />
+        Filter
+        {hasActiveFilters ? (
+          <span
+            className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-wn-azure-400"
+            aria-hidden
+          />
+        ) : null}
+      </button>
 
       <div className="absolute right-0 top-full z-20 mt-2 w-[min(100vw-3rem,24rem)]">
         <AnimatedPopover isOpen={isOpen}>
-          <div className="rounded-2xl border border-wn-mono-700 bg-wn-mono-900 p-4 shadow-lg">
-            <span className={modalFieldLabelClassName}>Filter by type</span>
+          <div className={`${surfacePanelClassName} shadow-lg`}>
+            <h3 {...getHeadingProps("h6", { tone: "inverse" })}>Filter by type</h3>
             <div className="mt-3 flex flex-wrap gap-2.5 px-0.5 py-1">
               {cardTypes.map((type) => {
-                const config = CARD_VISUAL_CONFIG[type];
+                const config = resolveCardBadgeStyle(type, cardTypeBadgeColors);
                 const isActive = selectedTypes.has(type);
                 return (
                   <button
@@ -141,7 +143,7 @@ export function VaultFilterButton({
               })}
             </div>
             {hasActiveFilters ? (
-              <div className="mt-3 border-t border-wn-mono-800 pt-3">
+              <div className="mt-4 border-t border-wn-border pt-4">
                 <Button variant="link" size="sm" onPress={onClear}>
                   Clear filters
                 </Button>

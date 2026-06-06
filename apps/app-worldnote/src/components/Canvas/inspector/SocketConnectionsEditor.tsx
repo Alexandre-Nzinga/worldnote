@@ -1,14 +1,23 @@
+import { cardTypeIconFor } from "@worldnote/canvas";
 import type { Link, SocketDescriptor, WorldCard } from "@worldnote/shared";
 import { CARD_TYPE_LABELS } from "@worldnote/shared";
-import { CardReferenceComboBox, MaterialSymbol } from "@worldnote/ui";
+import { CardReferenceComboBox, Eyebrow, MaterialSymbol } from "@worldnote/ui";
 import { useMemo } from "react";
+import { useSettings } from "../../../hooks/useSettings.js";
+import { useVault } from "../../../hooks/useVault.js";
+import { getRecentLinkTargetIds } from "../../../services/links/recentLinkTargets.js";
+import type { CardTypeBadgeOverrides } from "../../../services/settings/settings.js";
+import { resolveCardBadgeStyle } from "../../../services/settings/cardTypeBadgeSettings.js";
 import {
   inspectorFieldLabelClassName,
-  inspectorConnectionsSectionLabelClassName,
+  inspectorSectionClassName,
+  inspectorSectionEyebrowClassName,
 } from "./inspectorFieldStyles.js";
 import {
   currentSocketLinks,
   eligibleCardsForSocket,
+  recentEligibleForSocket,
+  toCardReferenceOption,
 } from "./socketEditing.js";
 
 type SocketEntry = { id: string; descriptor: SocketDescriptor };
@@ -29,6 +38,53 @@ type SocketConnectionsEditorProps = {
   ) => void;
 };
 
+function LinkedCardRow({
+  name,
+  cardType,
+  badgeOverrides,
+  onRemove,
+  disabled,
+}: {
+  name: string;
+  cardType?: WorldCard["card_type"];
+  badgeOverrides?: CardTypeBadgeOverrides;
+  onRemove: () => void;
+  disabled?: boolean;
+}) {
+  const badge = cardType
+    ? resolveCardBadgeStyle(cardType, badgeOverrides)
+    : null;
+  const typeIcon = cardType ? cardTypeIconFor(cardType) : null;
+
+  return (
+    <li className="flex items-center justify-between gap-2 rounded-lg bg-wn-mono-900 px-2.5 py-1.5">
+      <div className="flex min-w-0 items-center gap-2">
+        {typeIcon && badge ? (
+          <span
+            className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md ${badge.badgeClassName}`}
+            aria-hidden
+          >
+            <MaterialSymbol
+              name={typeIcon}
+              className={`text-sm ${badge.badgeTextColor ?? "text-wn-mono-50"}`}
+            />
+          </span>
+        ) : null}
+        <span className="min-w-0 truncate text-sm text-wn-mono-100">{name}</span>
+      </div>
+      <button
+        type="button"
+        className="shrink-0 rounded-lg p-1 text-wn-mono-500 transition-colors hover:bg-wn-mono-800 hover:text-wn-red-400 disabled:opacity-40"
+        aria-label={`Remove ${name}`}
+        disabled={disabled}
+        onClick={onRemove}
+      >
+        <MaterialSymbol name="close" className="text-base" />
+      </button>
+    </li>
+  );
+}
+
 function SocketFieldEditor({
   card,
   socketId,
@@ -37,6 +93,8 @@ function SocketFieldEditor({
   cardsById,
   links,
   disabled,
+  recentCardIds,
+  badgeOverrides,
   onCreateSocketLink,
   onRemoveSocketLink,
   onCreateAndLinkCard,
@@ -48,6 +106,8 @@ function SocketFieldEditor({
   cardsById: Record<string, WorldCard>;
   links: Link[];
   disabled?: boolean;
+  recentCardIds: string[];
+  badgeOverrides?: CardTypeBadgeOverrides;
   onCreateSocketLink: (socketId: string, targetCardId: string) => void;
   onRemoveSocketLink: (linkId: string) => void;
   onCreateAndLinkCard: (
@@ -69,12 +129,26 @@ function SocketFieldEditor({
     return ids;
   }, [card.id, linked]);
 
-  const eligibleOptions = useMemo(
+  const eligibleItems = useMemo(
     () =>
       eligibleCardsForSocket(descriptor, cardsById, {
         excludeCardIds: excludeIds,
+        badgeOverrides,
       }),
-    [descriptor, cardsById, excludeIds],
+    [descriptor, cardsById, excludeIds, badgeOverrides],
+  );
+
+  const eligibleOptions = useMemo(
+    () => eligibleItems.map(toCardReferenceOption),
+    [eligibleItems],
+  );
+
+  const recentSuggestions = useMemo(
+    () =>
+      recentEligibleForSocket(recentCardIds, eligibleItems).map(
+        toCardReferenceOption,
+      ),
+    [eligibleItems, recentCardIds],
   );
 
   const createOptions = useMemo(
@@ -93,7 +167,9 @@ function SocketFieldEditor({
       <CardReferenceComboBox
         id={`socket-${socketId}`}
         label={label}
+        labelClassName={inspectorFieldLabelClassName}
         options={eligibleOptions}
+        recentSuggestions={recentSuggestions}
         value={current?.targetCardId ?? null}
         disabled={disabled}
         placeholder="Search cards…"
@@ -114,23 +190,14 @@ function SocketFieldEditor({
       {linked.length > 0 ? (
         <ul className="flex flex-col gap-1.5">
           {linked.map((entry) => (
-            <li
+            <LinkedCardRow
               key={entry.linkId}
-              className="flex items-center justify-between gap-2 rounded-lg bg-wn-mono-900 px-2.5 py-1.5"
-            >
-              <span className="min-w-0 truncate text-sm text-wn-mono-100">
-                {entry.targetName}
-              </span>
-              <button
-                type="button"
-                className="shrink-0 rounded-lg p-1 text-wn-mono-500 transition-colors hover:bg-wn-mono-800 hover:text-wn-red-400 disabled:opacity-40"
-                aria-label={`Remove ${entry.targetName}`}
-                disabled={disabled}
-                onClick={() => onRemoveSocketLink(entry.linkId)}
-              >
-                <MaterialSymbol name="close" className="text-base" />
-              </button>
-            </li>
+              name={entry.targetName}
+              cardType={entry.targetCardType}
+              badgeOverrides={badgeOverrides}
+              disabled={disabled}
+              onRemove={() => onRemoveSocketLink(entry.linkId)}
+            />
           ))}
         </ul>
       ) : null}
@@ -139,6 +206,7 @@ function SocketFieldEditor({
         label={label}
         hideLabel
         options={eligibleOptions}
+        recentSuggestions={recentSuggestions}
         value={null}
         disabled={disabled}
         placeholder="Search cards to add…"
@@ -160,15 +228,28 @@ export function SocketConnectionsEditor({
   onRemoveSocketLink,
   onCreateAndLinkCard,
 }: SocketConnectionsEditorProps) {
+  const vaultPath = useVault((state) => state.currentVaultPath);
+  const badgeOverrides = useSettings(
+    (state) => state.settings?.cardTypeBadgeColors,
+  );
+  const recentCardIds = useMemo(
+    () => getRecentLinkTargetIds(vaultPath),
+    [vaultPath],
+  );
+
   if (socketEntries.length === 0) {
     return null;
   }
 
   return (
-    <section className="flex flex-col gap-3">
-      <span className={inspectorConnectionsSectionLabelClassName}>
+    <section className={inspectorSectionClassName}>
+      <Eyebrow
+        as="h3"
+        showDot={false}
+        className={inspectorSectionEyebrowClassName}
+      >
         Connections
-      </span>
+      </Eyebrow>
       <div className="flex flex-col gap-3">
         {socketEntries.map(({ id, descriptor }) => (
           <SocketFieldEditor
@@ -180,6 +261,8 @@ export function SocketConnectionsEditor({
             cardsById={cardsById}
             links={links}
             disabled={disabled}
+            recentCardIds={recentCardIds}
+            badgeOverrides={badgeOverrides}
             onCreateSocketLink={onCreateSocketLink}
             onRemoveSocketLink={onRemoveSocketLink}
             onCreateAndLinkCard={onCreateAndLinkCard}

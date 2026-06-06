@@ -18,10 +18,14 @@ const dotToneClassNames: Record<EyebrowTone, string> = {
   mono: "bg-wn-mono-400",
 };
 
+/** Base classes for uppercase monospace section labels (see 00-brand/Typography). */
+export const eyebrowClassName =
+  "inline-flex items-center gap-2 font-mono text-wn-xs font-wn-medium uppercase tracking-[0.12em] text-wn-mono-500";
+
 /** Uppercase monospace section label with optional leading dot. */
 export function Eyebrow<T extends ElementType = "span">({
   children,
-  tone = "azure",
+  tone = "mono",
   showDot = true,
   as,
   className,
@@ -31,10 +35,7 @@ export function Eyebrow<T extends ElementType = "span">({
 
   return (
     <Component
-      className={clsx(
-        "inline-flex items-center gap-2 font-mono text-wn-xs font-medium uppercase tracking-[0.12em] text-wn-mono-500",
-        className,
-      )}
+      className={clsx(eyebrowClassName, className)}
       {...props}
     >
       {showDot ? (

@@ -121,6 +121,13 @@ export const SOCKET_REGISTRY = {
     },
     members: { accepts: ["character"], cardinality: "many" },
   },
+  disaster: {
+    origin_location: {
+      accepts: ["location", "building", "structure", "planet", "moon", "satellite", "asteroid", "star"],
+      cardinality: "single",
+    },
+    affected_locations: { accepts: ["location", "building", "structure", "planet", "moon", "satellite", "asteroid", "star"], cardinality: "many" },
+  },
   event: {
     event_location: {
       accepts: ["location", "building", "structure", "planet", "moon", "satellite", "asteroid", "star"],

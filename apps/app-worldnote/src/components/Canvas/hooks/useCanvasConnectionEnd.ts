@@ -25,13 +25,17 @@ import { createLink } from "../../../services/links/createLink.js";
 import { linkToEdge } from "../../../services/links/linkToEdge.js";
 import { worldCardToNodeData } from "../../../services/canvas/cardNodeData.js";
 import { createWorldCard } from "../../../services/crudWorldCard/createWorldCard.js";
-import type { VisibleSocketsByCardType } from "../../../services/settings/settings.js";
+import type {
+  CardTypeBadgeOverrides,
+  VisibleSocketsByCardType,
+} from "../../../services/settings/settings.js";
 
 type UseCanvasConnectionEndOptions = {
   vaultPath: string | null;
   cardsByIdRef: RefObject<Record<string, WorldCard>>;
   linksByIdRef: RefObject<Record<string, Link>>;
   visibleSocketsSettingsRef: RefObject<VisibleSocketsByCardType | undefined>;
+  cardTypeBadgeColorsRef: RefObject<CardTypeBadgeOverrides | undefined>;
   onConnect: OnConnect;
   setNodes: React.Dispatch<React.SetStateAction<CanvasFlowNode[]>>;
   setEdges: React.Dispatch<React.SetStateAction<Edge[]>>;
@@ -106,6 +110,7 @@ export function useCanvasConnectionEnd({
   cardsByIdRef,
   linksByIdRef,
   visibleSocketsSettingsRef,
+  cardTypeBadgeColorsRef,
   onConnect,
   setNodes,
   setEdges,
@@ -309,6 +314,7 @@ export function useCanvasConnectionEnd({
                   position: newCard.position,
                   data: worldCardToNodeData(newCard, vaultPath, {
                     visibleSocketsSettings: visibleSocketsSettingsRef.current,
+                    cardTypeBadgeColors: cardTypeBadgeColorsRef.current,
                     links,
                     cardsById: cards,
                   }),
@@ -376,6 +382,7 @@ export function useCanvasConnectionEnd({
       setInspectorMode,
       vaultPath,
       visibleSocketsSettingsRef,
+      cardTypeBadgeColorsRef,
     ],
   );
 

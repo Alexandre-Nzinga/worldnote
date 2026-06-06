@@ -1,4 +1,5 @@
 export * from "./atoms/Button/Button.js";
+export * from "./atoms/Button/CloseIconButton.js";
 export * from "./atoms/Eyebrow/Eyebrow.js";
 export * from "./atoms/MaterialSymbol/MaterialSymbol.js";
 export * from "./atoms/NumberBadge/NumberBadge.js";

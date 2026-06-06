@@ -2,17 +2,18 @@ import { Input } from "@heroui/react";
 import { CARD_TYPE_LABELS } from "@worldnote/shared";
 import type { WorldCard } from "@worldnote/shared";
 import { AnimatedModal, getHeadingProps, MaterialSymbol } from "@worldnote/ui";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { darkFieldInputClassNames } from "../../Onboarding/fieldClassNames.js";
-import {
-  searchCanvasCards,
-  type CardSearchMatchKind,
-  type CardSearchResult,
+import { useCardIndexSearch } from "../../../hooks/useCardIndexSearch.js";
+import type {
+  CardSearchMatchKind,
+  CardSearchResult,
 } from "../../../services/canvas/searchCanvasCards.js";
 
 type CanvasCommandPaletteProps = {
   isOpen: boolean;
   onClose: () => void;
+  vaultPath: string | null | undefined;
   cardsById: Record<string, WorldCard>;
   onJumpToCard: (cardId: string, options?: { focusOnCanvas?: boolean }) => void;
 };
@@ -33,6 +34,7 @@ function matchKindLabel(
 export function CanvasCommandPalette({
   isOpen,
   onClose,
+  vaultPath,
   cardsById,
   onJumpToCard,
 }: CanvasCommandPaletteProps) {
@@ -47,12 +49,11 @@ export function CanvasCommandPalette({
     selected?.scrollIntoView({ block: "nearest" });
   }, []);
 
-  const cards = useMemo(() => Object.values(cardsById), [cardsById]);
-
-  const results = useMemo(
-    () => searchCanvasCards(cards, query),
-    [cards, query],
-  );
+  const { results, isSearching } = useCardIndexSearch({
+    vault: vaultPath,
+    query,
+    isActive: isOpen,
+  });
 
   const jumpTo = useCallback(
     (result: CardSearchResult) => {
@@ -170,16 +171,17 @@ export function CanvasCommandPalette({
         className="scrollbar-wn min-h-0 flex-1 overflow-y-auto rounded-xl border border-wn-mono-800"
         aria-label="Search results"
       >
-        {results.length === 0 ? (
+        {isSearching ? (
+          <p className="px-3 py-6 text-center text-sm text-wn-mono-500">
+            Searching…
+          </p>
+        ) : results.length === 0 ? (
           <p className="px-3 py-6 text-center text-sm text-wn-mono-500">
             No cards found
           </p>
         ) : (
           results.map((result, index) => {
             const card = cardsById[result.cardId];
-            if (!card) {
-              return null;
-            }
             const isSelected = index === selectedIndex;
             return (
               <button
@@ -196,10 +198,10 @@ export function CanvasCommandPalette({
                 onClick={() => jumpTo(result)}
               >
                 <span className="min-w-0 flex-1 truncate font-medium">
-                  {card.name}
+                  {card?.name ?? result.cardId}
                 </span>
                 <span className="shrink-0 text-xs text-wn-mono-500">
-                  {CARD_TYPE_LABELS[card.card_type]}
+                  {card ? CARD_TYPE_LABELS[card.card_type] : "Card"}
                 </span>
                 <span className="shrink-0 text-[11px] text-wn-mono-500">
                   {matchKindLabel(result.matchKind, result.matchDetail)}

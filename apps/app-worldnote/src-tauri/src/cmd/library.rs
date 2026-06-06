@@ -267,6 +267,76 @@ pub fn list_all_cards(root: String) -> Result<Vec<LibraryCard>, String> {
     Ok(items)
 }
 
+/// Searches cards across all worlds using each world's SQLite index.
+#[tauri::command]
+pub fn search_all_cards(root: String, query: String) -> Result<Vec<LibraryCard>, String> {
+    let root_path = PathBuf::from(root.trim());
+    if !root_path.is_dir() {
+        return Ok(vec![]);
+    }
+
+    let normalized = query.trim();
+    if normalized.is_empty() {
+        return list_all_cards(root);
+    }
+
+    let mut items: Vec<LibraryCard> = vec![];
+    let entries = fs::read_dir(&root_path).map_err(|error| error.to_string())?;
+
+    for entry in entries.filter_map(Result::ok) {
+        let world_path = entry.path();
+        if !is_world_folder(&world_path) {
+            continue;
+        }
+
+        let metadata = read_world_metadata(&world_path)?;
+        let lore = lore_dir(&world_path);
+        let index = SqliteIndex::open(sqlite_path(&world_path)).map_err(|error| error.to_string())?;
+        index
+            .ensure_synced(&lore)
+            .map_err(|error| error.to_string())?;
+        let hits = index
+            .search(normalized, 500)
+            .map_err(|error| error.to_string())?;
+
+        for hit in hits {
+            let card_path = lore.join(format!("{}.json", hit.id));
+            if !card_path.is_file() {
+                continue;
+            }
+
+            let raw = fs::read_to_string(&card_path).map_err(|error| error.to_string())?;
+            let card: serde_json::Value =
+                serde_json::from_str(&raw).map_err(|error| error.to_string())?;
+
+            let card_type = extract_string_field(&card, "card_type");
+            let Some(card_type) = card_type else {
+                continue;
+            };
+
+            items.push(LibraryCard {
+                world_path: world_path.to_string_lossy().into_owned(),
+                world_name: metadata.name.clone(),
+                world_cover_image: metadata.cover_image.clone(),
+                card_id: hit.id,
+                card_type: card_type.clone(),
+                name: hit.name,
+                created_at: file_modified_secs(&card_path),
+                image_path: extract_string_field(&card, "image_path"),
+                image_fit: extract_string_field(&card, "image_fit"),
+                image_position: card
+                    .get("image_position")
+                    .filter(|value| value.is_object())
+                    .cloned(),
+                subtitle: subtitle_for_card(&card, &card_type),
+            });
+        }
+    }
+
+    items.sort_by(|left, right| left.name.cmp(&right.name));
+    Ok(items)
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CopyPosition {
@@ -359,9 +429,13 @@ pub fn copy_card_to_world(
 
     let name = extract_string_field(&card, "name").unwrap_or_else(|| "Untitled".to_string());
     let tags = extract_tags(&card);
+    let lore = card
+        .get("lore")
+        .and_then(|value| value.as_str())
+        .unwrap_or_default();
     let index = SqliteIndex::open(sqlite_path(&target_world)).map_err(|error| error.to_string())?;
     index
-        .upsert(&new_id, &name, &tags)
+        .upsert(&new_id, &name, &tags, lore)
         .map_err(|error| error.to_string())?;
 
     update_canvas_manifest_node(

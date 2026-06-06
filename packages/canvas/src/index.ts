@@ -9,6 +9,7 @@ export * from "./nodes/card-image-display.js";
 export * from "./nodes/CardBrandLogo.js";
 export * from "./nodes/card-node-layout.js";
 export * from "./nodes/card-visual-config.js";
+export * from "./nodes/card-type-icons.js";
 export * from "./nodes/CardTypePlaceholder.js";
 export * from "./nodes/CardTypePill.js";
 export * from "./nodes/CardVisualPreview.js";

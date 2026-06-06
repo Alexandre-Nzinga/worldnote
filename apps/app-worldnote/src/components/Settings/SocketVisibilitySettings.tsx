@@ -3,11 +3,21 @@ import {
   listSocketsForCardType,
   SOCKET_REGISTRY,
 } from "@worldnote/shared";
-import { MaterialSymbol } from "@worldnote/ui";
-import { modalFieldLabelClassName } from "../Onboarding/fieldClassNames.js";
+import {
+  Eyebrow,
+  MaterialSymbol,
+  getBodyTextStyle,
+  getHeadingProps,
+} from "@worldnote/ui";
 import type { VisibleSocketsByCardType } from "../../services/settings/settings.js";
 import { formatSocketId } from "../../services/settings/visibleSocketSettings.js";
 import { objectKeys } from "../../services/objectKeys.js";
+import {
+  settingsPanelClassName,
+  settingsPanelStackClassName,
+  settingsRowClassName,
+  settingsRowListClassName,
+} from "./settingsStyles.js";
 
 type SocketVisibilitySettingsProps = {
   value: VisibleSocketsByCardType;
@@ -23,10 +33,10 @@ export function SocketVisibilitySettings({
   const cardTypes = objectKeys(SOCKET_REGISTRY);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className={settingsPanelStackClassName}>
       <div>
-        <span className={modalFieldLabelClassName}>Canvas sockets</span>
-        <p className="text-xs text-wn-mono-500">
+        <h3 {...getHeadingProps("h5", { tone: "inverse" })}>Canvas sockets</h3>
+        <p className="mt-1.5" style={getBodyTextStyle("small")}>
           Choose which connection handles appear on cards in the world canvas.
           Link cards on the canvas to fill connection fields in the inspector.
         </p>
@@ -41,21 +51,24 @@ export function SocketVisibilitySettings({
         const typeLabel = CARD_TYPE_LABELS[cardType] ?? cardType;
 
         return (
-          <div key={cardType} className="flex flex-col gap-2">
-            <span className="text-xs font-semibold uppercase tracking-wide text-wn-mono-500">
+          <section
+            key={cardType}
+            className={`${settingsPanelClassName} scroll-mt-6`}
+          >
+            <Eyebrow showDot={false} className="mb-4">
               {typeLabel}
-            </span>
-            <ul className="flex flex-col gap-1.5">
+            </Eyebrow>
+            <ul className={settingsRowListClassName}>
               {sockets.map(({ id, descriptor }) => {
                 const isVisible = cardSettings[id] ?? false;
                 return (
                   <li
                     key={id}
-                    className="flex items-center gap-2 rounded-xl border border-wn-mono-700 bg-wn-mono-950 px-3 py-2"
+                    className={`${settingsRowClassName} flex items-center gap-3`}
                   >
                     <button
                       type="button"
-                      className="shrink-0 text-wn-mono-400 transition-colors hover:text-wn-mono-50 disabled:opacity-40"
+                      className="shrink-0 rounded-lg p-1 text-wn-text-muted transition-colors hover:bg-wn-surface-raised hover:text-wn-text disabled:opacity-40"
                       aria-label={
                         isVisible
                           ? `Hide ${formatSocketId(id)} socket`
@@ -75,14 +88,14 @@ export function SocketVisibilitySettings({
                     >
                       <MaterialSymbol
                         name={isVisible ? "visibility" : "visibility_off"}
-                        className="text-base"
+                        className="text-xl"
                       />
                     </button>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm text-wn-mono-50">
+                      <p className="text-sm font-medium text-wn-text">
                         {formatSocketId(id)}
                       </p>
-                      <p className="text-xs text-wn-mono-500">
+                      <p className="mt-0.5" style={getBodyTextStyle("xs")}>
                         {descriptor.cardinality === "many" ? "many" : "single"}{" "}
                         · accepts {descriptor.accepts.join(", ")}
                       </p>
@@ -91,7 +104,7 @@ export function SocketVisibilitySettings({
                 );
               })}
             </ul>
-          </div>
+          </section>
         );
       })}
     </div>

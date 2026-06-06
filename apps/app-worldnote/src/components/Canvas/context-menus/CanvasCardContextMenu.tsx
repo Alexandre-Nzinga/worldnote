@@ -29,6 +29,7 @@ type CanvasCardContextMenuProps = {
   onBackToActions: () => void;
   onChangeType: (cardId: string, newType: NewCardType) => void;
   onDelete: (cardId: string) => void;
+  onOpenWizard?: () => void;
 };
 
 const menuClassName =
@@ -69,6 +70,7 @@ export function CanvasCardContextMenu({
   onBackToActions,
   onChangeType,
   onDelete,
+  onOpenWizard,
 }: CanvasCardContextMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
   const positionRef = useRef({ x: 0, y: 0 });
@@ -237,6 +239,20 @@ export function CanvasCardContextMenu({
         <MaterialSymbol name="copy_all" className="text-base" />
         Copy
       </button>
+      {onOpenWizard ? (
+        <button
+          type="button"
+          role="menuitem"
+          className={itemClassName}
+          onClick={() => {
+            onOpenWizard();
+            onClose();
+          }}
+        >
+          <MaterialSymbol name="auto_awesome" className="text-base" />
+          {multi ? `WorldWizard (${selectionCount})` : "WorldWizard"}
+        </button>
+      ) : null}
       {multi ? null : (
         <button
           type="button"

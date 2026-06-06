@@ -3,9 +3,11 @@ import clsx from "clsx";
 import type { ComponentProps, ReactNode } from "react";
 import { MaterialSymbol } from "../../../atoms/MaterialSymbol/MaterialSymbol.js";
 import {
+  fieldClearButtonClassName,
   fieldInputClassName,
   fieldInputClassNames,
   fieldLabelClassName,
+  fieldStackClassName,
 } from "../fieldStyles.js";
 
 export type FieldProps = Omit<
@@ -30,7 +32,7 @@ export function Field({
   const inputId = id ?? props.name;
 
   return (
-    <div className={clsx("flex flex-col gap-1", wrapperClassName)}>
+    <div className={clsx(fieldStackClassName, wrapperClassName)}>
       {label ? (
         <label htmlFor={inputId} className={fieldLabelClassName}>
           {label}
@@ -84,7 +86,7 @@ export function SearchField({
           <button
             type="button"
             aria-label="Clear search"
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-wn-mono-500 transition-colors hover:bg-wn-mono-800 hover:text-wn-mono-50"
+            className={fieldClearButtonClassName}
             onClick={onClear}
           >
             <MaterialSymbol name="close" className="text-base" />

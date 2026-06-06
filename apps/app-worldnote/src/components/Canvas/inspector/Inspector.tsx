@@ -12,6 +12,7 @@ import { CardTypePill, visualConfigFor } from "@worldnote/canvas";
 import {
   AnimatedModal,
   AnimatedPanel,
+  CloseIconButton,
   getHeadingProps,
   MaterialSymbol,
   type StepDirection,
@@ -70,6 +71,10 @@ import { PropertiesColumn } from "./PropertiesColumn.js";
 import { stripLeadingLoreHeading } from "./inspectorLoreMarkdown.js";
 import { PropertiesTab } from "./PropertiesTab.js";
 import { usePanelHotkeys } from "../hooks/usePanelHotkeys.js";
+import { applyWizardCardToInspector } from "./applyWizardCardToInspector.js";
+import { InspectorWizardSection } from "./InspectorWizardSection.js";
+import { useInspectorWizard } from "./useInspectorWizard.js";
+import type { WizardSuggestion } from "../../../services/wizard/analyzeSuggestions.js";
 
 type PropertyRow = { key: string; value: string };
 
@@ -142,25 +147,42 @@ type InspectorProps = {
     cardType: WorldCard["card_type"],
     name: string,
   ) => void;
+  worldName: string;
+  onOpenWizard?: (cardId: string) => void;
 };
+
+/** Canvas-internal keys stored in custom_properties but not shown in the inspector. */
+const HIDDEN_CUSTOM_PROPERTY_KEYS = new Set(["view_mode"]);
 
 function propertiesToRows(
   properties: Record<string, unknown>,
 ): PropertyRow[] {
-  return Object.entries(properties).map(([key, value]) => ({
-    key,
-    value: typeof value === "string" ? value : JSON.stringify(value),
-  }));
+  return Object.entries(properties)
+    .filter(([key]) => !HIDDEN_CUSTOM_PROPERTY_KEYS.has(key))
+    .map(([key, value]) => ({
+      key,
+      value: typeof value === "string" ? value : JSON.stringify(value),
+    }));
 }
 
-function rowsToProperties(rows: PropertyRow[]): Record<string, string> {
-  const result: Record<string, string> = {};
+function rowsToProperties(
+  rows: PropertyRow[],
+  preserved?: Record<string, unknown>,
+): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
   for (const row of rows) {
     const key = row.key.trim();
-    if (!key) {
+    if (!key || HIDDEN_CUSTOM_PROPERTY_KEYS.has(key)) {
       continue;
     }
     result[key] = row.value;
+  }
+  if (preserved) {
+    for (const key of HIDDEN_CUSTOM_PROPERTY_KEYS) {
+      if (key in preserved) {
+        result[key] = preserved[key];
+      }
+    }
   }
   return result;
 }
@@ -199,6 +221,8 @@ export function Inspector({
   onCreateSocketLink,
   onRemoveSocketLink,
   onCreateAndLinkCard,
+  worldName,
+  onOpenWizard,
 }: InspectorProps) {
   const lastCardRef = useRef<WorldCard | undefined>(undefined);
   if (card) {
@@ -368,6 +392,92 @@ export function Inspector({
     return cardsInGroup(activeCard.id, cardsById);
   }, [activeCard, cardsById]);
 
+  const inspectorWizard = useInspectorWizard({
+    vaultPath,
+    worldName,
+    selectedCard: activeCard,
+    cardsById,
+    links,
+    enabled: isOpen && Boolean(vaultPath),
+  });
+
+  const applyGeneratedCard = useCallback(
+    (generated: WorldCard) => {
+      const fieldState = applyWizardCardToInspector(generated);
+      if (generated.id === activeCard?.id) {
+        setName(fieldState.name);
+        setSubtitle(fieldState.subtitle);
+        setLore(fieldState.lore);
+        setTags(fieldState.tags);
+        setTypeFields(fieldState.typeFields);
+      }
+    },
+    [activeCard?.id],
+  );
+
+  const persistGeneratedCard = useCallback(
+    async (generated: WorldCard) => {
+      await onSave(generated);
+      if (generated.id !== activeCard?.id) {
+        onNavigateToCard?.(generated.id);
+      } else {
+        onModeChange("read");
+      }
+    },
+    [activeCard?.id, onModeChange, onNavigateToCard, onSave],
+  );
+
+  const handleWizardExpand = useCallback(() => {
+    if (!activeCard) return;
+    void (async () => {
+      try {
+        const generated = await inspectorWizard.runExpand(activeCard);
+        applyGeneratedCard(generated);
+        await persistGeneratedCard(generated);
+      } catch (err) {
+        inspectorWizard.handleError(err);
+      }
+    })();
+  }, [
+    activeCard,
+    applyGeneratedCard,
+    inspectorWizard,
+    persistGeneratedCard,
+  ]);
+
+  const handleWizardFillGaps = useCallback(() => {
+    if (!activeCard) return;
+    void (async () => {
+      try {
+        const generated = await inspectorWizard.runFillGaps(activeCard);
+        applyGeneratedCard(generated);
+        await persistGeneratedCard(generated);
+      } catch (err) {
+        inspectorWizard.handleError(err);
+      }
+    })();
+  }, [
+    activeCard,
+    applyGeneratedCard,
+    inspectorWizard,
+    persistGeneratedCard,
+  ]);
+
+  const handleWizardSuggestion = useCallback(
+    (suggestion: WizardSuggestion) => {
+      void (async () => {
+        try {
+          const generated = await inspectorWizard.runSuggestion(suggestion);
+          applyGeneratedCard(generated);
+          await persistGeneratedCard(generated);
+        } catch (err) {
+          inspectorWizard.handleError(err);
+        }
+      })();
+    },
+    [applyGeneratedCard, inspectorWizard, persistGeneratedCard],
+  );
+
   const buildCard = useCallback((): WorldCard => {
     if (!activeCard) {
       throw new Error("No card to save");
@@ -388,7 +498,10 @@ export function Inspector({
       ...(activeCard.card_type === "family"
         ? { crest_path: crestPath.trim() || undefined }
         : {}),
-      custom_properties: rowsToProperties(propertyRows),
+      custom_properties: rowsToProperties(
+        propertyRows,
+        activeCard.custom_properties,
+      ),
     };
     return buildWorldCard(activeCard, base, typeFields);
   }, [
@@ -510,6 +623,27 @@ export function Inspector({
 
   const isBusy = isSaving || isDeleting;
 
+  const wizardSection =
+    activeCard ? (
+      <InspectorWizardSection
+        status={inspectorWizard.status}
+        healthy={inspectorWizard.healthy}
+        activeAction={inspectorWizard.activeAction}
+        activeSuggestionId={inspectorWizard.activeSuggestionId}
+        suggestions={inspectorWizard.suggestions}
+        isBusy={isBusy || inspectorWizard.status === "generating"}
+        selectedCard={activeCard}
+        onExpand={handleWizardExpand}
+        onFillGaps={handleWizardFillGaps}
+        onRunSuggestion={handleWizardSuggestion}
+        onOpenWizard={
+          onOpenWizard
+            ? () => onOpenWizard(activeCard.id)
+            : undefined
+        }
+      />
+    ) : null;
+
   usePanelHotkeys({
     enabled: isOpen && !isBusy,
     onEscape: () => {
@@ -554,16 +688,12 @@ export function Inspector({
         />
         {readOnly ? "Edit" : isSaving ? "Saving…" : "Save"}
       </button>
-      <button
-        type="button"
-        className={inspectorHeaderIconActionClassName}
-        onClick={onClose}
-        disabled={isBusy}
+      <CloseIconButton
         aria-label="Close inspector"
         title="Close"
-      >
-        <MaterialSymbol name="close" className="text-[18px]" />
-      </button>
+        isDisabled={isBusy}
+        onPress={onClose}
+      />
     </>
   );
 
@@ -582,7 +712,7 @@ export function Inspector({
           <MaterialSymbol name="close_fullscreen" className="text-[18px]" />
           Dock
         </button>
-        <div className="col-start-3 flex items-center justify-end gap-0.5">
+        <div className="col-start-3 flex items-center justify-end gap-2">
           {inspectorSaveCloseActions}
         </div>
       </header>
@@ -599,7 +729,7 @@ export function Inspector({
         >
           <MaterialSymbol name="open_in_full" className="text-[18px]" />
         </button>
-        <div className="flex items-center gap-0.5">
+        <div className="flex items-center gap-2">
           {inspectorSaveCloseActions}
         </div>
       </header>
@@ -632,6 +762,8 @@ export function Inspector({
             onViewJson={() => {
               void handleViewJson();
             }}
+            wizardSection={wizardSection}
+            isLoreGenerating={inspectorWizard.isGeneratingLore}
           />
         </div>
         <div className={inspectorModalPropertiesClassName}>
@@ -740,7 +872,7 @@ export function Inspector({
         ) : null}
       </div>
 
-      <div className="px-5 pb-5 pt-5">
+      <div className="px-5 pb-2 pt-5">
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 flex-1 flex-col gap-1">
             {readOnly ? (
@@ -802,10 +934,12 @@ export function Inspector({
         </div>
       </div>
 
+      {activeTab === "info" ? wizardSection : null}
+
       <div className="flex min-h-0 flex-1 flex-col">
         <div
           className={[
-            "scrollbar-wn flex min-h-0 flex-1 flex-col overflow-x-clip pt-2",
+            "scrollbar-wn flex min-h-0 flex-1 flex-col overflow-x-clip",
             !readOnly && activeTab === "info"
               ? "overflow-hidden"
               : "overflow-y-auto pb-6",
@@ -841,6 +975,7 @@ export function Inspector({
                   onLoreChange={setLore}
                   onNavigateToCard={onNavigateToCard}
                   groupMembers={groupMembers}
+                  isLoreGenerating={inspectorWizard.isGeneratingLore}
                 />
               ) : (
                 <PropertiesTab

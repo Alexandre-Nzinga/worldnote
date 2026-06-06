@@ -98,6 +98,15 @@
   --color-wn-text-muted: var(--wn-text-muted);
   --color-wn-text-subtle: var(--wn-text-subtle);
 
+  /* WORLDNOTE-PRIMARY (user accent; defaults below, overridden at runtime) */
+  --color-wn-primary: var(--wn-primary);
+  --color-wn-primary-hover: var(--wn-primary-hover);
+  --color-wn-primary-foreground: var(--wn-primary-foreground);
+
+  /* Fixed contrast ink (never theme-flip; for accent text on palette swatches) */
+  --color-wn-ink: oklch(14% 0 0);
+  --color-wn-paper: oklch(98.5% 0 0);
+
   /* WORLDNOTE-ROSE */
   --color-wn-rose-50: oklch(96.9% 0.015 12.422);
   --color-wn-rose-100: oklch(94.1% 0.03 12.58);
@@ -220,6 +229,11 @@
   --wn-text: oklch(98.5% 0 0);
   --wn-text-muted: oklch(70.5% 0 0);
   --wn-text-subtle: oklch(55.2% 0 0);
+
+  /* PRIMARY — default matches legacy white CTA on dark surfaces */
+  --wn-primary: var(--color-wn-mono-50);
+  --wn-primary-hover: var(--color-wn-mono-100);
+  --wn-primary-foreground: var(--color-wn-mono-950);
 }
 
 .light {
@@ -246,6 +260,11 @@
   --wn-text: oklch(20% 0 0);
   --wn-text-muted: oklch(45% 0 0);
   --wn-text-subtle: oklch(55.2% 0 0);
+
+  /* PRIMARY — same token ids; mono steps invert with theme */
+  --wn-primary: var(--color-wn-mono-50);
+  --wn-primary-hover: var(--color-wn-mono-100);
+  --wn-primary-foreground: var(--color-wn-mono-950);
 }
 
 @layer components {

@@ -1,8 +1,17 @@
-import { useReactFlow, useStore, ViewportPortal } from "@xyflow/react";
 import { ActionMenu, Button, MaterialSymbol } from "@worldnote/ui";
-import { useCallback, useMemo, useState, type Key } from "react";
+import { useCallback, useState, type Key } from "react";
+import { useCanvasCardLayout } from "../hooks/useCanvasCardLayout.js";
+import {
+  type CanvasAlignAction,
+  type CanvasDistributeAction,
+} from "../../../services/canvas/canvasLayout.js";
+import type { CanvasFlowNode } from "@worldnote/canvas";
 
-const TOOLBAR_GAP_PX = 6;
+const toolbarSurfaceClassName =
+  "flex items-center gap-1 rounded-xl border border-wn-mono-600 bg-wn-mono-900 px-1.5 py-1 shadow-lg";
+
+const layoutIconButtonClassName =
+  "flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-wn-text-muted transition-colors hover:bg-wn-mono-800 hover:text-wn-text disabled:opacity-50";
 
 export type BulkSelectionKind = "card" | "image";
 
@@ -12,6 +21,14 @@ type BulkSelectionToolbarProps = {
   onDuplicate: () => Promise<void>;
   onDelete: () => Promise<void>;
   onCreateGroup?: () => Promise<void>;
+  onOpenWizard?: () => void;
+  setNodes: React.Dispatch<React.SetStateAction<CanvasFlowNode[]>>;
+  pushCanvasHistory: () => void;
+  updateCardPosition: ((placement: {
+    cardId: string;
+    x: number;
+    y: number;
+  }) => void) | null;
 };
 
 function countLabel(count: number): string {
@@ -26,49 +43,75 @@ function deleteConfirmMessage(kind: BulkSelectionKind, count: number): string {
   return `Delete ${count} selected ${noun}?`;
 }
 
+const alignItems: Array<{
+  id: CanvasAlignAction;
+  label: string;
+  icon: string;
+}> = [
+  { id: "align-left", label: "Align left", icon: "align_horizontal_left" },
+  {
+    id: "align-center-h",
+    label: "Align center",
+    icon: "align_horizontal_center",
+  },
+  { id: "align-right", label: "Align right", icon: "align_horizontal_right" },
+  { id: "align-top", label: "Align top", icon: "align_vertical_top" },
+  {
+    id: "align-center-v",
+    label: "Align middle",
+    icon: "align_vertical_center",
+  },
+  { id: "align-bottom", label: "Align bottom", icon: "align_vertical_bottom" },
+];
+
+const distributeItems: Array<{
+  id: CanvasDistributeAction;
+  label: string;
+  icon: string;
+}> = [
+  {
+    id: "distribute-h",
+    label: "Distribute horizontally",
+    icon: "horizontal_distribute",
+  },
+  {
+    id: "distribute-v",
+    label: "Distribute vertically",
+    icon: "vertical_distribute",
+  },
+];
+
+function isAlignAction(key: Key): key is CanvasAlignAction {
+  return alignItems.some((item) => item.id === key);
+}
+
+function isDistributeAction(key: Key): key is CanvasDistributeAction {
+  return distributeItems.some((item) => item.id === key);
+}
+
 export function BulkSelectionToolbar({
   selectedIds,
   selectionKind,
   onDuplicate,
   onDelete,
   onCreateGroup,
+  onOpenWizard,
+  setNodes,
+  pushCanvasHistory,
+  updateCardPosition,
 }: BulkSelectionToolbarProps) {
   const [isBusy, setIsBusy] = useState(false);
-  const { getNodesBounds } = useReactFlow();
-  const transform = useStore((state) => state.transform);
+  const applyCardLayout = useCanvasCardLayout({
+    setNodes,
+    pushCanvasHistory,
+    updateCardPosition,
+  });
 
-  const nodeType =
-    selectionKind === "image" ? "worldnoteImage" : "worldnoteCard";
-
-  const selectedNodes = useStore(
-    useCallback(
-      (state) =>
-        state.nodes.filter(
-          (node) =>
-            node.selected &&
-            node.type === nodeType &&
-            selectedIds.includes(node.id),
-        ),
-      [nodeType, selectedIds],
-    ),
-  );
-
-  const anchor = useMemo(() => {
-    void transform;
-    if (selectedNodes.length < 2) {
-      return null;
-    }
-
-    const bounds = getNodesBounds(selectedNodes);
-    if (!bounds.width && !bounds.height) {
-      return null;
-    }
-
-    return {
-      left: bounds.x + bounds.width + TOOLBAR_GAP_PX,
-      top: bounds.y,
-    };
-  }, [getNodesBounds, selectedNodes, transform]);
+  const showLayoutTools =
+    selectionKind === "card" &&
+    Boolean(updateCardPosition) &&
+    selectedIds.length > 0;
+  const showBulkActions = selectedIds.length > 1;
 
   const handleAction = useCallback(
     async (key: Key) => {
@@ -96,6 +139,10 @@ export function BulkSelectionToolbar({
         }
         return;
       }
+      if (key === "wizard") {
+        onOpenWizard?.();
+        return;
+      }
       if (key === "delete") {
         if (!window.confirm(deleteConfirmMessage(selectionKind, selectedIds.length))) {
           return;
@@ -108,67 +155,177 @@ export function BulkSelectionToolbar({
         }
       }
     },
-    [isBusy, onCreateGroup, onDelete, onDuplicate, selectedIds.length, selectionKind],
+    [isBusy, onCreateGroup, onDelete, onDuplicate, onOpenWizard, selectedIds.length, selectionKind],
   );
 
-  if (!anchor || selectedIds.length < 2) {
+  const handleAlign = useCallback(
+    (key: Key) => {
+      if (!isAlignAction(key)) {
+        return;
+      }
+      applyCardLayout({ type: "align", alignment: key }, selectedIds);
+    },
+    [applyCardLayout, selectedIds],
+  );
+
+  const handleDistribute = useCallback(
+    (key: Key) => {
+      if (!isDistributeAction(key)) {
+        return;
+      }
+      applyCardLayout({ type: "distribute", axis: key }, selectedIds);
+    },
+    [applyCardLayout, selectedIds],
+  );
+
+  if (!showLayoutTools && !showBulkActions) {
     return null;
   }
 
+  const canAlign = selectedIds.length > 1;
+  const canDistribute = selectedIds.length > 2;
+
   return (
-    <ViewportPortal>
-      <div
-        className="pointer-events-auto absolute z-50"
-        style={{ left: anchor.left, top: anchor.top }}
-      >
-        <ActionMenu
-          ariaLabel="Selection actions"
-          placement="bottom-start"
-          onAction={(key) => {
-            void handleAction(key);
-          }}
-          items={[
-            ...(selectionKind === "card" && onCreateGroup
-              ? [
-                  {
-                    id: "create-group",
-                    label: "Create group",
+    <div
+      className={toolbarSurfaceClassName}
+      role="toolbar"
+      aria-label="Selection tools"
+      onMouseDown={(event) => event.stopPropagation()}
+      onPointerDown={(event) => event.stopPropagation()}
+    >
+          {showLayoutTools ? (
+            <>
+              <button
+                type="button"
+                aria-label="Snap to grid"
+                title="Snap to grid"
+                className={layoutIconButtonClassName}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  applyCardLayout({ type: "snap-to-grid" }, selectedIds);
+                }}
+              >
+                <MaterialSymbol name="grid_on" className="text-[18px]" />
+              </button>
+              {canAlign ? (
+                <ActionMenu
+                  ariaLabel="Align selection"
+                  placement="top-start"
+                  onAction={handleAlign}
+                  items={alignItems.map((item) => ({
+                    id: item.id,
+                    label: item.label,
                     icon: (
-                      <MaterialSymbol name="groups" className="text-base" />
+                      <MaterialSymbol name={item.icon} className="text-base" />
                     ),
-                  },
-                ]
-              : []),
-            {
-              id: "duplicate",
-              label: "Duplicate",
-              icon: (
-                <MaterialSymbol name="content_copy" className="text-base" />
-              ),
-            },
-            {
-              id: "delete",
-              label: "Delete",
-              variant: "danger",
-              icon: <MaterialSymbol name="delete" className="text-base" />,
-            },
-          ]}
-          trigger={
-            <Button
-              variant="secondary"
-              size="sm"
-              isDisabled={isBusy}
-              className="h-8 min-h-0 gap-1.5 px-3 text-sm font-medium text-wn-mono-50 shadow-lg"
-            >
-              {countLabel(selectedIds.length)}
-              <MaterialSymbol
-                name="expand_more"
-                className="text-base text-wn-mono-50"
-              />
-            </Button>
-          }
-        />
-      </div>
-    </ViewportPortal>
+                  }))}
+                  trigger={
+                    <button
+                      type="button"
+                      aria-label="Align"
+                      title="Align"
+                      className={layoutIconButtonClassName}
+                    >
+                      <MaterialSymbol
+                        name="align_horizontal_left"
+                        className="text-[18px]"
+                      />
+                    </button>
+                  }
+                />
+              ) : null}
+              {canDistribute ? (
+                <ActionMenu
+                  ariaLabel="Distribute selection"
+                  placement="top-start"
+                  onAction={handleDistribute}
+                  items={distributeItems.map((item) => ({
+                    id: item.id,
+                    label: item.label,
+                    icon: (
+                      <MaterialSymbol name={item.icon} className="text-base" />
+                    ),
+                  }))}
+                  trigger={
+                    <button
+                      type="button"
+                      aria-label="Distribute"
+                      title="Distribute"
+                      className={layoutIconButtonClassName}
+                    >
+                      <MaterialSymbol
+                        name="horizontal_distribute"
+                        className="text-[18px]"
+                      />
+                    </button>
+                  }
+                />
+              ) : null}
+            </>
+          ) : null}
+          {showBulkActions ? (
+            <ActionMenu
+              ariaLabel="Selection actions"
+              placement="top-start"
+              onAction={(key) => {
+                void handleAction(key);
+              }}
+              items={[
+                ...(selectionKind === "card" && onCreateGroup
+                  ? [
+                      {
+                        id: "create-group",
+                        label: "Create group",
+                        icon: (
+                          <MaterialSymbol name="groups" className="text-base" />
+                        ),
+                      },
+                    ]
+                  : []),
+                {
+                  id: "duplicate",
+                  label: "Duplicate",
+                  icon: (
+                    <MaterialSymbol name="content_copy" className="text-base" />
+                  ),
+                },
+                ...(selectionKind === "card" && onOpenWizard
+                  ? [
+                      {
+                        id: "wizard",
+                        label: "WorldWizard",
+                        icon: (
+                          <MaterialSymbol
+                            name="auto_awesome"
+                            className="text-base"
+                          />
+                        ),
+                      },
+                    ]
+                  : []),
+                {
+                  id: "delete",
+                  label: "Delete",
+                  variant: "danger",
+                  icon: <MaterialSymbol name="delete" className="text-base" />,
+                },
+              ]}
+              trigger={
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  isDisabled={isBusy}
+                  className="h-8 min-h-0 gap-1.5 px-3 text-sm font-medium text-wn-mono-50 shadow-none"
+                >
+                  {countLabel(selectedIds.length)}
+                  <MaterialSymbol
+                    name="expand_more"
+                    className="text-base text-wn-mono-50"
+                  />
+                </Button>
+              }
+            />
+          ) : null}
+    </div>
   );
 }

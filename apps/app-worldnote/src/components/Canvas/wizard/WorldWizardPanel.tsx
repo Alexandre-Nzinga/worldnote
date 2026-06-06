@@ -1,8 +1,8 @@
 import type { Link, WorldCard } from "@worldnote/shared";
 import {
   AnimatedPanel,
+  CloseIconButton,
   getHeadingProps,
-  MaterialSymbol,
   WorldNoteLogo,
 } from "@worldnote/ui";
 import {
@@ -16,6 +16,7 @@ import {
 } from "react";
 
 import { CANVAS_CARD_DROP_TARGET_ATTR } from "@worldnote/canvas";
+import { useSettings } from "../../../hooks/useSettings.js";
 import { getAvailableActions } from "../../../services/wizard/index.js";
 import { cx } from "./cx.js";
 import { dragHasCard, readDraggedCardId } from "./dnd.js";
@@ -36,6 +37,8 @@ type WorldWizardPanelProps = {
   links: Link[];
   vaultPath: string;
   onSpawnCard: (card: WorldCard) => void;
+  onApplyCard?: (card: WorldCard) => void;
+  seedCardIds?: string[] | null;
 };
 
 function StatusDot({ healthy }: { healthy: boolean | null }) {
@@ -66,6 +69,8 @@ export function WorldWizardPanel({
   links,
   vaultPath,
   onSpawnCard,
+  onApplyCard,
+  seedCardIds = null,
 }: WorldWizardPanelProps) {
   const wizard = useWorldWizard({
     vaultPath,
@@ -73,13 +78,17 @@ export function WorldWizardPanel({
     cardsById,
     links,
     isOpen,
+    seedCardIds,
   });
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+  const quickCommands = useSettings(
+    (state) => state.settings?.wizard?.quickCommands,
+  );
 
   const actions = useMemo(
-    () => getAvailableActions(wizard.droppedCards),
-    [wizard.droppedCards],
+    () => getAvailableActions(wizard.droppedCards, quickCommands),
+    [wizard.droppedCards, quickCommands],
   );
 
   const busy = wizard.status === "generating";
@@ -153,14 +162,7 @@ export function WorldWizardPanel({
           </h2>
           <StatusDot healthy={wizard.healthy} />
         </div>
-        <button
-          type="button"
-          aria-label="Close WorldWizard"
-          className="rounded-lg bg-wn-mono-950/80 px-2 py-1 text-sm text-wn-mono-300 transition-colors hover:bg-wn-mono-800 hover:text-wn-mono-50"
-          onClick={onClose}
-        >
-          <MaterialSymbol name="close" className="text-base" />
-        </button>
+        <CloseIconButton aria-label="Close WorldWizard" onPress={onClose} />
       </header>
 
       <div
@@ -177,8 +179,9 @@ export function WorldWizardPanel({
               alt=""
             />
             <p className="max-w-[16rem]">
-              Drop cards into the chat box, then ask the wizard to simulate
-              conversations, events, or breed new cards.
+              {wizard.contextScope === "focused" && wizard.droppedCards.length > 0
+                ? `${wizard.droppedCards.length} card(s) loaded as context. Drop more cards or chat to expand.`
+                : "Drop cards into the chat box, then ask the wizard to simulate conversations, events, or breed new cards."}
             </p>
           </div>
         ) : (
@@ -187,6 +190,7 @@ export function WorldWizardPanel({
               key={message.id}
               message={message}
               onSpawn={onSpawnCard}
+              onApply={onApplyCard}
             />
           ))
         )}

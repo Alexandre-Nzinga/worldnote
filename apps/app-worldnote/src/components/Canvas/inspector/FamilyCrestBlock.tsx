@@ -1,8 +1,9 @@
-import { Button, MaterialSymbol } from "@worldnote/ui";
+import { Button, Eyebrow, MaterialSymbol } from "@worldnote/ui";
 
 import {
   inspectorFieldLabelClassName,
-  inspectorSectionLabelClassName,
+  inspectorSectionClassName,
+  inspectorSectionEyebrowClassName,
 } from "./inspectorFieldStyles.js";
 
 type FamilyCrestBlockProps = {
@@ -27,11 +28,16 @@ export function FamilyCrestBlock({
     <section
       className={
         embedded
-          ? "flex flex-col gap-3"
+          ? inspectorSectionClassName
           : "flex flex-col gap-3 border-b border-wn-mono-800 px-5 py-5"
       }
     >
-      <h3 className={inspectorSectionLabelClassName}>Family crest</h3>
+      <Eyebrow
+        as="h3"
+        className={inspectorSectionEyebrowClassName}
+      >
+        Family crest
+      </Eyebrow>
       <p className="m-0 text-xs leading-snug text-wn-mono-500">
         Upload a family crest to display on the card visual view.
       </p>

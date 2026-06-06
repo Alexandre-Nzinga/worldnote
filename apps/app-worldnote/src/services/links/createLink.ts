@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
+import { trackPersist } from "../../hooks/useSaveStatus.js";
 import {
   getSocketDescriptor,
   LinkSchema,
@@ -7,6 +8,7 @@ import {
 } from "@worldnote/shared";
 import { deleteLink } from "./deleteLink.js";
 import { listLinks } from "./listLinks.js";
+import { recordRecentLinkTarget } from "./recentLinkTargets.js";
 import {
   reciprocalKinshipLink,
   type CharacterCard,
@@ -50,90 +52,93 @@ export async function createLink({
   targetCard,
   mirrorKinship = true,
 }: CreateLinkInput): Promise<Link> {
-  const descriptor = getSocketDescriptor(sourceCard.card_type, sourceSocket);
-  if (!descriptor) {
-    throw new Error(
-      `Socket "${sourceSocket}" is not defined for ${sourceCard.card_type} cards`,
-    );
-  }
-  if (!descriptor.accepts.includes(targetCard.card_type)) {
-    throw new Error(
-      `Socket "${sourceSocket}" cannot accept a ${targetCard.card_type} card`,
-    );
-  }
-  if (sourceCard.id === targetCard.id) {
-    throw new Error("A link cannot connect a card to itself");
-  }
-
-  let existing = await listLinks(vault);
-
-  if (descriptor.cardinality === "single") {
-    await Promise.all(
-      existing
-        .filter(
-          (link) =>
-            link.source_card === sourceCard.id &&
-            link.source_socket === sourceSocket,
-        )
-        .map((link) => deleteLink(vault, link.id)),
-    );
-    existing = await listLinks(vault);
-  }
-
-  const draft: Link = {
-    id: crypto.randomUUID(),
-    source_card: sourceCard.id,
-    source_socket: sourceSocket,
-    target_card: targetCard.id,
-  };
-  const link = LinkSchema.parse(draft);
-  await upsertLinkRecord(vault, link);
-
-  if (
-    mirrorKinship &&
-    isCharacter(sourceCard) &&
-    isCharacter(targetCard)
-  ) {
-    const reciprocal = reciprocalKinshipLink(
-      sourceCard,
-      sourceSocket,
-      targetCard,
-    );
-    if (reciprocal) {
-      existing = await listLinks(vault);
-      const alreadyMirrored = linkAlreadyExists(
-        existing,
-        reciprocal.sourceCard.id,
-        reciprocal.sourceSocket,
-        reciprocal.targetCard.id,
+  return trackPersist(async () => {
+    const descriptor = getSocketDescriptor(sourceCard.card_type, sourceSocket);
+    if (!descriptor) {
+      throw new Error(
+        `Socket "${sourceSocket}" is not defined for ${sourceCard.card_type} cards`,
       );
-      if (!alreadyMirrored) {
-        const mirrorDescriptor = getSocketDescriptor(
-          reciprocal.sourceCard.card_type,
+    }
+    if (!descriptor.accepts.includes(targetCard.card_type)) {
+      throw new Error(
+        `Socket "${sourceSocket}" cannot accept a ${targetCard.card_type} card`,
+      );
+    }
+    if (sourceCard.id === targetCard.id) {
+      throw new Error("A link cannot connect a card to itself");
+    }
+
+    let existing = await listLinks(vault);
+
+    if (descriptor.cardinality === "single") {
+      await Promise.all(
+        existing
+          .filter(
+            (link) =>
+              link.source_card === sourceCard.id &&
+              link.source_socket === sourceSocket,
+          )
+          .map((link) => deleteLink(vault, link.id)),
+      );
+      existing = await listLinks(vault);
+    }
+
+    const draft: Link = {
+      id: crypto.randomUUID(),
+      source_card: sourceCard.id,
+      source_socket: sourceSocket,
+      target_card: targetCard.id,
+    };
+    const link = LinkSchema.parse(draft);
+    await upsertLinkRecord(vault, link);
+
+    if (
+      mirrorKinship &&
+      isCharacter(sourceCard) &&
+      isCharacter(targetCard)
+    ) {
+      const reciprocal = reciprocalKinshipLink(
+        sourceCard,
+        sourceSocket,
+        targetCard,
+      );
+      if (reciprocal) {
+        existing = await listLinks(vault);
+        const alreadyMirrored = linkAlreadyExists(
+          existing,
+          reciprocal.sourceCard.id,
           reciprocal.sourceSocket,
+          reciprocal.targetCard.id,
         );
-        if (mirrorDescriptor?.cardinality === "single") {
-          await Promise.all(
-            existing
-              .filter(
-                (l) =>
-                  l.source_card === reciprocal.sourceCard.id &&
-                  l.source_socket === reciprocal.sourceSocket,
-              )
-              .map((l) => deleteLink(vault, l.id)),
+        if (!alreadyMirrored) {
+          const mirrorDescriptor = getSocketDescriptor(
+            reciprocal.sourceCard.card_type,
+            reciprocal.sourceSocket,
           );
+          if (mirrorDescriptor?.cardinality === "single") {
+            await Promise.all(
+              existing
+                .filter(
+                  (l) =>
+                    l.source_card === reciprocal.sourceCard.id &&
+                    l.source_socket === reciprocal.sourceSocket,
+                )
+                .map((l) => deleteLink(vault, l.id)),
+            );
+          }
+          const mirrorDraft: Link = {
+            id: crypto.randomUUID(),
+            source_card: reciprocal.sourceCard.id,
+            source_socket: reciprocal.sourceSocket,
+            target_card: reciprocal.targetCard.id,
+          };
+          const mirrorLink = LinkSchema.parse(mirrorDraft);
+          await upsertLinkRecord(vault, mirrorLink);
         }
-        const mirrorDraft: Link = {
-          id: crypto.randomUUID(),
-          source_card: reciprocal.sourceCard.id,
-          source_socket: reciprocal.sourceSocket,
-          target_card: reciprocal.targetCard.id,
-        };
-        const mirrorLink = LinkSchema.parse(mirrorDraft);
-        await upsertLinkRecord(vault, mirrorLink);
       }
     }
-  }
 
-  return link;
+    recordRecentLinkTarget(vault, targetCard.id);
+    return link;
+  });
 }

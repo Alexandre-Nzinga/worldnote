@@ -73,7 +73,8 @@ export function StepLayout({
           <Button
             variant="white"
             size="base"
-            className="h-12 w-full rounded-full border-0 bg-wn-mono-50 text-base font-semibold text-wn-mono-950 shadow-none hover:bg-wn-mono-100 data-[hover=true]:bg-wn-mono-100"
+            fullWidth
+            className="!h-12 text-base"
             isDisabled={actionDisabled}
             onPress={onAction}
           >

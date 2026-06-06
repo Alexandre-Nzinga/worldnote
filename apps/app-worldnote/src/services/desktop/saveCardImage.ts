@@ -1,5 +1,6 @@
 import { open } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
+import { trackPersist } from "../../hooks/useSaveStatus.js";
 import { DESKTOP_ONLY_MESSAGE, isTauriRuntime } from "./tauriRuntime.js";
 
 /** File extensions accepted for card cover and lore images. */
@@ -41,11 +42,13 @@ export async function saveCardImage(
   cardId: string,
   sourcePath: string,
 ): Promise<string> {
-  return invoke<string>("save_card_image", {
-    vault,
-    cardId,
-    sourcePath,
-  });
+  return trackPersist(() =>
+    invoke<string>("save_card_image", {
+      vault,
+      cardId,
+      sourcePath,
+    }),
+  );
 }
 
 export async function saveFamilyCrest(
@@ -53,11 +56,13 @@ export async function saveFamilyCrest(
   cardId: string,
   sourcePath: string,
 ): Promise<string> {
-  return invoke<string>("save_family_crest", {
-    vault,
-    cardId,
-    sourcePath,
-  });
+  return trackPersist(() =>
+    invoke<string>("save_family_crest", {
+      vault,
+      cardId,
+      sourcePath,
+    }),
+  );
 }
 
 export async function addCardLoreImage(
@@ -65,9 +70,11 @@ export async function addCardLoreImage(
   cardId: string,
   sourcePath: string,
 ): Promise<string> {
-  return invoke<string>("add_card_lore_image", {
-    vault,
-    cardId,
-    sourcePath,
-  });
+  return trackPersist(() =>
+    invoke<string>("add_card_lore_image", {
+      vault,
+      cardId,
+      sourcePath,
+    }),
+  );
 }

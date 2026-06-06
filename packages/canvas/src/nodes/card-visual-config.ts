@@ -36,6 +36,12 @@ export type CardVisualConfig = {
   badgeTextColor?: string;
 };
 
+/** User overrides for badge colors (from app settings). */
+export type CardVisualOverride = {
+  badgeClassName?: string;
+  badgeTextColor?: string;
+};
+
 export const CARD_VISUAL_CONFIG: Record<WorldNoteCardType, CardVisualConfig> = {
   character: {
     label: "Character",
@@ -96,7 +102,6 @@ export const CARD_VISUAL_CONFIG: Record<WorldNoteCardType, CardVisualConfig> = {
   planet: {
     label: "Planet",
     badgeClassName: "bg-wn-amber-400",
-    badgeTextColor: "text-wn-mono-50",
     widthClass: "w-[260px]",
     aspectClass: "aspect-square",
   },
@@ -217,9 +222,29 @@ const visualConfigByCardType: Record<string, CardVisualConfig> =
 
 export function visualConfigFor(
   cardType: WorldNoteCardType | string | undefined,
+  override?: CardVisualOverride,
 ): CardVisualConfig {
-  if (cardType && cardType in visualConfigByCardType) {
-    return visualConfigByCardType[cardType] ?? DEFAULT_VISUAL_CONFIG;
+  const base =
+    cardType && cardType in visualConfigByCardType
+      ? (visualConfigByCardType[cardType] ?? DEFAULT_VISUAL_CONFIG)
+      : DEFAULT_VISUAL_CONFIG;
+
+  if (!override) {
+    return base;
   }
-  return DEFAULT_VISUAL_CONFIG;
+
+  return {
+    ...base,
+    ...(override.badgeClassName
+      ? { badgeClassName: override.badgeClassName }
+      : {}),
+    ...(override.badgeTextColor
+      ? { badgeTextColor: override.badgeTextColor }
+      : {}),
+  };
 }
+
+/** All configured card types for settings UIs. */
+export const CONFIGURED_CARD_TYPES: WorldNoteCardType[] = Object.keys(
+  CARD_VISUAL_CONFIG,
+) as WorldNoteCardType[];

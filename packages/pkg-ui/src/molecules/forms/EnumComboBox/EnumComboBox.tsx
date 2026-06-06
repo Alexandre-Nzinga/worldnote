@@ -2,6 +2,21 @@ import { Select, SelectItem } from "@heroui/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { MaterialSymbol } from "../../../atoms/MaterialSymbol/MaterialSymbol.js";
 import { resolveOverlayContainer } from "../../../overlay/resolveOverlayContainer.js";
+import {
+  fieldClearButtonClassName,
+  fieldLabelClassName,
+  fieldLabelRowClassName,
+  fieldStackClassName,
+  selectInlineSelectorIconClassName,
+  selectInlineTriggerClassName,
+  selectInlineValueClassName,
+  selectItemClassName,
+  selectListboxClassName,
+  selectPopoverClassName,
+  selectSelectorIconClassName,
+  selectTriggerClassName,
+  selectValueClassName,
+} from "../fieldStyles.js";
 
 export type EnumComboBoxOption<V extends string = string> = {
   value: V;
@@ -23,6 +38,10 @@ export type EnumComboBoxProps<V extends string = string> = {
   className?: string;
   /** Hides the visible label while keeping it for assistive tech. */
   hideLabel?: boolean;
+  /** Override label typography (e.g. inspector subtle labels). */
+  labelClassName?: string;
+  /** Shows a clear control when a value is selected. Defaults to true for `field` variant. */
+  clearable?: boolean;
   /** Compact trigger for toolbars and inline controls. */
   variant?: "field" | "inline";
 };
@@ -39,28 +58,6 @@ function labelFromOptionData(data: unknown): string | undefined {
   return undefined;
 }
 
-const fieldLabelClassName = "text-sm font-medium text-wn-mono-50";
-
-const fieldTriggerClassName =
-  "relative h-10 min-h-10 rounded-full border border-wn-mono-700 bg-wn-mono-950 px-3 pr-9 shadow-none data-[hover=true]:border-wn-mono-600 data-[hover=true]:bg-wn-mono-950 group-data-[focus=true]:border-wn-mono-500";
-
-const inlineTriggerClassName =
-  "relative h-8 min-h-8 max-w-40 rounded-lg border-0 bg-transparent px-2 pr-7 shadow-none data-[hover=true]:bg-wn-mono-800 group-data-[focus=true]:bg-wn-mono-800";
-
-const fieldValueClassName =
-  "w-full min-w-0 truncate text-left text-sm text-wn-mono-50 group-data-[has-value=true]:text-wn-mono-50";
-
-const inlineValueClassName =
-  "w-full min-w-0 truncate text-left text-xs text-wn-mono-400 group-data-[has-value=true]:text-wn-mono-400";
-
-const popoverSurfaceClassName =
-  "z-[250] rounded-xl border border-wn-mono-700 bg-wn-mono-900 p-1 shadow-lg";
-
-const listboxClassName = "max-h-60 gap-0.5 overflow-y-auto";
-
-const itemClassName =
-  "rounded-lg text-wn-mono-100 outline-none ring-0 data-[hover=true]:bg-wn-mono-700 data-[hover=true]:text-wn-mono-50 data-[focus=true]:bg-wn-mono-700 data-[focus=true]:!text-wn-mono-50 data-[focus=true]:outline data-[focus=true]:outline-2 data-[focus=true]:outline-offset-0 data-[focus=true]:outline-wn-mono-50 data-[focus-visible=true]:outline data-[focus-visible=true]:outline-2 data-[focus-visible=true]:outline-offset-0 data-[focus-visible=true]:outline-wn-mono-50 data-[selected=true]:bg-wn-mono-600 data-[selected=true]:text-wn-mono-50";
-
 /** Dark enum picker styled like HeroUI ComboBox (Select until HeroUI v3 migration). */
 export function EnumComboBox<V extends string = string>({
   id,
@@ -73,6 +70,8 @@ export function EnumComboBox<V extends string = string>({
   allowEmpty = false,
   className,
   hideLabel = false,
+  labelClassName = fieldLabelClassName,
+  clearable,
   variant = "field",
 }: EnumComboBoxProps<V>) {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -94,6 +93,9 @@ export function EnumComboBox<V extends string = string>({
   const selectedKeys = value ? [value] : [];
   const hasSelection = value.length > 0;
   const isInline = variant === "inline";
+  const isClearable = clearable ?? (!isInline && !hideLabel);
+  const canClear = isClearable && hasSelection && !disabled;
+  const allowsEmptySelection = allowEmpty || isClearable;
 
   const releaseOverflow = useCallback(() => {
     const saved = overflowRestoreRef.current;
@@ -127,12 +129,24 @@ export function EnumComboBox<V extends string = string>({
   return (
     <div
       ref={rootRef}
-      className={`flex flex-col ${hideLabel ? "gap-0" : "gap-1"} ${className ?? ""}`}
+      className={`${fieldStackClassName} ${hideLabel ? "gap-0" : ""} ${className ?? ""}`}
     >
       {!hideLabel ? (
-        <label htmlFor={id} className={fieldLabelClassName}>
-          {label}
-        </label>
+        <div className={fieldLabelRowClassName}>
+          <label htmlFor={id} className={labelClassName}>
+            {label}
+          </label>
+          {canClear ? (
+            <button
+              type="button"
+              className={fieldClearButtonClassName}
+              aria-label={`Clear ${label}`}
+              onClick={() => onChange("")}
+            >
+              <MaterialSymbol name="close" className="text-base" />
+            </button>
+          ) : null}
+        </div>
       ) : null}
       <Select
         id={id}
@@ -141,7 +155,7 @@ export function EnumComboBox<V extends string = string>({
         items={items}
         selectedKeys={selectedKeys}
         isDisabled={disabled}
-        disallowEmptySelection={!allowEmpty}
+        disallowEmptySelection={!allowsEmptySelection}
         selectorIcon={
           <MaterialSymbol
             name="keyboard_arrow_down"
@@ -183,19 +197,19 @@ export function EnumComboBox<V extends string = string>({
         classNames={{
           base: isInline ? "w-auto min-w-0 max-w-40 gap-0" : "w-full gap-0",
           label: "hidden",
-          trigger: isInline ? inlineTriggerClassName : fieldTriggerClassName,
+          trigger: isInline ? selectInlineTriggerClassName : selectTriggerClassName,
           innerWrapper: "min-w-0 flex-1",
-          value: isInline ? inlineValueClassName : fieldValueClassName,
+          value: isInline ? selectInlineValueClassName : selectValueClassName,
           selectorIcon: isInline
-            ? "pointer-events-none absolute end-1.5 top-1/2 flex -translate-y-1/2 items-center justify-center text-wn-mono-500"
-            : "pointer-events-none absolute end-3 top-1/2 flex -translate-y-1/2 items-center justify-center text-wn-mono-400",
-          popoverContent: popoverSurfaceClassName,
-          listbox: listboxClassName,
+            ? selectInlineSelectorIconClassName
+            : selectSelectorIconClassName,
+          popoverContent: selectPopoverClassName,
+          listbox: selectListboxClassName,
           listboxWrapper: "max-h-60",
         }}
         listboxProps={{
           itemClasses: {
-            base: itemClassName,
+            base: selectItemClassName,
           },
         }}
         popoverProps={{
@@ -205,7 +219,7 @@ export function EnumComboBox<V extends string = string>({
           portalContainer,
           classNames: {
             base: "z-[250]",
-            content: popoverSurfaceClassName,
+            content: selectPopoverClassName,
           },
         }}
       >
