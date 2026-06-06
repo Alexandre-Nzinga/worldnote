@@ -18,6 +18,14 @@ pub struct CardSearchHit {
     pub match_detail: Option<String>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TimelineEntry {
+    pub id: String,
+    pub name: String,
+    pub start_year: i64,
+    pub end_year: i64,
+}
+
 impl SqliteIndex {
     pub fn open(path: impl AsRef<Path>) -> Result<Self, PersistenceError> {
         let conn = Connection::open(path.as_ref())?;
@@ -28,6 +36,18 @@ impl SqliteIndex {
               name TEXT NOT NULL,
               tags TEXT,
               lore TEXT NOT NULL DEFAULT ''
+            );
+            CREATE TABLE IF NOT EXISTS eras (
+              id TEXT PRIMARY KEY,
+              name TEXT NOT NULL,
+              start_year INTEGER NOT NULL,
+              end_year INTEGER NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS periods (
+              id TEXT PRIMARY KEY,
+              name TEXT NOT NULL,
+              start_year INTEGER NOT NULL,
+              end_year INTEGER NOT NULL
             );
             ",
         )?;
@@ -286,6 +306,182 @@ impl SqliteIndex {
         if lore_count > 0 {
             self.rebuild_from_lore(lore_dir)?;
         }
+        Ok(())
+    }
+
+    pub fn upsert_era(
+        &self,
+        id: &str,
+        name: &str,
+        start_year: i64,
+        end_year: i64,
+    ) -> Result<(), PersistenceError> {
+        self.conn.execute(
+            "INSERT OR REPLACE INTO eras (id, name, start_year, end_year) VALUES (?1, ?2, ?3, ?4)",
+            (id, name, start_year, end_year),
+        )?;
+        Ok(())
+    }
+
+    pub fn delete_era(&self, id: &str) -> Result<(), PersistenceError> {
+        self.conn
+            .execute("DELETE FROM eras WHERE id = ?1", (id,))?;
+        Ok(())
+    }
+
+    pub fn list_eras(&self) -> Result<Vec<TimelineEntry>, PersistenceError> {
+        let mut stmt = self.conn.prepare(
+            "SELECT id, name, start_year, end_year FROM eras ORDER BY start_year, name COLLATE NOCASE",
+        )?;
+        let rows = stmt.query_map([], |row| {
+            Ok(TimelineEntry {
+                id: row.get(0)?,
+                name: row.get(1)?,
+                start_year: row.get(2)?,
+                end_year: row.get(3)?,
+            })
+        })?;
+        rows.collect::<Result<Vec<_>, _>>()
+            .map_err(PersistenceError::from)
+    }
+
+    pub fn upsert_period(
+        &self,
+        id: &str,
+        name: &str,
+        start_year: i64,
+        end_year: i64,
+    ) -> Result<(), PersistenceError> {
+        self.conn.execute(
+            "INSERT OR REPLACE INTO periods (id, name, start_year, end_year) VALUES (?1, ?2, ?3, ?4)",
+            (id, name, start_year, end_year),
+        )?;
+        Ok(())
+    }
+
+    pub fn delete_period(&self, id: &str) -> Result<(), PersistenceError> {
+        self.conn
+            .execute("DELETE FROM periods WHERE id = ?1", (id,))?;
+        Ok(())
+    }
+
+    pub fn list_periods(&self) -> Result<Vec<TimelineEntry>, PersistenceError> {
+        let mut stmt = self.conn.prepare(
+            "SELECT id, name, start_year, end_year FROM periods ORDER BY start_year, name COLLATE NOCASE",
+        )?;
+        let rows = stmt.query_map([], |row| {
+            Ok(TimelineEntry {
+                id: row.get(0)?,
+                name: row.get(1)?,
+                start_year: row.get(2)?,
+                end_year: row.get(3)?,
+            })
+        })?;
+        rows.collect::<Result<Vec<_>, _>>()
+            .map_err(PersistenceError::from)
+    }
+
+    fn rebuild_timeline_table(
+        conn: &Connection,
+        table: &str,
+        json_dir: &Path,
+    ) -> Result<u32, PersistenceError> {
+        if !json_dir.is_dir() {
+            conn.execute(&format!("DELETE FROM {table}"), [])?;
+            return Ok(0);
+        }
+
+        let tx = conn.unchecked_transaction()?;
+        tx.execute(&format!("DELETE FROM {table}"), [])?;
+
+        let mut indexed = 0u32;
+        for entry in fs::read_dir(json_dir)? {
+            let entry = entry?;
+            let path = entry.path();
+            if !path
+                .extension()
+                .is_some_and(|ext| ext.to_string_lossy().eq_ignore_ascii_case("json"))
+            {
+                continue;
+            }
+
+            let raw = fs::read_to_string(&path)?;
+            let payload: Value = serde_json::from_str(&raw)?;
+            let Some(id) = payload.get("id").and_then(Value::as_str) else {
+                continue;
+            };
+            let Some(name) = payload.get("name").and_then(Value::as_str) else {
+                continue;
+            };
+            let Some(start_year) = payload.get("start_year").and_then(Value::as_i64) else {
+                continue;
+            };
+            let Some(end_year) = payload.get("end_year").and_then(Value::as_i64) else {
+                continue;
+            };
+
+            tx.execute(
+                &format!(
+                    "INSERT INTO {table} (id, name, start_year, end_year) VALUES (?1, ?2, ?3, ?4)"
+                ),
+                (id, name, start_year, end_year),
+            )?;
+            indexed += 1;
+        }
+
+        tx.commit()?;
+        Ok(indexed)
+    }
+
+    pub fn rebuild_eras_from_json(&self, eras_dir: &Path) -> Result<u32, PersistenceError> {
+        Self::rebuild_timeline_table(&self.conn, "eras", eras_dir)
+    }
+
+    pub fn rebuild_periods_from_json(&self, periods_dir: &Path) -> Result<u32, PersistenceError> {
+        Self::rebuild_timeline_table(&self.conn, "periods", periods_dir)
+    }
+
+    pub fn ensure_timeline_synced(
+        &self,
+        eras_dir: &Path,
+        periods_dir: &Path,
+    ) -> Result<(), PersistenceError> {
+        let era_count: i64 = self
+            .conn
+            .query_row("SELECT COUNT(*) FROM eras", [], |row| row.get(0))?;
+        if era_count == 0 && eras_dir.is_dir() {
+            let json_count = fs::read_dir(eras_dir)?
+                .filter_map(Result::ok)
+                .filter(|entry| {
+                    entry
+                        .path()
+                        .extension()
+                        .is_some_and(|ext| ext.to_string_lossy().eq_ignore_ascii_case("json"))
+                })
+                .count();
+            if json_count > 0 {
+                self.rebuild_eras_from_json(eras_dir)?;
+            }
+        }
+
+        let period_count: i64 = self
+            .conn
+            .query_row("SELECT COUNT(*) FROM periods", [], |row| row.get(0))?;
+        if period_count == 0 && periods_dir.is_dir() {
+            let json_count = fs::read_dir(periods_dir)?
+                .filter_map(Result::ok)
+                .filter(|entry| {
+                    entry
+                        .path()
+                        .extension()
+                        .is_some_and(|ext| ext.to_string_lossy().eq_ignore_ascii_case("json"))
+                })
+                .count();
+            if json_count > 0 {
+                self.rebuild_periods_from_json(periods_dir)?;
+            }
+        }
+
         Ok(())
     }
 }

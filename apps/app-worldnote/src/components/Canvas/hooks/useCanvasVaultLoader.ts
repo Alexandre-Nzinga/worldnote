@@ -22,10 +22,12 @@ import type {
   VisibleSocketsByCardType,
 } from "../../../services/settings/settings.js";
 import { cardsRecord, linksRecord } from "../helpers/canvasSelectionHelpers.js";
+import { migrateCardsChronology } from "../../../services/crudWorldCard/migrateCardChronology.js";
 
 type UseCanvasVaultLoaderOptions = {
   vaultPath: string | null;
   listCards: (vaultPath: string) => Promise<WorldCard[]>;
+  upsertCard: (vaultPath: string, card: WorldCard) => Promise<void>;
   loadCanvasManifest: (vaultPath: string) => Promise<CanvasManifest>;
   visibleSocketsSettingsRef: React.RefObject<VisibleSocketsByCardType | undefined>;
   cardTypeBadgeColorsRef: React.RefObject<CardTypeBadgeOverrides | undefined>;
@@ -43,6 +45,7 @@ type UseCanvasVaultLoaderOptions = {
 export function useCanvasVaultLoader({
   vaultPath,
   listCards,
+  upsertCard,
   loadCanvasManifest,
   visibleSocketsSettingsRef,
   cardTypeBadgeColorsRef,
@@ -73,10 +76,23 @@ export function useCanvasVaultLoader({
     let isDisposed = false;
     void (async () => {
       try {
-        const [cards, manifest] = await Promise.all([
+        const [rawCards, manifest] = await Promise.all([
           listCards(vaultPath),
           loadCanvasManifest(vaultPath),
         ]);
+        if (isDisposed) {
+          return;
+        }
+
+        const { cards, changedIds } = migrateCardsChronology(rawCards);
+        if (changedIds.length > 0) {
+          await Promise.all(
+            changedIds.map((id) => {
+              const card = cards.find((entry) => entry.id === id);
+              return card ? upsertCard(vaultPath, card) : Promise.resolve();
+            }),
+          );
+        }
         if (isDisposed) {
           return;
         }
@@ -193,6 +209,7 @@ export function useCanvasVaultLoader({
     cardTypeBadgeColorsRef,
     kinshipLabelColorsRef,
     listCards,
+    upsertCard,
     loadCanvasManifest,
     setCardsById,
     setEdges,

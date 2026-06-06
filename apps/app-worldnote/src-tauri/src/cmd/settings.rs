@@ -143,6 +143,9 @@ pub struct AppSettings {
     /// Family Tree: "hide" or "dim" unrelated characters when anchor is selected.
     #[serde(default)]
     pub family_tree_unrelated_mode: Option<String>,
+    /// Timeline: suffix appended to year labels (e.g. "AG" → "10191 AG").
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub timeline_era_suffix: Option<String>,
 }
 
 fn settings_path(app: &tauri::AppHandle) -> Result<PathBuf, String> {

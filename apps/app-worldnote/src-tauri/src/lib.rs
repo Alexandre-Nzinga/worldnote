@@ -80,6 +80,14 @@ pub fn run() {
             cmd::wizard::ollama_health,
             cmd::wizard::ollama_list_models,
             cmd::wizard::ollama_chat,
+            cmd::timeline::list_eras,
+            cmd::timeline::upsert_era,
+            cmd::timeline::delete_era,
+            cmd::timeline::list_periods,
+            cmd::timeline::upsert_period,
+            cmd::timeline::delete_period,
+            cmd::timeline::load_calendar_config,
+            cmd::timeline::save_calendar_config,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

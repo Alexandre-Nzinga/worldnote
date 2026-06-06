@@ -21,20 +21,31 @@ export type DockTabItem = {
   onPress?: () => void;
 };
 
+type DockOrientation = "horizontal" | "vertical";
+
 type DockIconProps = {
   item: DockTabItem;
-  mouseX: MotionValue<number>;
+  mousePosition: MotionValue<number>;
+  orientation: DockOrientation;
   itemRef?: RefObject<HTMLDivElement | null>;
 };
 
-function DockIcon({ item, mouseX, itemRef }: DockIconProps) {
+function DockIcon({ item, mousePosition, orientation, itemRef }: DockIconProps) {
   const ref = useRef<HTMLDivElement>(null);
   const reducedMotion = usePrefersReducedMotion();
   const [isHovered, setIsHovered] = useState(false);
   const [isClicked, setIsClicked] = useState(false);
 
-  const distance = useTransform(mouseX, (val) => {
-    const bounds = ref.current?.getBoundingClientRect() ?? { x: 0, width: 0 };
+  const distance = useTransform(mousePosition, (val) => {
+    const bounds = ref.current?.getBoundingClientRect() ?? {
+      x: 0,
+      y: 0,
+      width: 0,
+      height: 0,
+    };
+    if (orientation === "vertical") {
+      return val - bounds.y - bounds.height / 2;
+    }
     return val - bounds.x - bounds.width / 2;
   });
 
@@ -90,9 +101,15 @@ function DockIcon({ item, mouseX, itemRef }: DockIconProps) {
         className={`relative flex h-full w-full items-center justify-center overflow-hidden rounded-2xl shadow-lg disabled:cursor-not-allowed disabled:opacity-40 ${item.colorClassName} ${
           item.isActive ? primaryAccentRingOnDarkClassName : ""
         }`}
-        animate={{
-          y: isClicked ? 2 : isHovered && !item.disabled ? -6 : 0,
-        }}
+        animate={
+          orientation === "vertical"
+            ? {
+                x: isClicked ? -2 : isHovered && !item.disabled ? -6 : 0,
+              }
+            : {
+                y: isClicked ? 2 : isHovered && !item.disabled ? -6 : 0,
+              }
+        }
         transition={{
           type: "spring",
           stiffness: 400,
@@ -132,18 +149,34 @@ function DockIcon({ item, mouseX, itemRef }: DockIconProps) {
 
       <motion.span
         aria-hidden
-        initial={{ opacity: 0, y: 10, scale: 0.8 }}
-        animate={{
-          opacity: isHovered && !item.disabled ? 1 : 0,
-          y: isHovered && !item.disabled ? -18 : 10,
-          scale: isHovered && !item.disabled ? 1 : 0.8,
-        }}
+        initial={
+          orientation === "vertical"
+            ? { opacity: 0, x: -10, scale: 0.8 }
+            : { opacity: 0, y: 10, scale: 0.8 }
+        }
+        animate={
+          orientation === "vertical"
+            ? {
+                opacity: isHovered && !item.disabled ? 1 : 0,
+                x: isHovered && !item.disabled ? 0 : -10,
+                scale: isHovered && !item.disabled ? 1 : 0.8,
+              }
+            : {
+                opacity: isHovered && !item.disabled ? 1 : 0,
+                y: isHovered && !item.disabled ? -18 : 10,
+                scale: isHovered && !item.disabled ? 1 : 0.8,
+              }
+        }
         transition={{
           type: "spring",
           stiffness: 500,
           damping: 30,
         }}
-        className="pointer-events-none absolute -top-10 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-md border border-wn-mono-700 bg-wn-mono-950/90 px-2 py-1 text-xs font-semibold text-wn-mono-100 backdrop-blur-sm"
+        className={
+          orientation === "vertical"
+            ? "pointer-events-none absolute left-full top-1/2 z-10 ml-2 -translate-y-1/2 whitespace-nowrap rounded-md border border-wn-mono-700 bg-wn-mono-950/90 px-2 py-1 text-xs font-semibold text-wn-mono-100 backdrop-blur-sm"
+            : "pointer-events-none absolute -top-10 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-md border border-wn-mono-700 bg-wn-mono-950/90 px-2 py-1 text-xs font-semibold text-wn-mono-100 backdrop-blur-sm"
+        }
       >
         {item.name}
       </motion.span>
@@ -154,27 +187,39 @@ function DockIcon({ item, mouseX, itemRef }: DockIconProps) {
 type DockTabsProps = {
   items: DockTabItem[];
   className?: string;
+  orientation?: DockOrientation;
   itemRefs?: Partial<Record<string, RefObject<HTMLDivElement | null>>>;
   leading?: ReactNode;
   trailing?: ReactNode;
 };
 
+const dockShellClassName =
+  "rounded-3xl border border-wn-mono-700/80 bg-wn-mono-900/85 shadow-xl backdrop-blur-md";
+
 export function DockTabs({
   items,
   className,
+  orientation = "horizontal",
   itemRefs,
   leading,
   trailing,
 }: DockTabsProps) {
-  const mouseX = useMotionValue(Number.POSITIVE_INFINITY);
+  const mousePosition = useMotionValue(Number.POSITIVE_INFINITY);
+  const isVertical = orientation === "vertical";
 
   return (
     <motion.div
-      onMouseMove={(event) => mouseX.set(event.pageX)}
-      onMouseLeave={() => mouseX.set(Number.POSITIVE_INFINITY)}
-      className={`mx-auto flex h-18 items-end gap-3 rounded-3xl border border-wn-mono-700/80 bg-wn-mono-900/85 px-3 pb-3 pt-2 shadow-xl backdrop-blur-md ${className ?? ""}`}
-      initial={{ y: 24, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
+      onMouseMove={(event) =>
+        mousePosition.set(isVertical ? event.pageY : event.pageX)
+      }
+      onMouseLeave={() => mousePosition.set(Number.POSITIVE_INFINITY)}
+      className={
+        isVertical
+          ? `flex w-18 flex-col items-end gap-3 py-3 pl-2 pr-3 ${dockShellClassName} ${className ?? ""}`
+          : `mx-auto flex h-18 items-end gap-3 px-3 pb-3 pt-2 ${dockShellClassName} ${className ?? ""}`
+      }
+      initial={isVertical ? { x: -24, opacity: 0 } : { y: 24, opacity: 0 }}
+      animate={isVertical ? { x: 0, opacity: 1 } : { y: 0, opacity: 1 }}
       transition={{
         type: "spring",
         stiffness: 260,
@@ -187,7 +232,8 @@ export function DockTabs({
         <DockIcon
           key={item.id}
           item={item}
-          mouseX={mouseX}
+          mousePosition={mousePosition}
+          orientation={orientation}
           itemRef={itemRefs?.[item.id]}
         />
       ))}

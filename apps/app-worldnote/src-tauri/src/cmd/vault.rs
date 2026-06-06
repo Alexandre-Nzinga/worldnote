@@ -74,6 +74,8 @@ pub fn create_world(root: String, name: String, description: String) -> Result<S
 
     fs::create_dir_all(&worldnote_dir).map_err(|error| error.to_string())?;
     fs::create_dir_all(&lore_dir).map_err(|error| error.to_string())?;
+    fs::create_dir_all(world_root.join("eras")).map_err(|error| error.to_string())?;
+    fs::create_dir_all(world_root.join("periods")).map_err(|error| error.to_string())?;
 
     let created_at = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)

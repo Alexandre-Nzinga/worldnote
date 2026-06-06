@@ -66,6 +66,8 @@ export type AppSettings = {
   modules?: ModulesSettings;
   /** Family Tree: hide or dim characters unrelated to the selected anchor. */
   familyTreeUnrelatedMode?: FamilyTreeUnrelatedMode;
+  /** Timeline: suffix appended to year labels (e.g. "AG" → "10191 AG"). */
+  timelineEraSuffix?: string;
 };
 
 export async function getSettings(): Promise<AppSettings | null> {

@@ -1,9 +1,10 @@
 import { z } from "zod";
 import { BaseCardSchema } from "../base-card/base-card.js";
+import { ChronologyFieldsSchema } from "../../timeline/chronology-fields.js";
 
 export const EventCardSchema = BaseCardSchema.extend({
   card_type: z.literal("event"),
-  event_date: z.string().optional(),
+  ...ChronologyFieldsSchema.shape,
 });
 
 export type EventCard = z.infer<typeof EventCardSchema>;

@@ -173,7 +173,14 @@ export default function App() {
             animate="visible"
             exit="exit"
           >
-            <Settings onBack={onBackFromSettings} />
+            <Settings
+              onBack={onBackFromSettings}
+              currentWorldPath={
+                settingsReturnTo === "canvas"
+                  ? (currentVaultPath ?? undefined)
+                  : undefined
+              }
+            />
           </motion.div>
         ) : null}
         {view === "vault" ? (

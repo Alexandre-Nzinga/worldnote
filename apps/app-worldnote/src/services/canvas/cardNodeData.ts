@@ -31,6 +31,7 @@ import type {
 import { resolveCardBadgeStyle } from "../settings/cardTypeBadgeSettings.js";
 import { resolveKinshipBadgeStyle } from "../settings/kinshipBadgeSettings.js";
 import { getVisibleSocketsForCardType } from "../settings/visibleSocketSettings.js";
+import { formatYear } from "../timeline/calendarFormat.js";
 
 export function cardImageSrc(
   vaultPath: string,
@@ -49,8 +50,8 @@ function scalarsFromCard(card: WorldCard): CardNodeScalars {
     case "character":
       return {
         gender: card.gender,
-        birthdate: card.birthdate,
-        deathdate: card.deathdate,
+        start_year: card.start_year,
+        end_year: card.end_year,
         race: card.race,
         appearance: card.appearance,
         personality: card.personality,
@@ -86,7 +87,9 @@ function subtitleForCard(card: WorldCard): string | undefined {
 
   switch (card.card_type) {
     case "character":
-      return card.birthdate?.trim() || descriptionLine;
+      return card.start_year !== undefined
+        ? formatYear(card.start_year)
+        : descriptionLine;
     case "location":
       return card.coordinates?.trim() || descriptionLine;
     case "item":
@@ -112,7 +115,9 @@ function subtitleForCard(card: WorldCard): string | undefined {
     case "polity":
       return card.government_type?.trim();
     case "event":
-      return card.event_date?.trim();
+      return card.start_year !== undefined
+        ? formatYear(card.start_year)
+        : undefined;
     case "family":
       return card.motto?.trim();
     case "group":

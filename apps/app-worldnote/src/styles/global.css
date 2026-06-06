@@ -281,6 +281,22 @@ body.wn-canvas-card-external-drag * {
   min-height: 0;
 }
 
+/* Full-screen native dialogs (graph, timeline, etc.) */
+dialog.z-modal[open] {
+  display: flex;
+  flex-direction: column;
+  border: none;
+  padding: 0;
+  margin: 0;
+  max-width: none;
+  max-height: none;
+  background: transparent;
+}
+
+dialog.z-modal::backdrop {
+  background: rgb(0 0 0 / 0.72);
+}
+
 /* Sticky note Tiptap — paper-toned text on wn-*-200 backgrounds */
 .sticky-note-editor-prose .ProseMirror {
   min-height: 3rem;

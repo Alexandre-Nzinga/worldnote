@@ -12,7 +12,11 @@ import type {
 import { ToggleSwitch } from "../shell/ToggleSwitch.js";
 import { FamilyTreeUnrelatedSetting } from "./FamilyTreeUnrelatedSetting.js";
 import { KinshipBadgeSettings } from "./KinshipBadgeSettings.js";
-import { settingsPanelClassName } from "./settingsStyles.js";
+import { TimelineEraSuffixSetting } from "./TimelineEraSuffixSetting.js";
+import {
+  settingsPanelClassName,
+  settingsPanelStackClassName,
+} from "./settingsStyles.js";
 
 type ModulesSettingsPanelProps = {
   value: ModulesSettings;
@@ -21,6 +25,9 @@ type ModulesSettingsPanelProps = {
   onKinshipLabelColorsChange: (value: KinshipBadgeOverride) => void;
   familyTreeUnrelatedMode: FamilyTreeUnrelatedMode | undefined;
   onFamilyTreeUnrelatedModeChange: (value: FamilyTreeUnrelatedMode) => void;
+  timelineEraSuffix: string;
+  onTimelineEraSuffixChange: (value: string) => void;
+  timelineWorldName?: string;
   disabled?: boolean;
 };
 
@@ -31,16 +38,19 @@ export function ModulesSettingsPanel({
   onKinshipLabelColorsChange,
   familyTreeUnrelatedMode,
   onFamilyTreeUnrelatedModeChange,
+  timelineEraSuffix,
+  onTimelineEraSuffixChange,
+  timelineWorldName,
   disabled = false,
 }: ModulesSettingsPanelProps) {
   return (
-    <section className={`${settingsPanelClassName} flex flex-col gap-4`}>
+    <div className={settingsPanelStackClassName}>
       {BUILTIN_MODULES.map((module) => {
         const checked = isModuleEnabledInSettings(value, module.id);
         return (
-          <div
+          <section
             key={module.id}
-            className="rounded-xl bg-wn-surface/40 px-4 py-3"
+            className={settingsPanelClassName}
           >
             <div className="flex items-start justify-between gap-4">
               <div className="flex min-w-0 flex-1 gap-3">
@@ -80,9 +90,17 @@ export function ModulesSettingsPanel({
                 />
               </>
             ) : null}
-          </div>
+            {module.id === "timeline" ? (
+              <TimelineEraSuffixSetting
+                value={timelineEraSuffix}
+                onChange={onTimelineEraSuffixChange}
+                worldName={timelineWorldName}
+                disabled={disabled}
+              />
+            ) : null}
+          </section>
         );
       })}
-    </section>
+    </div>
   );
 }

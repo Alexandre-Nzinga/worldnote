@@ -38,11 +38,15 @@ import {
   type CardImagePosition,
   type FamilyCard,
   type Link,
+  type CalendarConfig,
+  type Era,
+  type Period,
   type WorldCard,
 } from "@worldnote/shared";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { DragEvent, MouseEvent } from "react";
 import { useCardCommands } from "../../hooks/useCardCommands.js";
+import { useTimelineCommands } from "../../hooks/useTimelineCommands.js";
 import { useSettings } from "../../hooks/useSettings.js";
 import { useVault } from "../../hooks/useVault.js";
 import { WIZARD_CARD_MIME, readVaultCardRefPayload } from "../../services/canvas/cardDragOut.js";
@@ -135,9 +139,11 @@ import { StickyNoteNode } from "./sticky-note/StickyNoteNode.js";
 import { StickyNoteToolbar } from "./toolbars/StickyNoteToolbar.js";
 import { CanvasImageToolbar } from "./toolbars/CanvasImageToolbar.js";
 import { CanvasToolbar, type CanvasTool } from "./chrome/CanvasToolbar.js";
+import { CanvasViewToolbar } from "./chrome/CanvasViewToolbar.js";
 import { BulkSelectionToolbar } from "./toolbars/BulkSelectionToolbar.js";
 import { attachmentLabelFromPath } from "../../services/graph/attachmentLabel.js";
 import { GlobalGraphView } from "./graph/GlobalGraphView.js";
+import { TimelineWorkspace } from "./timeline/TimelineWorkspace.js";
 import { WorldWizardPanel } from "./wizard/WorldWizardPanel.js";
 import { useCanvasCommandPaletteShortcut } from "./hooks/useCanvasCommandPaletteShortcut.js";
 import { useCanvasEditShortcuts } from "./hooks/useCanvasEditShortcuts.js";
@@ -176,6 +182,7 @@ import {
 import { familyTreeNodeStateForCard } from "../../services/familyTree/familyTreeNodeState.js";
 import { syncFamilyCardMembers } from "../../services/familyTree/syncFamilyCardMembers.js";
 import { normalizeFamilyTreeUnrelatedMode } from "../../services/settings/familyTreeSettings.js";
+import { normalizeTimelineEraSuffix } from "../../services/settings/timelineSettings.js";
 
 const nodeTypes = {
   worldnoteCard: CardNode,
@@ -227,7 +234,14 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
   const [resolvedWorldName, setResolvedWorldName] = useState<string | null>(
     null,
   );
-  const { listCards, loadCanvasManifest } = useCardCommands();
+  const { listCards, upsertCard, loadCanvasManifest } = useCardCommands();
+  const {
+    listEras,
+    upsertEra,
+    listPeriods,
+    upsertPeriod,
+    loadCalendarConfig,
+  } = useTimelineCommands();
   const [nodes, setNodes, onNodesChange] = useNodesState<CanvasFlowNode>([]);
   const [activeTool, setActiveTool] = useState<CanvasTool>("select");
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
@@ -245,6 +259,12 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
     null,
   );
   const [isGraphViewOpen, setIsGraphViewOpen] = useState(false);
+  const [isTimelineOpen, setIsTimelineOpen] = useState(false);
+  const [eras, setEras] = useState<Era[]>([]);
+  const [periods, setPeriods] = useState<Period[]>([]);
+  const [calendarConfig, setCalendarConfig] = useState<CalendarConfig>({
+    suffix: "",
+  });
   const [isVaultDataLoaded, setIsVaultDataLoaded] = useState(false);
   const pendingStarterAction = useVault((state) => state.pendingStarterAction);
   const clearStarterAction = useVault((state) => state.clearStarterAction);
@@ -392,6 +412,7 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
   }, [cardsById, familyGraph, familyTreeAnchorId]);
 
   const familyTreeEnabled = isModuleEnabled(appSettings, "familyTree");
+  const timelineEnabled = isModuleEnabled(appSettings, "timeline");
 
   const anchoredFamilyCards = useMemo(
     () => (familyTreeEnabled ? familyCardsWithAnchor(cardsById) : []),
@@ -1028,6 +1049,44 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
     },
     [vaultPath],
   );
+
+  const handleSaveEra = useCallback(
+    async (era: Era) => {
+      if (!vaultPath) {
+        return;
+      }
+      const saved = await upsertEra(vaultPath, era);
+      setEras((prev) => {
+        const next = prev.filter((entry) => entry.id !== saved.id);
+        return [...next, saved].sort(
+          (left, right) =>
+            left.start_year - right.start_year ||
+            left.name.localeCompare(right.name),
+        );
+      });
+    },
+    [upsertEra, vaultPath],
+  );
+
+  const handleSavePeriod = useCallback(
+    async (period: Period) => {
+      if (!vaultPath) {
+        return;
+      }
+      const saved = await upsertPeriod(vaultPath, period);
+      setPeriods((prev) => {
+        const next = prev.filter((entry) => entry.id !== saved.id);
+        return [...next, saved].sort(
+          (left, right) =>
+            left.start_year - right.start_year ||
+            left.name.localeCompare(right.name),
+        );
+      });
+    },
+    [upsertPeriod, vaultPath],
+  );
+
+
   const toggleAllCardViews = useCallback(async () => {
     if (!vaultPath || isBulkTogglingView) {
       return;
@@ -1125,6 +1184,7 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
   useCanvasVaultLoader({
     vaultPath,
     listCards,
+    upsertCard,
     loadCanvasManifest,
     visibleSocketsSettingsRef,
     cardTypeBadgeColorsRef,
@@ -1138,6 +1198,53 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
     setSelectedLinkId,
     setIsVaultDataLoaded,
   });
+
+  useEffect(() => {
+    if (!timelineEnabled) {
+      setIsTimelineOpen(false);
+    }
+  }, [timelineEnabled]);
+
+  useEffect(() => {
+    if (!vaultPath) {
+      setEras([]);
+      setPeriods([]);
+      setCalendarConfig({ suffix: "" });
+      return;
+    }
+
+    const appSuffix = normalizeTimelineEraSuffix(appSettings?.timelineEraSuffix);
+
+    let disposed = false;
+    void (async () => {
+      try {
+        const [nextEras, nextPeriods, nextCalendar] = await Promise.all([
+          listEras(vaultPath),
+          listPeriods(vaultPath),
+          loadCalendarConfig(vaultPath),
+        ]);
+        if (!disposed) {
+          setEras(nextEras);
+          setPeriods(nextPeriods);
+          setCalendarConfig({
+            suffix: nextCalendar.suffix || appSuffix,
+          });
+        }
+      } catch (error) {
+        console.warn("Could not load timeline data:", error);
+      }
+    })();
+
+    return () => {
+      disposed = true;
+    };
+  }, [
+    appSettings?.timelineEraSuffix,
+    listEras,
+    listPeriods,
+    loadCalendarConfig,
+    vaultPath,
+  ]);
 
   const linksList = useMemo(() => Object.values(linksById), [linksById]);
 
@@ -3279,7 +3386,8 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
     Boolean(vaultPath) &&
     canvasCardCount === 0 &&
     !isWizardOpen &&
-    !isGraphViewOpen;
+    !isGraphViewOpen &&
+    !isTimelineOpen;
   const canvasCardIds = useMemo(
     () =>
       new Set(
@@ -3363,6 +3471,19 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
         onBackToHome={onBack}
         onOpenVault={onOpenVault}
         onOpenSettings={onOpenSettings}
+      />
+
+      <CanvasViewToolbar
+        onToggleGraphView={
+          vaultPath ? () => setIsGraphViewOpen((open) => !open) : undefined
+        }
+        isGraphViewOpen={isGraphViewOpen}
+        onToggleTimeline={
+          vaultPath && timelineEnabled
+            ? () => setIsTimelineOpen((open) => !open)
+            : undefined
+        }
+        isTimelineOpen={isTimelineOpen}
       />
 
       <ReactFlowProvider>
@@ -3655,8 +3776,6 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
           });
         }}
         isWizardOpen={isWizardOpen}
-        onToggleGraphView={() => setIsGraphViewOpen((open) => !open)}
-        isGraphViewOpen={isGraphViewOpen}
         familyTreeBanner={
           familyTreeAnchorId ? (
             <div className="flex items-center gap-2 rounded-full border border-wn-border bg-wn-surface/90 px-3 py-1.5 text-xs text-wn-text-muted shadow-sm">
@@ -3759,6 +3878,21 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
           void addCard("character", undefined, { preferViewportCenter: true });
         }}
       />
+
+      {vaultPath && timelineEnabled ? (
+        <TimelineWorkspace
+          isOpen={isTimelineOpen}
+          onClose={() => setIsTimelineOpen(false)}
+          vaultPath={vaultPath}
+          cardsById={cardsById}
+          eras={eras}
+          periods={periods}
+          calendarConfig={calendarConfig}
+          onSaveCard={handleSaveCard}
+          onSaveEra={handleSaveEra}
+          onSavePeriod={handleSavePeriod}
+        />
+      ) : null}
 
       <CanvasCommandPalette
         isOpen={isCommandPaletteOpen}

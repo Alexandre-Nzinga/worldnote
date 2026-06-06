@@ -111,8 +111,8 @@ export function CardTypeFields({
       if (readOnly) {
         return (
           <>
-            <ReadOnlyField label="Birthdate" value={fields.birthdate} />
-            <ReadOnlyField label="Deathdate" value={fields.deathdate} />
+            <ReadOnlyField label="Birth year" value={fields.startYear} />
+            <ReadOnlyField label="Death year" value={fields.endYear} />
             <ReadOnlyField
               label="Gender"
               value={
@@ -125,28 +125,30 @@ export function CardTypeFields({
       return (
         <>
           <div className="flex flex-col gap-1">
-            <label htmlFor="card-birthdate" className={inspectorFieldLabelClassName}>
-              Birthdate
+            <label htmlFor="card-start-year" className={inspectorFieldLabelClassName}>
+              Birth year
             </label>
             <Input
-              id="card-birthdate"
-              placeholder="Year 402"
-              value={fields.birthdate}
+              id="card-start-year"
+              type="number"
+              placeholder="-402"
+              value={fields.startYear}
               isDisabled={disabled}
-              onValueChange={(birthdate) => patch({ birthdate })}
+              onValueChange={(startYear) => patch({ startYear })}
               classNames={inspectorInlineInputClassNames}
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label htmlFor="card-deathdate" className={inspectorFieldLabelClassName}>
-              Deathdate
+            <label htmlFor="card-end-year" className={inspectorFieldLabelClassName}>
+              Death year
             </label>
             <Input
-              id="card-deathdate"
-              placeholder="Year 450"
-              value={fields.deathdate}
+              id="card-end-year"
+              type="number"
+              placeholder="450"
+              value={fields.endYear}
               isDisabled={disabled}
-              onValueChange={(deathdate) => patch({ deathdate })}
+              onValueChange={(endYear) => patch({ endYear })}
               classNames={inspectorInlineInputClassNames}
             />
           </div>
@@ -458,21 +460,44 @@ export function CardTypeFields({
       );
     case "event":
       if (readOnly) {
-        return <ReadOnlyField label="Event date" value={fields.eventDate} />;
+        return (
+          <>
+            <ReadOnlyField label="Start year" value={fields.eventStartYear} />
+            <ReadOnlyField label="End year" value={fields.eventEndYear} />
+          </>
+        );
       }
       return (
-        <div className="flex flex-col gap-1">
-          <label htmlFor="card-event-date" className={inspectorFieldLabelClassName}>
-            Event date
-          </label>
-          <Input
-            id="card-event-date"
-            value={fields.eventDate}
-            isDisabled={disabled}
-            onValueChange={(eventDate) => patch({ eventDate })}
-            classNames={inspectorInlineInputClassNames}
-          />
-        </div>
+        <>
+          <div className="flex flex-col gap-1">
+            <label htmlFor="card-event-start-year" className={inspectorFieldLabelClassName}>
+              Start year
+            </label>
+            <Input
+              id="card-event-start-year"
+              type="number"
+              placeholder="10191"
+              value={fields.eventStartYear}
+              isDisabled={disabled}
+              onValueChange={(eventStartYear) => patch({ eventStartYear })}
+              classNames={inspectorInlineInputClassNames}
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label htmlFor="card-event-end-year" className={inspectorFieldLabelClassName}>
+              End year
+            </label>
+            <Input
+              id="card-event-end-year"
+              type="number"
+              placeholder="10200"
+              value={fields.eventEndYear}
+              isDisabled={disabled}
+              onValueChange={(eventEndYear) => patch({ eventEndYear })}
+              classNames={inspectorInlineInputClassNames}
+            />
+          </div>
+        </>
       );
     case "family":
       if (readOnly) {

@@ -23,8 +23,8 @@ const CHARACTER_GEN_FIELDS: Record<string, JsonSchemaProperty> = {
   gender: { type: "string", enum: ["male", "female", "x"] },
   appearance: { type: "string" },
   personality: { type: "string" },
-  birthdate: { type: "string" },
-  deathdate: { type: "string" },
+  start_year: { type: "integer", description: "Birth year (integer timeline axis)." },
+  end_year: { type: "integer", description: "Death year (integer timeline axis)." },
 };
 
 const ITEM_GEN_FIELDS: Record<string, JsonSchemaProperty> = {
@@ -77,7 +77,8 @@ const POLITY_GEN_FIELDS: Record<string, JsonSchemaProperty> = {
 };
 
 const EVENT_GEN_FIELDS: Record<string, JsonSchemaProperty> = {
-  event_date: { type: "string" },
+  start_year: { type: "integer", description: "Event year (integer timeline axis)." },
+  end_year: { type: "integer", description: "Event end year for ranged events." },
 };
 
 const FAMILY_GEN_FIELDS: Record<string, JsonSchemaProperty> = {

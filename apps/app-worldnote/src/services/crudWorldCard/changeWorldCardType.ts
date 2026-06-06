@@ -6,7 +6,7 @@ import {
 
 /**
  * Re-types a card: starts from the new type's defaults, then re-applies shared
- * base fields. Type-specific fields on the old card (e.g. character birthdate)
+ * base fields. Type-specific fields on the old card (e.g. character start_year)
  * are not copied and will be gone after save. Shared base fields kept: name,
  * subtitle, description, lore, tags, image, parent_id, position,
  * custom_properties. Lore is stored as markdown in `lore`.

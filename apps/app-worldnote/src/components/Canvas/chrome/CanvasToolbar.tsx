@@ -120,8 +120,6 @@ type CanvasToolbarProps = {
   onToggleAllCardViews?: () => void;
   onToggleWizard?: () => void;
   isWizardOpen?: boolean;
-  onToggleGraphView?: () => void;
-  isGraphViewOpen?: boolean;
   /** Renders above the dock (e.g. sticky note controls). */
   noteToolbar?: ReactNode;
   imageToolbar?: ReactNode;
@@ -143,8 +141,6 @@ export function CanvasToolbar({
   onToggleAllCardViews,
   onToggleWizard,
   isWizardOpen = false,
-  onToggleGraphView,
-  isGraphViewOpen = false,
   noteToolbar,
   imageToolbar,
   selectionToolbar,
@@ -288,17 +284,6 @@ export function CanvasToolbar({
         onPress: onToggleWizard,
       },
       {
-        id: "graph-view",
-        name: "Graph view",
-        icon: "hub",
-        colorClassName: isGraphViewOpen
-          ? primaryAccentFillClassName
-          : dockInactiveClassName,
-        isActive: isGraphViewOpen,
-        disabled: !onToggleGraphView,
-        onPress: onToggleGraphView,
-      },
-      {
         id: "vault",
         name: "Vault",
         icon: "layers",
@@ -337,14 +322,12 @@ export function CanvasToolbar({
       closeCreateMenu,
       createMenuOpen,
       isWizardOpen,
-      isGraphViewOpen,
       onImageTool,
       onTextTool,
       onOpenVault,
       supportsTextTool,
       onToggleAllCardViews,
       onToggleWizard,
-      onToggleGraphView,
       supportsBulkViewToggle,
       supportsCreate,
       supportsImageTool,

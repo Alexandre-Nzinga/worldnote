@@ -10,9 +10,10 @@ function stubCharacter(): WorldCard {
     parent_id: null,
     position: { x: 10, y: 20 },
     tags: ["hero"],
-    birthdate: "10191",
+    start_year: 10191,
     lore: "The messiah",
-  } as WorldCard;
+    custom_properties: {},
+  };
 }
 
 describe("changeWorldCardType", () => {
@@ -26,6 +27,6 @@ describe("changeWorldCardType", () => {
     expect(next.position).toEqual({ x: 10, y: 20 });
     expect(next.tags).toEqual(["hero"]);
     expect(next.lore).toBe("The messiah");
-    expect("birthdate" in next).toBe(false);
+    expect("start_year" in next).toBe(false);
   });
 });

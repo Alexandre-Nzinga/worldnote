@@ -21,6 +21,7 @@ import type {
   VehicleCard,
   WorldCard,
 } from "@worldnote/shared";
+import { parseYearInput } from "../../../services/timeline/calendarFormat.js";
 
 type CardBaseFields = {
   id: string;
@@ -39,8 +40,8 @@ type CardBaseFields = {
 };
 
 export type TypeSpecificEditorState = {
-  birthdate: string;
-  deathdate: string;
+  startYear: string;
+  endYear: string;
   gender: CharacterCard["gender"] | "";
   coordinates: string;
   itemWeight: string;
@@ -54,7 +55,8 @@ export type TypeSpecificEditorState = {
   planetType: string;
   foundingDate: string;
   governmentType: string;
-  eventDate: string;
+  eventStartYear: string;
+  eventEndYear: string;
   motto: string;
   groupType: string;
   spectralClass: string;
@@ -67,8 +69,8 @@ export function defaultTypeFields(
   cardType: WorldCard["card_type"],
 ): TypeSpecificEditorState {
   return {
-    birthdate: "",
-    deathdate: "",
+    startYear: "",
+    endYear: "",
     gender: "",
     coordinates: "",
     itemWeight: "",
@@ -82,7 +84,8 @@ export function defaultTypeFields(
     planetType: "",
     foundingDate: "",
     governmentType: "",
-    eventDate: "",
+    eventStartYear: "",
+    eventEndYear: "",
     motto: "",
     groupType: "",
     spectralClass: "",
@@ -98,8 +101,8 @@ export function typeFieldsFromCard(card: WorldCard): TypeSpecificEditorState {
     case "character":
       return {
         ...defaults,
-        birthdate: card.birthdate ?? "",
-        deathdate: card.deathdate ?? "",
+        startYear: card.start_year !== undefined ? String(card.start_year) : "",
+        endYear: card.end_year !== undefined ? String(card.end_year) : "",
         gender: card.gender ?? "",
       };
     case "location":
@@ -131,7 +134,12 @@ export function typeFieldsFromCard(card: WorldCard): TypeSpecificEditorState {
     case "polity":
       return { ...defaults, governmentType: card.government_type ?? "" };
     case "event":
-      return { ...defaults, eventDate: card.event_date ?? "" };
+      return {
+        ...defaults,
+        eventStartYear:
+          card.start_year !== undefined ? String(card.start_year) : "",
+        eventEndYear: card.end_year !== undefined ? String(card.end_year) : "",
+      };
     case "family":
       return { ...defaults, motto: card.motto ?? "" };
     case "group":
@@ -159,8 +167,8 @@ export function buildWorldCard(
       return {
         ...base,
         card_type: "character",
-        birthdate: typeFields.birthdate.trim() || undefined,
-        deathdate: typeFields.deathdate.trim() || undefined,
+        start_year: parseYearInput(typeFields.startYear),
+        end_year: parseYearInput(typeFields.endYear),
         gender: typeFields.gender || undefined,
       } satisfies CharacterCard;
     case "location":
@@ -236,7 +244,8 @@ export function buildWorldCard(
       return {
         ...base,
         card_type: "event",
-        event_date: typeFields.eventDate.trim() || undefined,
+        start_year: parseYearInput(typeFields.eventStartYear),
+        end_year: parseYearInput(typeFields.eventEndYear),
       } satisfies EventCard;
     case "family":
       return {

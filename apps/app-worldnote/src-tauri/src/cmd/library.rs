@@ -83,6 +83,14 @@ fn extract_string_field(card: &serde_json::Value, key: &str) -> Option<String> {
     card.get(key).and_then(|value| value.as_str()).map(ToString::to_string)
 }
 
+fn extract_i64_field(card: &serde_json::Value, key: &str) -> Option<i64> {
+    card.get(key).and_then(|value| value.as_i64())
+}
+
+fn format_year_field(card: &serde_json::Value, key: &str) -> Option<String> {
+    extract_i64_field(card, key).map(|year| year.to_string())
+}
+
 fn capitalize_first(value: &str) -> String {
     let mut chars = value.chars();
     match chars.next() {
@@ -102,8 +110,7 @@ fn subtitle_for_card(card: &serde_json::Value, card_type: &str) -> String {
     }
 
     match card_type {
-        "character" => extract_string_field(card, "birthdate")
-            .filter(|value| !value.trim().is_empty())
+        "character" => format_year_field(card, "start_year")
             .or_else(|| extract_string_field(card, "description").filter(|value| !value.trim().is_empty()))
             .unwrap_or_else(|| type_label("Character")),
         "location" => extract_string_field(card, "coordinates")
@@ -140,8 +147,7 @@ fn subtitle_for_card(card: &serde_json::Value, card_type: &str) -> String {
         "polity" => extract_string_field(card, "government_type")
             .filter(|value| !value.trim().is_empty())
             .unwrap_or_else(|| type_label("Polity")),
-        "event" => extract_string_field(card, "event_date")
-            .filter(|value| !value.trim().is_empty())
+        "event" => format_year_field(card, "start_year")
             .unwrap_or_else(|| type_label("Event")),
         "family" => extract_string_field(card, "motto")
             .filter(|value| !value.trim().is_empty())

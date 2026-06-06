@@ -1,0 +1,85 @@
+.wn-timeline-root {
+  font-family: "Inter", var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+.wn-timeline-root .wn-timeline-mount,
+.wn-timeline-root .wn-timeline-mount .vis-timeline {
+  height: 100%;
+  min-height: 12rem;
+}
+
+.wn-timeline-root .vis-timeline {
+  background: color-mix(in srgb, var(--color-wn-surface) 85%, transparent);
+  border: none;
+}
+
+.wn-timeline-root .vis-text,
+.wn-timeline-root .vis-time-axis .vis-text,
+.wn-timeline-root .vis-labelset .vis-label {
+  font-family: "Inter", var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  color: var(--color-wn-text-muted);
+}
+
+.wn-timeline-root .vis-item {
+  border-radius: 6px;
+  border-width: 1px;
+  font-family: "Inter", var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  font-size: 12px;
+}
+
+.wn-timeline-root .vis-item.wn-timeline-character {
+  background: color-mix(in srgb, var(--color-wn-primary) 22%, transparent);
+  border-color: color-mix(in srgb, var(--color-wn-primary) 55%, transparent);
+  color: var(--color-wn-text);
+}
+
+.wn-timeline-root .vis-item.wn-timeline-event {
+  background: color-mix(in srgb, var(--color-wn-warning) 24%, transparent);
+  border-color: color-mix(in srgb, var(--color-wn-warning) 55%, transparent);
+  color: var(--color-wn-text);
+}
+
+.wn-timeline-root .vis-item.vis-point.wn-timeline-character,
+.wn-timeline-root .vis-item.vis-point.wn-timeline-event {
+  background: var(--color-wn-surface);
+}
+
+.wn-timeline-root .vis-item.wn-era-bg,
+.wn-timeline-root .vis-item.wn-period-bg {
+  background: color-mix(in srgb, var(--color-wn-mono-800) 35%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-wn-mono-700) 40%, transparent);
+  color: var(--color-wn-text-muted);
+  font-size: 11px;
+}
+
+.wn-timeline-root .vis-panel.vis-background {
+  background: transparent;
+}
+
+.wn-timeline-root .vis-time-axis .vis-grid.vis-minor {
+  border-color: color-mix(in srgb, var(--color-wn-mono-800) 65%, transparent);
+}
+
+.wn-timeline-root .vis-time-axis .vis-grid.vis-major {
+  border-color: color-mix(in srgb, var(--color-wn-mono-700) 75%, transparent);
+}
+
+.wn-timeline-root .vis-labelset .vis-label {
+  background: color-mix(in srgb, var(--color-wn-bg) 92%, transparent);
+  border-color: var(--color-wn-border);
+  color: var(--color-wn-text);
+  font-weight: 600;
+}
+
+.wn-timeline-root .vis-panel.vis-center,
+.wn-timeline-root .vis-panel.vis-left,
+.wn-timeline-root .vis-panel.vis-right,
+.wn-timeline-root .vis-panel.vis-top,
+.wn-timeline-root .vis-panel.vis-bottom {
+  border-color: var(--color-wn-border);
+}
+
+.wn-timeline-root .vis-item.vis-selected {
+  border-color: var(--color-wn-primary);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-wn-primary) 45%, transparent);
+}

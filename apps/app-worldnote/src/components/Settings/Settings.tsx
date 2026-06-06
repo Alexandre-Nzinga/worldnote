@@ -31,11 +31,19 @@ import {
 } from "../../services/settings/visibleSocketSettings.js";
 import { normalizeWizardSettings } from "../../services/settings/wizardSettings.js";
 import {
+  formatTimelineEraSuffixForStorage,
+  normalizeTimelineEraSuffix,
+} from "../../services/settings/timelineSettings.js";
+import {
   applyModuleSettingsChange,
   isModuleEnabledInSettings,
   normalizeModulesSettings,
   type ModulesSettings,
 } from "../../services/settings/modulesSettings.js";
+import {
+  loadCalendarConfig,
+  saveCalendarConfig,
+} from "../../services/timeline/timelineCommands.js";
 import { CardTypeBadgeSettings } from "./CardTypeBadgeSettings.js";
 import { useResolvedTheme } from "../../theme/ThemeProvider.js";
 import { KeyboardShortcutsSettings } from "./KeyboardShortcutsSettings.js";
@@ -62,6 +70,8 @@ import {
 
 type SettingsProps = {
   onBack: () => void;
+  /** When opened from the canvas, edit that world's calendar suffix. */
+  currentWorldPath?: string;
 };
 
 const settingsSectionFadeVariants = {
@@ -76,7 +86,7 @@ const settingsSectionTransition = {
   ease: [0.22, 1, 0.36, 1] as const,
 };
 
-export function Settings({ onBack }: SettingsProps) {
+export function Settings({ onBack, currentWorldPath }: SettingsProps) {
   const settings = useSettings((state) => state.settings);
   const save = useSettings((state) => state.save);
   const theme = useResolvedTheme();
@@ -109,10 +119,15 @@ export function Settings({ onBack }: SettingsProps) {
   );
   const [familyTreeUnrelatedMode, setFamilyTreeUnrelatedMode] =
     useState<FamilyTreeUnrelatedMode>(DEFAULT_FAMILY_TREE_UNRELATED_MODE);
+  const [timelineEraSuffix, setTimelineEraSuffix] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const sectionMeta = settingsSectionMeta(activeSection);
+
+  const timelineWorldName = currentWorldPath
+    ? currentWorldPath.split(/[/\\]/).pop()
+    : undefined;
 
   const goToSection = useCallback((next: SettingsSection) => {
     const nextIndex = SETTINGS_SECTION_ORDER.indexOf(next);
@@ -194,6 +209,9 @@ export function Settings({ onBack }: SettingsProps) {
             onKinshipLabelColorsChange={setKinshipLabelColors}
             familyTreeUnrelatedMode={familyTreeUnrelatedMode}
             onFamilyTreeUnrelatedModeChange={setFamilyTreeUnrelatedMode}
+            timelineEraSuffix={timelineEraSuffix}
+            onTimelineEraSuffixChange={setTimelineEraSuffix}
+            timelineWorldName={timelineWorldName}
             disabled={isSaving}
           />
         );
@@ -226,6 +244,8 @@ export function Settings({ onBack }: SettingsProps) {
     isSaving,
     modulesSettings,
     settings,
+    timelineEraSuffix,
+    timelineWorldName,
     username,
     visibleSockets,
     wizardSettings,
@@ -257,9 +277,35 @@ export function Settings({ onBack }: SettingsProps) {
     setFamilyTreeUnrelatedMode(
       normalizeFamilyTreeUnrelatedMode(settings.familyTreeUnrelatedMode),
     );
+    if (!currentWorldPath) {
+      setTimelineEraSuffix(
+        normalizeTimelineEraSuffix(settings.timelineEraSuffix),
+      );
+    }
     setError(null);
     setIsSaving(false);
-  }, [settings]);
+  }, [currentWorldPath, settings]);
+
+  useEffect(() => {
+    if (!currentWorldPath) {
+      return;
+    }
+
+    let cancelled = false;
+    void loadCalendarConfig(currentWorldPath)
+      .then((config) => {
+        if (!cancelled) {
+          setTimelineEraSuffix(normalizeTimelineEraSuffix(config.suffix));
+        }
+      })
+      .catch((error) => {
+        console.warn("Could not load world calendar config:", error);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentWorldPath]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -280,6 +326,13 @@ export function Settings({ onBack }: SettingsProps) {
     setIsSaving(true);
     setError(null);
     try {
+      const storedTimelineEraSuffix =
+        formatTimelineEraSuffixForStorage(timelineEraSuffix);
+      if (currentWorldPath) {
+        await saveCalendarConfig(currentWorldPath, {
+          suffix: normalizeTimelineEraSuffix(timelineEraSuffix),
+        });
+      }
       await save({
         ...settings,
         username: username.trim(),
@@ -295,6 +348,7 @@ export function Settings({ onBack }: SettingsProps) {
           familyTreeUnrelatedMode === DEFAULT_FAMILY_TREE_UNRELATED_MODE
             ? undefined
             : familyTreeUnrelatedMode,
+        timelineEraSuffix: storedTimelineEraSuffix,
       });
       onBack();
     } catch (saveError) {
@@ -310,9 +364,11 @@ export function Settings({ onBack }: SettingsProps) {
     kinshipLabelColors,
     familyTreeUnrelatedMode,
     modulesSettings,
+    currentWorldPath,
     onBack,
     save,
     settings,
+    timelineEraSuffix,
     username,
     visibleSockets,
     wizardSettings,

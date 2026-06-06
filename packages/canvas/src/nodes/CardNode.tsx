@@ -67,8 +67,8 @@ export type CardNodeSocket = {
 
 export type CardNodeScalars = {
   gender?: "male" | "female" | "x";
-  birthdate?: string;
-  deathdate?: string;
+  start_year?: number;
+  end_year?: number;
   race?: string;
   appearance?: string;
   personality?: string;

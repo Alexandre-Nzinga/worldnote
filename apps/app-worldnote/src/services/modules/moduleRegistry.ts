@@ -1,5 +1,5 @@
 /** Built-in module identifiers. Extend as new modules ship. */
-export type BuiltinModuleId = "familyTree";
+export type BuiltinModuleId = "familyTree" | "timeline";
 
 export type ModuleRegistryEntry = {
   id: BuiltinModuleId;
@@ -16,6 +16,14 @@ export const BUILTIN_MODULES: readonly ModuleRegistryEntry[] = [
     description:
       "Select a character on the canvas to reveal kinship labels on related characters and dim or hide unrelated ones.",
     icon: "account_tree",
+    defaultEnabled: false,
+  },
+  {
+    id: "timeline",
+    name: "Timeline",
+    description:
+      "View characters and events on a chronological axis with eras and periods as background zones.",
+    icon: "timeline",
     defaultEnabled: false,
   },
 ] as const;
