@@ -54,10 +54,8 @@ export function useInspectorWizard({
     if (!selectedCard) return [];
     return analyzeWizardSuggestions({
       selectedCard,
-      cardsById,
-      links,
     });
-  }, [selectedCard, cardsById, links]);
+  }, [selectedCard]);
 
   const isGeneratingLore = useMemo(() => {
     if (status !== "generating" || !selectedCard) return false;
@@ -107,8 +105,6 @@ export function useInspectorWizard({
     async (
       targetCard: WorldCard,
       mode: "expand" | "fill-gaps",
-      linkedContext?: { sourceCardName: string; socketLabel: string },
-      contextCards?: WorldCard[],
     ): Promise<WorldCard> => {
       const model = modelRef.current;
       if (!model) {
@@ -127,9 +123,8 @@ export function useInspectorWizard({
         throw new Error("No fields to generate on this card.");
       }
 
-      const cardsForContext = contextCards ?? [targetCard];
       const contextMessage = buildPatchContextMessage(
-        cardsForContext,
+        [targetCard],
         cardsById,
         links,
         worldName,
@@ -143,7 +138,6 @@ export function useInspectorWizard({
         systemPrompt: buildSystemPrompt(guidelinesRef.current),
         contextMessage,
         fields,
-        linkedContext,
       });
     },
     [cardsById, healthy, links, worldName],
@@ -179,38 +173,25 @@ export function useInspectorWizard({
 
   const runSuggestion = useCallback(
     async (suggestion: WizardSuggestion): Promise<WorldCard> => {
-      const target = cardsById[suggestion.targetCardId];
-      const source = cardsById[suggestion.sourceCardId];
-      if (!target) {
-        throw new Error("Target card no longer exists.");
+      if (!selectedCard) {
+        throw new Error("No card selected.");
+      }
+      if (suggestion.targetCardId !== selectedCard.id) {
+        throw new Error("Suggestion does not apply to the selected card.");
       }
 
       setActiveAction("suggestion");
       setActiveSuggestionId(suggestion.id);
       setStatus("generating");
       try {
-        const linkedContext =
-          source && suggestion.socketLabel
-            ? {
-                sourceCardName: source.name,
-                socketLabel: suggestion.socketLabel,
-              }
-            : undefined;
-        const contextCards =
-          source && source.id !== target.id ? [source, target] : [target];
-        return await runPatch(
-          target,
-          suggestion.action,
-          linkedContext,
-          contextCards,
-        );
+        return await runPatch(selectedCard, suggestion.action);
       } finally {
         setActiveSuggestionId(null);
         setActiveAction(null);
         setStatus("idle");
       }
     },
-    [cardsById, runPatch],
+    [runPatch, selectedCard],
   );
 
   const handleError = useCallback((err: unknown) => {

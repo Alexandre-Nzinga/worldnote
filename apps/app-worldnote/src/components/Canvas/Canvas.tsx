@@ -36,6 +36,7 @@ import {
   rotateCardImageClockwise,
   StickyNotePlacementSchema,
   type CardImagePosition,
+  type FamilyCard,
   type Link,
   type WorldCard,
 } from "@worldnote/shared";
@@ -47,6 +48,7 @@ import { useVault } from "../../hooks/useVault.js";
 import { WIZARD_CARD_MIME, readVaultCardRefPayload } from "../../services/canvas/cardDragOut.js";
 import { cardImageSrc, cardNodeSaveCallbacks, worldCardToNodeData } from "../../services/canvas/cardNodeData.js";
 import { resolveCardBadgeStyle } from "../../services/settings/cardTypeBadgeSettings.js";
+import { resolveKinshipBadgeStyle } from "../../services/settings/kinshipBadgeSettings.js";
 import {
   removeCanvasManifestStickyNote,
   updateCanvasManifestImage,
@@ -94,7 +96,10 @@ import {
 } from "../../services/desktop/saveCanvasImage.js";
 import { isTauriRuntime } from "../../services/desktop/tauriRuntime.js";
 import { createWorldCard } from "../../services/crudWorldCard/createWorldCard.js";
-import { groupSelectedWorldCards } from "../../services/crudWorldCard/groupSelectedWorldCards.js";
+import {
+  centerPositionForGroup,
+  groupSelectedWorldCards,
+} from "../../services/crudWorldCard/groupSelectedWorldCards.js";
 import { changeWorldCardType } from "../../services/crudWorldCard/changeWorldCardType.js";
 import type { NewCardType } from "../../services/crudWorldCard/cardTemplates.js";
 import { isNewCardType } from "../../services/crudWorldCard/creatableCardTypes.js";
@@ -156,6 +161,21 @@ import {
 } from "../../services/links/resolveEasyConnect.js";
 import { copyCardToWorld } from "../../services/library/copyCardToWorld.js";
 import { listWorlds } from "../../services/worlds/listWorlds.js";
+import { isModuleEnabled } from "../../services/modules/isModuleEnabled.js";
+import { applyFamilyTreeKinshipSocketVisibility } from "../../services/settings/visibleSocketSettings.js";
+import {
+  buildFamilyGraph,
+  characterCardsFromRecord,
+} from "../../services/familyTree/buildFamilyGraph.js";
+import { computeRelationsToAnchor } from "../../services/familyTree/computeRelationsToAnchor.js";
+import { createFamilyCardFromCharacter } from "../../services/familyTree/createFamilyCardFromCharacter.js";
+import {
+  familyCardsWithAnchor,
+  findFamilyCardByAnchor,
+} from "../../services/familyTree/familyCardAnchor.js";
+import { familyTreeNodeStateForCard } from "../../services/familyTree/familyTreeNodeState.js";
+import { syncFamilyCardMembers } from "../../services/familyTree/syncFamilyCardMembers.js";
+import { normalizeFamilyTreeUnrelatedMode } from "../../services/settings/familyTreeSettings.js";
 
 const nodeTypes = {
   worldnoteCard: CardNode,
@@ -173,18 +193,32 @@ type CanvasProps = {
   onOpenSettings?: () => void;
 };
 
+type CharacterCard = Extract<WorldCard, { card_type: "character" }>;
+
 export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
   const vaultPath = useVault((state) => state.currentVaultPath);
   const storedWorldName = useVault((state) => state.currentWorldName);
   const worldnoteRoot = useSettings((state) => state.settings?.worldnoteRoot);
-  const visibleSocketsSettings = useSettings(
+  const rawVisibleSocketsSettings = useSettings(
     (state) => state.settings?.visibleSockets,
   );
   const cardTypeBadgeColors = useSettings(
     (state) => state.settings?.cardTypeBadgeColors,
   );
+  const kinshipLabelColors = useSettings(
+    (state) => state.settings?.kinshipLabelColors,
+  );
   const canvasShortcuts = useSettings(
     (state) => state.settings?.canvasShortcuts,
+  );
+  const appSettings = useSettings((state) => state.settings);
+  const visibleSocketsSettings = useMemo(
+    () =>
+      applyFamilyTreeKinshipSocketVisibility(
+        rawVisibleSocketsSettings,
+        isModuleEnabled(appSettings, "familyTree"),
+      ),
+    [appSettings, rawVisibleSocketsSettings],
   );
   const setCanvasClipboard = useCanvasClipboard((state) => state.setClipboard);
   const nextPasteGeneration = useCanvasClipboard(
@@ -236,6 +270,9 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
   const cardTypeBadgeColorsRef = useRef(cardTypeBadgeColors);
   cardTypeBadgeColorsRef.current = cardTypeBadgeColors;
 
+  const kinshipLabelColorsRef = useRef(kinshipLabelColors);
+  kinshipLabelColorsRef.current = kinshipLabelColors;
+
   /** Ignores duplicate select changes from React Flow after we set selection in onNodeClick. */
   const ignoreSelectChangesFromClickRef = useRef(false);
   const handleSaveCardRef = useRef<
@@ -261,6 +298,7 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
     linksByIdRef,
     visibleSocketsSettingsRef,
     cardTypeBadgeColorsRef,
+    kinshipLabelColorsRef,
     handleSaveCardRef,
     setNodes,
     setEdges,
@@ -282,9 +320,12 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
           node.data.cardType,
           cardTypeBadgeColors,
         );
+        const kinshipBadge = resolveKinshipBadgeStyle(kinshipLabelColors);
         if (
           node.data.badgeClassName === badge.badgeClassName &&
-          node.data.badgeTextColor === badge.badgeTextColor
+          node.data.badgeTextColor === badge.badgeTextColor &&
+          node.data.kinshipBadgeClassName === kinshipBadge.badgeClassName &&
+          node.data.kinshipBadgeTextColor === kinshipBadge.badgeTextColor
         ) {
           return node;
         }
@@ -294,11 +335,13 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
             ...node.data,
             badgeClassName: badge.badgeClassName,
             badgeTextColor: badge.badgeTextColor,
+            kinshipBadgeClassName: kinshipBadge.badgeClassName,
+            kinshipBadgeTextColor: kinshipBadge.badgeTextColor,
           },
         };
       }),
     );
-  }, [cardTypeBadgeColors, setNodes]);
+  }, [cardTypeBadgeColors, kinshipLabelColors, setNodes]);
 
   const handleNavigateToCard = useCallback(
     (cardId: string, options?: { focusOnCanvas?: boolean }) => {
@@ -317,6 +360,254 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
     },
     [setNodes],
   );
+
+  const familyTreeAnchorId = useMemo(() => {
+    if (!isModuleEnabled(appSettings, "familyTree")) {
+      return null;
+    }
+    if (selectedCardIds.length !== 1) {
+      return null;
+    }
+    const anchorId = selectedCardIds[0];
+    if (!anchorId || cardsById[anchorId]?.card_type !== "character") {
+      return null;
+    }
+    return anchorId;
+  }, [appSettings, cardsById, selectedCardIds]);
+
+  const familyGraph = useMemo(() => {
+    const links = Object.values(linksById);
+    return buildFamilyGraph(characterCardsFromRecord(cardsById), links);
+  }, [cardsById, linksById]);
+
+  const relationsByCardId = useMemo(() => {
+    if (!familyTreeAnchorId) {
+      return null;
+    }
+    return computeRelationsToAnchor(
+      familyGraph,
+      familyTreeAnchorId,
+      cardsById,
+    );
+  }, [cardsById, familyGraph, familyTreeAnchorId]);
+
+  const familyTreeEnabled = isModuleEnabled(appSettings, "familyTree");
+
+  const anchoredFamilyCards = useMemo(
+    () => (familyTreeEnabled ? familyCardsWithAnchor(cardsById) : []),
+    [cardsById, familyTreeEnabled],
+  );
+
+  const familyTreeUnrelatedMode = normalizeFamilyTreeUnrelatedMode(
+    appSettings?.familyTreeUnrelatedMode,
+  );
+
+  useEffect(() => {
+    const familyTreeActive = Boolean(familyTreeAnchorId && relationsByCardId);
+    const kinshipBadge = resolveKinshipBadgeStyle(kinshipLabelColors);
+
+    setNodes((prev) => {
+      let changed = false;
+      const next = prev.map((node) => {
+        if (node.type !== "worldnoteCard") {
+          return node;
+        }
+
+        const card = cardsByIdRef.current[node.id];
+        if (!card) {
+          return node;
+        }
+
+        let hidden = false;
+        let dimmed = false;
+        let kinshipLabel: string | undefined;
+
+        if (familyTreeActive && card.card_type === "character") {
+          const treeState = familyTreeNodeStateForCard(
+            card,
+            familyTreeAnchorId,
+            relationsByCardId,
+            familyTreeUnrelatedMode,
+          );
+          if (treeState) {
+            hidden = treeState.hidden;
+            dimmed = treeState.dimmed ?? false;
+            kinshipLabel = treeState.kinshipLabel;
+          }
+        }
+
+        const currentHidden = node.hidden ?? false;
+        const currentDimmed = node.data.dimmed ?? false;
+        const currentLabel =
+          "kinshipLabel" in node.data
+            ? node.data.kinshipLabel
+            : undefined;
+        const currentKinshipBg = node.data.kinshipBadgeClassName;
+        const currentKinshipText = node.data.kinshipBadgeTextColor;
+
+        if (
+          currentHidden === hidden &&
+          currentDimmed === dimmed &&
+          currentLabel === kinshipLabel &&
+          currentKinshipBg === kinshipBadge.badgeClassName &&
+          currentKinshipText === kinshipBadge.badgeTextColor
+        ) {
+          return node;
+        }
+
+        changed = true;
+        return {
+          ...node,
+          hidden,
+          data: {
+            ...node.data,
+            kinshipLabel,
+            dimmed: dimmed || undefined,
+            kinshipBadgeClassName: kinshipBadge.badgeClassName,
+            kinshipBadgeTextColor: kinshipBadge.badgeTextColor,
+          },
+        };
+      });
+
+      return changed ? next : prev;
+    });
+  }, [
+    familyTreeAnchorId,
+    familyTreeUnrelatedMode,
+    kinshipLabelColors,
+    relationsByCardId,
+    setNodes,
+  ]);
+
+  const placeFamilyCardOnCanvas = useCallback(
+    (
+      familyCard: FamilyCard,
+      links: Link[],
+      options?: { select?: boolean; focus?: boolean },
+    ) => {
+      if (!vaultPath) {
+        return;
+      }
+
+      const nextCardsById = {
+        ...cardsByIdRef.current,
+        [familyCard.id]: familyCard,
+      };
+      setCardsById(nextCardsById);
+      setLinksById(linksRecord(links));
+      setEdges(links.map(linkToEdge));
+
+      setNodes((prev) => {
+        const exists = prev.some((node) => node.id === familyCard.id);
+        const nodeData = worldCardToNodeData(familyCard, vaultPath, {
+          visibleSocketsSettings,
+          cardTypeBadgeColors,
+          kinshipLabelColors,
+          links,
+          cardsById: nextCardsById,
+          ...cardNodeSaveCallbacks(familyCard, (nextCard, saveOptions) =>
+            handleSaveCardRef.current(nextCard, saveOptions),
+          ),
+        });
+
+        if (exists) {
+          return prev.map((node) => {
+            if (node.id !== familyCard.id) {
+              return { ...node, selected: false };
+            }
+            if (node.type !== "worldnoteCard") {
+              return node;
+            }
+            return {
+              ...node,
+              position: familyCard.position,
+              selected: options?.select ?? false,
+              data: nodeData,
+            };
+          });
+        }
+
+        const newNode: CardFlowNode = {
+          id: familyCard.id,
+          type: "worldnoteCard",
+          position: familyCard.position,
+          selected: options?.select ?? true,
+          data: {
+            ...nodeData,
+            enterAnimation: true,
+          },
+        };
+
+        return [...prev.map((node) => ({ ...node, selected: false })), newNode];
+      });
+
+      if (options?.select) {
+        setSelectedCardIds([familyCard.id]);
+        setSelectedLinkId(null);
+        setInspectorMode("edit");
+      }
+      if (options?.focus) {
+        focusCardRef.current?.(familyCard.id);
+      }
+    },
+    [
+      cardTypeBadgeColors,
+      kinshipLabelColors,
+      setEdges,
+      setNodes,
+      vaultPath,
+      visibleSocketsSettings,
+    ],
+  );
+
+  useEffect(() => {
+    if (!vaultPath || !isVaultDataLoaded || !familyTreeEnabled) {
+      return;
+    }
+    if (anchoredFamilyCards.length === 0) {
+      return;
+    }
+
+    let cancelled = false;
+
+    void (async () => {
+      let latestLinks = Object.values(linksByIdRef.current);
+      let anyChanged = false;
+
+      for (const familyCard of anchoredFamilyCards) {
+        const result = await syncFamilyCardMembers({
+          vault: vaultPath,
+          familyCard,
+          graph: familyGraph,
+          links: latestLinks,
+          cardsById: cardsByIdRef.current,
+        });
+        if (cancelled) {
+          return;
+        }
+        if (result.changed) {
+          anyChanged = true;
+          latestLinks = result.links;
+        }
+      }
+
+      if (anyChanged && !cancelled) {
+        setLinksById(linksRecord(latestLinks));
+        setEdges(latestLinks.map(linkToEdge));
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    anchoredFamilyCards,
+    familyGraph,
+    familyTreeEnabled,
+    isVaultDataLoaded,
+    setEdges,
+    vaultPath,
+  ]);
 
   const syncSelectionFromNodes = useCallback((nodeList: CanvasFlowNode[]) => {
     const cardIds = selectedCardIdsFromNodes(
@@ -805,6 +1096,7 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
           data: worldCardToNodeData(card, vaultPath, {
             visibleSocketsSettings,
             cardTypeBadgeColors,
+            kinshipLabelColors,
             links,
             cardsById: cards,
             ...cardNodeSaveCallbacks(card, (nextCard, options) =>
@@ -814,7 +1106,14 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
         };
       }),
     );
-  }, [linksById, setNodes, vaultPath, visibleSocketsSettings]);
+  }, [
+    cardTypeBadgeColors,
+    kinshipLabelColors,
+    linksById,
+    setNodes,
+    vaultPath,
+    visibleSocketsSettings,
+  ]);
 
   useEffect(() => {
     if (!vaultPath || Object.keys(cardsById).length === 0) {
@@ -829,6 +1128,7 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
     loadCanvasManifest,
     visibleSocketsSettingsRef,
     cardTypeBadgeColorsRef,
+    kinshipLabelColorsRef,
     setNodes,
     setEdges,
     setCardsById,
@@ -926,7 +1226,6 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
         ({ x: 0, y: 0 } satisfies CanvasFlowPointer);
       const tempId = crypto.randomUUID();
       const fallbackTitle = NEW_CARD_DEFAULT_NAMES[cardType];
-      const typeLabel = CARD_TYPE_LABELS[cardType];
 
       setNodes((prev) => [
         ...prev,
@@ -936,7 +1235,6 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
           position: nextPosition,
           data: {
             title: fallbackTitle,
-            subtitle: typeLabel,
             cardType,
             enterAnimation: true,
           },
@@ -960,6 +1258,7 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
                     data: worldCardToNodeData(card, vaultPath, {
                       visibleSocketsSettings,
                       cardTypeBadgeColors,
+                      kinshipLabelColors,
                       links: Object.values(linksById),
                       cardsById: { ...cardsById, [card.id]: card },
                     }),
@@ -979,7 +1278,15 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
           setNodes((prev) => prev.filter((node) => node.id !== tempId));
         });
     },
-    [cardsById, linksById, setNodes, vaultPath, visibleSocketsSettings],
+    [
+      cardTypeBadgeColors,
+      cardsById,
+      kinshipLabelColors,
+      linksById,
+      setNodes,
+      vaultPath,
+      visibleSocketsSettings,
+    ],
   );
 
   useEffect(() => {
@@ -1689,6 +1996,7 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
           data: worldCardToNodeData(card, vaultPath, {
             visibleSocketsSettings: visibleSocketsSettingsRef.current,
             cardTypeBadgeColors: cardTypeBadgeColorsRef.current,
+            kinshipLabelColors: kinshipLabelColorsRef.current,
             links,
             cardsById: nextCardsById,
             ...cardNodeSaveCallbacks(card, (nextCard, options) =>
@@ -1823,6 +2131,7 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
               ...worldCardToNodeData(saved, vaultPath, {
                 visibleSocketsSettings,
                 cardTypeBadgeColors,
+                kinshipLabelColors,
                 links: Object.values(linksByIdRef.current),
                 cardsById: { ...cardsByIdRef.current, [saved.id]: saved },
               }),
@@ -1837,7 +2146,13 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
         console.error("Failed to spawn generated card:", error);
       }
     },
-    [setNodes, vaultPath, visibleSocketsSettings],
+    [
+      cardTypeBadgeColors,
+      kinshipLabelColors,
+      setNodes,
+      vaultPath,
+      visibleSocketsSettings,
+    ],
   );
 
   const handleDeleteLink = useCallback(
@@ -1880,6 +2195,7 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
           data: worldCardToNodeData(card, vaultPath, {
             visibleSocketsSettings: visibleSocketsSettingsRef.current,
             cardTypeBadgeColors: cardTypeBadgeColorsRef.current,
+            kinshipLabelColors: kinshipLabelColorsRef.current,
             links,
             cardsById: cards,
           }),
@@ -1978,6 +2294,7 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
             data: worldCardToNodeData(newCard, vaultPath, {
               visibleSocketsSettings: visibleSocketsSettingsRef.current,
               cardTypeBadgeColors: cardTypeBadgeColorsRef.current,
+            kinshipLabelColors: kinshipLabelColorsRef.current,
               links: linksBefore,
               cardsById: nextCardsById,
             }),
@@ -2166,6 +2483,7 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
         data: worldCardToNodeData(card, vaultPath, {
           visibleSocketsSettings,
           cardTypeBadgeColors,
+          kinshipLabelColors,
           links,
           cardsById: nextCardsById,
           ...cardNodeSaveCallbacks(card, (nextCard, options) =>
@@ -2177,7 +2495,15 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
     setSelectedCardIds(newIds);
     setSelectedLinkId(null);
     setInspectorMode("read");
-  }, [linksById, selectedCardIds, setNodes, vaultPath, visibleSocketsSettings]);
+  }, [
+    cardTypeBadgeColors,
+    kinshipLabelColors,
+    linksById,
+    selectedCardIds,
+    setNodes,
+    vaultPath,
+    visibleSocketsSettings,
+  ]);
 
   const handleDuplicateSelection = useCallback(async () => {
     pushCanvasHistory();
@@ -2194,6 +2520,71 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
     selectedCardIds.length,
     selectedImageIds.length,
   ]);
+
+  const handleCreateFamilyFromCharacters = useCallback(
+    async (
+      members: CharacterCard[],
+      options?: { position?: { x: number; y: number } },
+    ) => {
+      if (!vaultPath || members.length === 0) {
+        return;
+      }
+
+      const anchor = members[0];
+
+      pushCanvasHistory();
+
+      try {
+        const result = await createFamilyCardFromCharacter({
+          vault: vaultPath,
+          anchorCharacter: anchor,
+          graph: familyGraph,
+          links: Object.values(linksByIdRef.current),
+          cardsById: cardsByIdRef.current,
+          position: options?.position,
+          extraAnchorIds: members
+            .filter((card) => card.id !== anchor.id)
+            .map((card) => card.id),
+        });
+
+        placeFamilyCardOnCanvas(result.familyCard, result.links, {
+          select: true,
+          focus: true,
+        });
+      } catch (error) {
+        console.error("Failed to create family card:", error);
+      }
+    },
+    [familyGraph, placeFamilyCardOnCanvas, pushCanvasHistory, vaultPath],
+  );
+
+  const handleCreateFamilyFromSelection = useCallback(async () => {
+    if (!familyTreeEnabled) {
+      return;
+    }
+
+    const members = selectedCardIds
+      .map((cardId) => {
+        const card = cardsByIdRef.current[cardId];
+        if (!card || card.card_type !== "character") {
+          return null;
+        }
+        const node = nodesRef.current.find(
+          (entry): entry is CardFlowNode =>
+            entry.id === cardId && entry.type === "worldnoteCard",
+        );
+        return node ? { ...card, position: node.position } : card;
+      })
+      .filter((card): card is CharacterCard => card != null);
+
+    if (members.length === 0) {
+      return;
+    }
+
+    const position =
+      members.length > 1 ? centerPositionForGroup(members) : undefined;
+    await handleCreateFamilyFromCharacters(members, { position });
+  }, [familyTreeEnabled, handleCreateFamilyFromCharacters, selectedCardIds]);
 
   const handleGroupSelectedCards = useCallback(async () => {
     if (!vaultPath || selectedCardIds.length < 2) {
@@ -2215,6 +2606,21 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
       .filter((card): card is WorldCard => card != null);
 
     if (members.length < 2) {
+      return;
+    }
+
+    if (
+      familyTreeEnabled &&
+      members.every((card) => card.card_type === "character")
+    ) {
+      await handleCreateFamilyFromCharacters(
+        members.filter(
+          (card): card is CharacterCard => card.card_type === "character",
+        ),
+        {
+          position: centerPositionForGroup(members),
+        },
+      );
       return;
     }
 
@@ -2243,6 +2649,7 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
           data: worldCardToNodeData(group, vaultPath, {
             visibleSocketsSettings,
             cardTypeBadgeColors,
+            kinshipLabelColors,
             links,
             cardsById: nextCardsById,
             ...cardNodeSaveCallbacks(group, (nextCard, options) =>
@@ -2258,6 +2665,10 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
       console.error("Failed to create group from selection:", error);
     }
   }, [
+    cardTypeBadgeColors,
+    familyTreeEnabled,
+    handleCreateFamilyFromCharacters,
+    kinshipLabelColors,
     linksById,
     pushCanvasHistory,
     selectedCardIds,
@@ -2265,6 +2676,37 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
     vaultPath,
     visibleSocketsSettings,
   ]);
+
+  const familyAnchorIdForAction = useMemo(() => {
+    if (familyTreeAnchorId) {
+      return familyTreeAnchorId;
+    }
+    for (const cardId of selectedCardIds) {
+      if (cardsById[cardId]?.card_type === "character") {
+        return cardId;
+      }
+    }
+    return null;
+  }, [cardsById, familyTreeAnchorId, selectedCardIds]);
+
+  const createFamilyCardLabel = useMemo(() => {
+    if (
+      !familyAnchorIdForAction ||
+      !findFamilyCardByAnchor(cardsById, familyAnchorIdForAction)
+    ) {
+      return "Create family card";
+    }
+    return "Open family card";
+  }, [cardsById, familyAnchorIdForAction]);
+
+  const canCreateFamilyFromSelection = useMemo(() => {
+    if (!familyTreeEnabled || selectedCardIds.length === 0) {
+      return false;
+    }
+    return selectedCardIds.every(
+      (cardId) => cardsById[cardId]?.card_type === "character",
+    );
+  }, [cardsById, familyTreeEnabled, selectedCardIds]);
 
   const handleCopySelection = useCallback(() => {
     if (!vaultPath) {
@@ -2490,6 +2932,7 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
           data: worldCardToNodeData(card, vaultPath, {
             visibleSocketsSettings: visibleSocketsSettingsRef.current,
             cardTypeBadgeColors: cardTypeBadgeColorsRef.current,
+            kinshipLabelColors: kinshipLabelColorsRef.current,
             links,
             cardsById: nextCardsById,
             ...cardNodeSaveCallbacks(card, (nextCard, options) =>
@@ -2716,6 +3159,7 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
                         data: worldCardToNodeData(card, vaultPath, {
                           visibleSocketsSettings,
                           cardTypeBadgeColors,
+                          kinshipLabelColors,
                           links,
                           cardsById: {
                             ...cardsByIdRef.current,
@@ -2753,7 +3197,15 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
 
       void addCard(droppedType, position);
     },
-    [addCard, listCards, setNodes, vaultPath, visibleSocketsSettings],
+    [
+      addCard,
+      cardTypeBadgeColors,
+      kinshipLabelColors,
+      listCards,
+      setNodes,
+      vaultPath,
+      visibleSocketsSettings,
+    ],
   );
 
   useEffect(() => {
@@ -2861,45 +3313,17 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
   );
 
   const selectionToolbar = useMemo(() => {
-    const bulkSelection =
-      selectedCardIds.length > 0
-        ? { kind: "card" as const, ids: selectedCardIds }
+    const selectedCount =
+      selectedCardIds.length > 1
+        ? selectedCardIds.length
         : selectedImageIds.length > 1
-          ? { kind: "image" as const, ids: selectedImageIds }
-          : null;
-    if (!bulkSelection) {
+          ? selectedImageIds.length
+          : 0;
+    if (selectedCount <= 1) {
       return null;
     }
-    return (
-      <BulkSelectionToolbar
-        selectedIds={bulkSelection.ids}
-        selectionKind={bulkSelection.kind}
-        onDuplicate={handleDuplicateSelection}
-        onDelete={handleDeleteSelection}
-        onCreateGroup={handleGroupSelectedCards}
-        setNodes={setNodes}
-        pushCanvasHistory={pushCanvasHistory}
-        updateCardPosition={
-          bulkSelection.kind === "card" ? updateCardPosition : null
-        }
-        onOpenWizard={
-          bulkSelection.kind === "card"
-            ? () => handleOpenWizardWithCards(bulkSelection.ids)
-            : undefined
-        }
-      />
-    );
-  }, [
-    handleDeleteSelection,
-    handleDuplicateSelection,
-    handleGroupSelectedCards,
-    handleOpenWizardWithCards,
-    pushCanvasHistory,
-    selectedCardIds,
-    selectedImageIds,
-    setNodes,
-    updateCardPosition,
-  ]);
+    return <BulkSelectionToolbar selectedCount={selectedCount} />;
+  }, [selectedCardIds.length, selectedImageIds.length]);
 
   useCanvasCommandPaletteShortcut({
     isOpen: isCommandPaletteOpen,
@@ -2976,6 +3400,7 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
             linksByIdRef={linksByIdRef}
             visibleSocketsSettingsRef={visibleSocketsSettingsRef}
             cardTypeBadgeColorsRef={cardTypeBadgeColorsRef}
+            kinshipLabelColorsRef={kinshipLabelColorsRef}
             setNodes={setNodes}
             setEdges={setEdges}
             setCardsById={setCardsById}
@@ -3139,6 +3564,14 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
             }}
             onOpenWizardWithCards={handleOpenWizardWithCards}
             selectedCardIdsForWizard={selectedCardIds}
+            onCreateFamilyCard={
+              canCreateFamilyFromSelection
+                ? () => {
+                    void handleCreateFamilyFromSelection();
+                  }
+                : undefined
+            }
+            createFamilyCardLabel={createFamilyCardLabel}
             onDuplicateCanvasImage={(imageId) => {
               void handleDuplicateCanvasImage(imageId);
             }}
@@ -3224,6 +3657,25 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
         isWizardOpen={isWizardOpen}
         onToggleGraphView={() => setIsGraphViewOpen((open) => !open)}
         isGraphViewOpen={isGraphViewOpen}
+        familyTreeBanner={
+          familyTreeAnchorId ? (
+            <div className="flex items-center gap-2 rounded-full border border-wn-border bg-wn-surface/90 px-3 py-1.5 text-xs text-wn-text-muted shadow-sm">
+              <span>
+                Family Tree · relations to{" "}
+                {cardsById[familyTreeAnchorId]?.name ?? "character"}
+              </span>
+              <button
+                type="button"
+                className="rounded-full border border-wn-border bg-wn-surface px-2.5 py-1 font-semibold text-wn-text transition-colors hover:border-wn-mono-50 hover:text-wn-text"
+                onClick={() => {
+                  void handleCreateFamilyFromSelection();
+                }}
+              >
+                {createFamilyCardLabel}
+              </button>
+            </div>
+          ) : null
+        }
       />
       </ReactFlowProvider>
 

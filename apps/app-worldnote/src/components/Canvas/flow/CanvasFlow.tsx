@@ -38,6 +38,7 @@ import type { Link, WorldCard } from "@worldnote/shared";
 import type { NewCardType } from "../../../services/crudWorldCard/cardTemplates.js";
 import type {
   CardTypeBadgeOverrides,
+  KinshipBadgeOverride,
   VisibleSocketsByCardType,
 } from "../../../services/settings/settings.js";
 import { CanvasExternalImageDropBridge } from "./bridges/CanvasExternalImageDropBridge.js";
@@ -101,6 +102,7 @@ type CanvasFlowProps = {
   linksByIdRef: RefObject<Record<string, Link>>;
   visibleSocketsSettingsRef: RefObject<VisibleSocketsByCardType | undefined>;
   cardTypeBadgeColorsRef: RefObject<CardTypeBadgeOverrides | undefined>;
+  kinshipLabelColorsRef: RefObject<KinshipBadgeOverride | undefined>;
   setNodes: React.Dispatch<React.SetStateAction<CanvasFlowNode[]>>;
   setEdges: React.Dispatch<React.SetStateAction<Edge[]>>;
   setCardsById: React.Dispatch<React.SetStateAction<Record<string, WorldCard>>>;
@@ -112,6 +114,8 @@ type CanvasFlowProps = {
   selectedImageIds: string[];
   onOpenWizardWithCards: (cardIds: string[]) => void;
   selectedCardIdsForWizard: string[];
+  onCreateFamilyCard?: () => void;
+  createFamilyCardLabel?: string;
   focusCardRef: MutableRefObject<((cardId: string) => void) | undefined>;
   lastCanvasPointerRef: MutableRefObject<CanvasFlowPointer | null>;
   canvasPointerApiRef: MutableRefObject<CanvasPointerApi | null>;
@@ -168,6 +172,7 @@ export function CanvasFlow({
   linksByIdRef,
   visibleSocketsSettingsRef,
   cardTypeBadgeColorsRef,
+  kinshipLabelColorsRef,
   setNodes,
   setEdges,
   setCardsById,
@@ -179,6 +184,8 @@ export function CanvasFlow({
   selectedImageIds,
   onOpenWizardWithCards,
   selectedCardIdsForWizard,
+  onCreateFamilyCard,
+  createFamilyCardLabel,
   focusCardRef,
   lastCanvasPointerRef,
   canvasPointerApiRef,
@@ -200,6 +207,7 @@ export function CanvasFlow({
     linksByIdRef,
     visibleSocketsSettingsRef,
     cardTypeBadgeColorsRef,
+    kinshipLabelColorsRef,
     onConnect,
     setNodes,
     setEdges,
@@ -304,6 +312,8 @@ export function CanvasFlow({
       onChangeType={onCardChangeType}
       onDelete={onCardContextDelete}
       onOpenWizard={() => onOpenWizardWithCards(selectedCardIdsForWizard)}
+      onCreateFamilyCard={onCreateFamilyCard}
+      createFamilyCardLabel={createFamilyCardLabel}
     />
     <CanvasStickyNoteContextMenu
       menu={stickyNoteContextMenu}

@@ -11,7 +11,12 @@ import {
   type SocketDescriptor,
   type WorldCard,
 } from "@worldnote/shared";
+import { useMemo } from "react";
 import { useSettings } from "../../../hooks/useSettings.js";
+import {
+  buildFamilyGraph,
+  parentConflictsForCard,
+} from "../../../services/familyTree/buildFamilyGraph.js";
 import { normalizeUnitSystem } from "../../../services/settings/unitSystem.js";
 import { CardTypeFields } from "../card-editor/CardTypeFields.js";
 import type { TypeSpecificEditorState } from "../card-editor/cardEditorTypes.js";
@@ -26,6 +31,7 @@ import {
   inspectorTabPaddingXClassName,
 } from "./inspectorFieldStyles.js";
 import { FamilyCrestBlock } from "./FamilyCrestBlock.js";
+import { ParentConflictWarning } from "./ParentConflictWarning.js";
 import { SocketConnectionsEditor } from "./SocketConnectionsEditor.js";
 import { TagsSection } from "./TagsSection.js";
 
@@ -138,6 +144,17 @@ export function PropertiesTab({
     onRemoveSocketLink != null &&
     onCreateAndLinkCard != null;
 
+  const parentConflicts = useMemo(() => {
+    if (card.card_type !== "character") {
+      return [];
+    }
+    const characters = Object.values(cardsById).filter(
+      (entry) => entry.card_type === "character",
+    );
+    const graph = buildFamilyGraph(characters, links);
+    return parentConflictsForCard(graph.parentConflicts, card.id);
+  }, [card.card_type, card.id, cardsById, links]);
+
   const customPropertiesContent = readOnly ? (
     hasCustomProperties ? (
       <div className="flex flex-col gap-3">
@@ -223,7 +240,7 @@ export function PropertiesTab({
 
   return (
     <div
-      className={`${inspectorSectionStackClassName} ${inspectorTabPaddingXClassName}`}
+      className={`${inspectorSectionStackClassName} ${inspectorTabPaddingXClassName} pt-5`}
     >
       {cardType === "family" && onPickCrest && onRemoveCrest ? (
         <FamilyCrestBlock
@@ -284,6 +301,7 @@ export function PropertiesTab({
             socketEntries={socketEntries}
             formatSocketId={formatSocketId}
             disabled={isBusy}
+            parentConflicts={parentConflicts}
             onCreateSocketLink={onCreateSocketLink}
             onRemoveSocketLink={onRemoveSocketLink}
             onCreateAndLinkCard={onCreateAndLinkCard}
@@ -298,6 +316,10 @@ export function PropertiesTab({
               Connections
             </Eyebrow>
             <div className="flex flex-col gap-3">
+              <ParentConflictWarning
+                conflicts={parentConflicts}
+                cardsById={cardsById}
+              />
               {socketEntries.map(({ id }) => (
                 <PropertyField
                   key={id}

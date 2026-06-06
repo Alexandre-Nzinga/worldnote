@@ -41,6 +41,7 @@ type CardBaseFields = {
 export type TypeSpecificEditorState = {
   birthdate: string;
   deathdate: string;
+  gender: CharacterCard["gender"] | "";
   coordinates: string;
   itemWeight: string;
   itemRarity: ItemCard["rarity"] | "";
@@ -68,6 +69,7 @@ export function defaultTypeFields(
   return {
     birthdate: "",
     deathdate: "",
+    gender: "",
     coordinates: "",
     itemWeight: "",
     itemRarity: "",
@@ -98,6 +100,7 @@ export function typeFieldsFromCard(card: WorldCard): TypeSpecificEditorState {
         ...defaults,
         birthdate: card.birthdate ?? "",
         deathdate: card.deathdate ?? "",
+        gender: card.gender ?? "",
       };
     case "location":
       return { ...defaults, coordinates: card.coordinates ?? "" };
@@ -158,6 +161,7 @@ export function buildWorldCard(
         card_type: "character",
         birthdate: typeFields.birthdate.trim() || undefined,
         deathdate: typeFields.deathdate.trim() || undefined,
+        gender: typeFields.gender || undefined,
       } satisfies CharacterCard;
     case "location":
       return {

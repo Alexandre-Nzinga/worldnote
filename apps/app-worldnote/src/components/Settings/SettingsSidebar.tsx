@@ -6,6 +6,7 @@ export type SettingsSection =
   | "measurements"
   | "appearance"
   | "canvas"
+  | "modules"
   | "wizard"
   | "shortcuts";
 
@@ -40,6 +41,12 @@ export const SETTINGS_SECTIONS: SettingsNavItem[] = [
     label: "Canvas",
     icon: "hub",
     description: "Socket visibility and card type badge colors.",
+  },
+  {
+    id: "modules",
+    label: "Modules",
+    icon: "extension",
+    description: "Optional features you can turn on or off.",
   },
   {
     id: "wizard",

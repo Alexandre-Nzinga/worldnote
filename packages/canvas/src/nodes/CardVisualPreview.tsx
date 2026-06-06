@@ -13,6 +13,10 @@ import {
   visualConfigFor,
   type WorldNoteCardType,
 } from "./card-visual-config.js";
+import {
+  cardSubtitleTextClassName,
+  cardTitleTextClassName,
+} from "./card-title-text.js";
 import { useImageLuminance } from "./useImageLuminance.js";
 
 const cardRadiusStyle = cardOuterRadiusStyle;
@@ -127,12 +131,14 @@ export function CardVisualPreview({
         <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-4">
           <div className="min-w-0 flex-1">
             <div
-              className={`truncate ${titleColorClass} ${config.titleClassName ?? "text-lg font-semibold leading-tight"}`}
+              className={`${cardTitleTextClassName} ${titleColorClass} ${config.titleClassName ?? "text-lg font-semibold leading-tight"}`}
             >
               {title}
             </div>
             {subtitle ? (
-              <div className={`truncate pt-0.5 text-xs ${subtitleColorClass}`}>
+              <div
+                className={`${cardSubtitleTextClassName} text-xs ${subtitleColorClass}`}
+              >
                 {subtitle}
               </div>
             ) : null}

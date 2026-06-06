@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Link, WorldCard } from "@worldnote/shared";
+import type { WorldCard } from "@worldnote/shared";
 import { analyzeWizardSuggestions, buildSuggestionLabel } from "./analyzeSuggestions.js";
 
 const ariaId = "00000000-0000-4000-8000-000000000001";
@@ -31,19 +31,6 @@ function location(id: string, name: string, lore?: string): WorldCard {
   };
 }
 
-function link(
-  sourceCard: string,
-  sourceSocket: string,
-  targetCard: string,
-): Link {
-  return {
-    id: crypto.randomUUID(),
-    source_card: sourceCard,
-    source_socket: sourceSocket,
-    target_card: targetCard,
-  };
-}
-
 describe("buildSuggestionLabel", () => {
   it("uses Generate for lore-like fields and Fill for type fields", () => {
     expect(buildSuggestionLabel("lore")).toBe("Generate lore");
@@ -53,37 +40,23 @@ describe("buildSuggestionLabel", () => {
 });
 
 describe("analyzeWizardSuggestions", () => {
-  it("suggests filling linked location lore when character links to empty location", () => {
+  it("does not suggest changes for linked cards with empty fields", () => {
     const aria = character(ariaId, "Aria");
     const silverhold = location(silverholdId, "Silverhold");
-    const cardsById = { [ariaId]: aria, [silverholdId]: silverhold };
-    const links = [link(ariaId, "birthplace", silverholdId)];
 
     const suggestions = analyzeWizardSuggestions({
       selectedCard: aria,
-      cardsById,
-      links,
     });
 
-    expect(suggestions.length).toBeGreaterThanOrEqual(1);
-    const linked = suggestions.find((s) => s.targetCardId === silverholdId);
-    expect(linked).toBeDefined();
-    expect(linked?.action).toBe("fill-gaps");
-    expect(linked?.label).toBe("Generate lore");
-    expect(linked?.message).toContain("Aria");
-    expect(linked?.message).toContain("Silverhold");
-    expect(linked?.message).toContain("lore");
-    expect(linked?.socketId).toBe("birthplace");
+    expect(suggestions.every((s) => s.targetCardId === ariaId)).toBe(true);
+    expect(suggestions.find((s) => s.targetCardId === silverholdId)).toBeUndefined();
   });
 
   it("suggests self fill-gaps when selected card has empty lore", () => {
     const aria = character(ariaId, "Aria");
-    const cardsById = { [ariaId]: aria };
 
     const suggestions = analyzeWizardSuggestions({
       selectedCard: aria,
-      cardsById,
-      links: [],
     });
 
     expect(suggestions).toHaveLength(1);
@@ -95,16 +68,6 @@ describe("analyzeWizardSuggestions", () => {
 
   it("returns no suggestions when primary creative fields are populated", () => {
     const spellId = "00000000-0000-4000-8000-000000000003";
-    const aria = {
-      ...character(ariaId, "Aria", "A brave knight."),
-      subtitle: "The Bold",
-      description: "A brave knight of the realm.",
-    };
-    const silverhold = {
-      ...location(silverholdId, "Silverhold", "A fortified city."),
-      subtitle: "Fortress",
-      description: "A fortified city on the northern coast.",
-    };
     const fireball = {
       id: spellId,
       name: "Fireball",
@@ -117,38 +80,22 @@ describe("analyzeWizardSuggestions", () => {
       subtitle: "Evocation",
       description: "Classic arcane fire spell.",
     };
-    const cardsById = {
-      [ariaId]: aria,
-      [silverholdId]: silverhold,
-      [spellId]: fireball,
-    };
-    const links = [
-      link(ariaId, "birthplace", silverholdId),
-      link(ariaId, "spells", spellId),
-    ];
 
     const suggestions = analyzeWizardSuggestions({
       selectedCard: fireball,
-      cardsById,
-      links,
     });
 
     expect(suggestions).toHaveLength(0);
   });
 
-  it("prioritizes linked-card gaps over self gaps", () => {
+  it("only suggests gaps on the selected card when it also has links", () => {
     const aria = character(ariaId, "Aria");
-    const silverhold = location(silverholdId, "Silverhold");
-    const cardsById = { [ariaId]: aria, [silverholdId]: silverhold };
-    const links = [link(ariaId, "affiliations", silverholdId)];
 
     const suggestions = analyzeWizardSuggestions({
       selectedCard: aria,
-      cardsById,
-      links,
     });
 
-    expect(suggestions.length).toBeGreaterThanOrEqual(2);
-    expect(suggestions[0]?.targetCardId).toBe(silverholdId);
+    expect(suggestions).toHaveLength(1);
+    expect(suggestions[0]?.targetCardId).toBe(ariaId);
   });
 });

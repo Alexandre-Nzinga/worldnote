@@ -49,6 +49,10 @@ export default defineConfig({
         find: /^@worldnote\/ui(\/.*)?$/,
         replacement: `${path.join(rootDir, "../../packages/pkg-ui/src").replace(/\\/g, "/")}$1`,
       },
+      {
+        find: /^@worldnote\/canvas(\/.*)?$/,
+        replacement: `${path.join(rootDir, "../../packages/canvas/src").replace(/\\/g, "/")}$1`,
+      },
     ],
   },
   envPrefix: ["VITE_", "TAURI_"],

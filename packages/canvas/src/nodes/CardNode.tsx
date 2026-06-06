@@ -49,6 +49,10 @@ import {
 import { FamilyCrestOverlay } from "./FamilyCrestOverlay.js";
 import { GroupMembersVisual } from "./GroupMembersVisual.js";
 import type { GroupMemberPreview } from "./group-member-preview.js";
+import {
+  cardSubtitleTextClassName,
+  cardTitleTextClassName,
+} from "./card-title-text.js";
 import { useLazyImageVisible } from "./useLazyImageVisible.js";
 
 export type { GroupMemberPreview } from "./group-member-preview.js";
@@ -117,6 +121,13 @@ export type CardNodeData = {
   /** Optional user override from settings; falls back to `visualConfigFor`. */
   badgeClassName?: string;
   badgeTextColor?: string;
+  /** Contextual kinship label when Family Tree module anchor is selected. */
+  kinshipLabel?: string;
+  /** Optional user override for kinship label pill colors. */
+  kinshipBadgeClassName?: string;
+  kinshipBadgeTextColor?: string;
+  /** Faded appearance for unrelated characters when Family Tree is active. */
+  dimmed?: boolean;
   /** @deprecated Grip uses pointer drag; kept for node data compatibility. */
   onDragCardStart?: unknown;
 };
@@ -405,6 +416,30 @@ function CardImageBorderFrame({
   );
 }
 
+const KINSHIP_PILL_LAYOUT_CLASS_NAME = "mt-1 max-w-full";
+const KINSHIP_PILL_DEFAULT_BG = "bg-wn-indigo-300";
+const KINSHIP_PILL_DEFAULT_TEXT = "text-wn-mono-950";
+
+function KinshipLabelLine({
+  label,
+  badgeClassName,
+  badgeTextColor,
+}: {
+  label: string;
+  badgeClassName?: string;
+  badgeTextColor?: string;
+}) {
+  return (
+    <CardTypePill
+      className={`${KINSHIP_PILL_LAYOUT_CLASS_NAME} ${badgeClassName ?? KINSHIP_PILL_DEFAULT_BG}`}
+      textClassName={`truncate ${badgeTextColor ?? KINSHIP_PILL_DEFAULT_TEXT}`}
+      aria-label={`Relation to selected character: ${label}`}
+    >
+      {label}
+    </CardTypePill>
+  );
+}
+
 type OverlayMediaCardProps = {
   data: CardNodeData;
   widthClass: string;
@@ -477,13 +512,24 @@ function OverlayMediaCard({
         />
         <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-4">
           <div className="min-w-0 flex-1">
-            <div className={`truncate ${titleColorClass} ${titleClassName}`}>
+            <div
+              className={`${cardTitleTextClassName} ${titleColorClass} ${titleClassName}`}
+            >
               {data.title}
             </div>
             {data.subtitle ? (
-              <div className={`truncate pt-0.5 text-xs ${subtitleColorClass}`}>
+              <div
+                className={`${cardSubtitleTextClassName} text-xs ${subtitleColorClass}`}
+              >
                 {data.subtitle}
               </div>
+            ) : null}
+            {data.kinshipLabel ? (
+              <KinshipLabelLine
+                label={data.kinshipLabel}
+                badgeClassName={data.kinshipBadgeClassName}
+                badgeTextColor={data.kinshipBadgeTextColor}
+              />
             ) : null}
           </div>
           <CardTypePill
@@ -586,6 +632,13 @@ function CardNodeView({
               <div className="truncate pt-0.5 text-xs text-wn-mono-400">
                 {data.subtitle}
               </div>
+            ) : null}
+            {data.kinshipLabel ? (
+              <KinshipLabelLine
+                label={data.kinshipLabel}
+                badgeClassName={data.kinshipBadgeClassName}
+                badgeTextColor={data.kinshipBadgeTextColor}
+              />
             ) : null}
           </div>
           <CardTypePill
@@ -791,7 +844,10 @@ function CardNodeInner({ data, selected = false }: NodeProps<CardFlowNode>) {
   return (
     <button
       type="button"
-      className="group/card relative block w-full cursor-pointer border-0 bg-transparent p-0 text-left outline-none focus-visible:ring-2 focus-visible:ring-wn-mono-50 focus-visible:ring-offset-2 focus-visible:ring-offset-wn-mono-950"
+      className={[
+        "group/card relative block w-full cursor-pointer border-0 bg-transparent p-0 text-left outline-none focus-visible:ring-2 focus-visible:ring-wn-mono-50 focus-visible:ring-offset-2 focus-visible:ring-offset-wn-mono-950",
+        data.dimmed ? "opacity-35 transition-opacity" : "",
+      ].join(" ")}
       onClick={onCardRootClick}
       onContextMenu={onCardRootContextMenu}
     >

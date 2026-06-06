@@ -4,7 +4,6 @@ import {
   Button,
   fieldLabelClassName,
   getBodyTextStyle,
-  getHeadingProps,
   MaterialSymbol,
 } from "@worldnote/ui";
 import { useCallback, useState } from "react";
@@ -301,9 +300,9 @@ export function WorldWizardQuickCommandsSettings({
 
   return (
     <section className={`${settingsPanelClassName} flex flex-col gap-4`}>
-      <div>
-        <h3 {...getHeadingProps("h5", { tone: "inverse" })}>Quick commands</h3>
-        <p className="mt-1.5" style={getBodyTextStyle("small")}>
+      <div className="flex flex-col gap-1">
+        <span className={fieldLabelClassName}>Quick commands</span>
+        <p style={getBodyTextStyle("small")}>
           Chips shown in WorldWizard when dropped cards match each command&apos;s
           requirements. Toggle off commands you do not need, or add your own.
         </p>

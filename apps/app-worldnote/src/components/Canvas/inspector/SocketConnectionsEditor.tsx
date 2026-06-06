@@ -13,6 +13,8 @@ import {
   inspectorSectionClassName,
   inspectorSectionEyebrowClassName,
 } from "./inspectorFieldStyles.js";
+import type { ParentConflict } from "../../../services/familyTree/buildFamilyGraph.js";
+import { ParentConflictWarning } from "./ParentConflictWarning.js";
 import {
   currentSocketLinks,
   eligibleCardsForSocket,
@@ -36,6 +38,7 @@ type SocketConnectionsEditorProps = {
     cardType: WorldCard["card_type"],
     name: string,
   ) => void;
+  parentConflicts?: ParentConflict[];
 };
 
 function LinkedCardRow({
@@ -227,6 +230,7 @@ export function SocketConnectionsEditor({
   onCreateSocketLink,
   onRemoveSocketLink,
   onCreateAndLinkCard,
+  parentConflicts = [],
 }: SocketConnectionsEditorProps) {
   const vaultPath = useVault((state) => state.currentVaultPath);
   const badgeOverrides = useSettings(
@@ -251,6 +255,10 @@ export function SocketConnectionsEditor({
         Connections
       </Eyebrow>
       <div className="flex flex-col gap-3">
+        <ParentConflictWarning
+          conflicts={parentConflicts}
+          cardsById={cardsById}
+        />
         {socketEntries.map(({ id, descriptor }) => (
           <SocketFieldEditor
             key={id}

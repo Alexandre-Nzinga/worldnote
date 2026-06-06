@@ -46,7 +46,7 @@ export const inlineFieldInputClassNames = {
 
 /** Card name field — matches `getHeadingProps("h4", { tone: "inverse", weight: "bold" })`. */
 export const nameFieldInputClassNames = {
-  inputWrapper: inlineFieldInputWrapperClassName,
+  inputWrapper: `${inlineFieldInputWrapperClassName} !h-auto min-h-0`,
   innerWrapper: fieldInnerWrapperClassName,
   input: `${headingClass.h4} !text-wn-h4 font-wn-bold text-wn-text placeholder:!text-wn-text-subtle data-[hover=true]:!text-wn-text`,
 };

@@ -1,4 +1,4 @@
-import { MaterialSymbol, getBodyTextStyle } from "@worldnote/ui";
+import { fieldLabelClassName, MaterialSymbol, getBodyTextStyle } from "@worldnote/ui";
 import { useCallback } from "react";
 import { useSettings } from "../../hooks/useSettings.js";
 import {
@@ -52,10 +52,13 @@ export function UnitSystemSetting({ disabled = false }: UnitSystemSettingProps) 
 
   return (
     <section className={settingsPanelClassName}>
-      <p style={getBodyTextStyle("small")}>
-        Choose how measurements appear in card properties.
-        Data is always saved in metric units (kg, cm, °C, m, km/h).
-      </p>
+      <div className="flex flex-col gap-1">
+        <span className={fieldLabelClassName}>Unit system</span>
+        <p style={getBodyTextStyle("small")}>
+          Choose how measurements appear in card properties.
+          Data is always saved in metric units (kg, cm, °C, m, km/h).
+        </p>
+      </div>
       <div className="mt-4 inline-flex w-fit gap-1 rounded-full bg-wn-surface-sunken p-1">
         {UNIT_OPTIONS.map((option) => {
           const isActive = option.value === current;

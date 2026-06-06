@@ -16,6 +16,7 @@ import {
 } from "./inspectorFieldStyles.js";
 import { InspectorCardMoreMenu } from "./InspectorCardMoreMenu.js";
 import { LoreEditorSkeleton } from "./LoreEditorSkeleton.js";
+import { LoreEmptyState } from "./LoreEmptyState.js";
 
 type InfoColumnProps = {
   readOnly: boolean;
@@ -33,6 +34,7 @@ type InfoColumnProps = {
   onViewJson: () => void;
   wizardSection?: ReactNode;
   isLoreGenerating?: boolean;
+  onStartWriting?: () => void;
 };
 
 export function InfoColumn({
@@ -51,6 +53,7 @@ export function InfoColumn({
   onViewJson,
   wizardSection,
   isLoreGenerating = false,
+  onStartWriting,
 }: InfoColumnProps) {
   const cardTypeBadgeColors = useSettings(
     (state) => state.settings?.cardTypeBadgeColors,
@@ -67,27 +70,20 @@ export function InfoColumn({
             className="h-10 w-auto shrink-0"
             alt=""
           />
-          <div className="flex min-w-0 flex-1 items-start gap-3">
-            <div className="flex min-w-0 flex-1 flex-col gap-1">
-              {readOnly ? (
-                <>
+          <div className="flex min-w-0 flex-1 flex-col gap-1">
+            <div className="flex items-start gap-3">
+              <div className="min-w-0 flex-1">
+                {readOnly ? (
                   <h2
                     {...getHeadingProps("h4", {
                       tone: "inverse",
                       weight: "bold",
-                      className: "m-0",
+                      className: "m-0 break-words",
                     })}
                   >
                     {name}
                   </h2>
-                  {subtitle.trim() ? (
-                    <p className="m-0 text-base font-medium leading-snug text-wn-mono-300">
-                      {subtitle}
-                    </p>
-                  ) : null}
-                </>
-              ) : (
-                <>
+                ) : (
                   <Input
                     id="inspector-modal-name"
                     aria-label="Name"
@@ -97,28 +93,36 @@ export function InfoColumn({
                     onValueChange={onNameChange}
                     classNames={inspectorNameFieldClassNames}
                   />
-                  <Input
-                    id="inspector-modal-subtitle"
-                    aria-label="Subtitle"
-                    placeholder="Subtitle or alias"
-                    value={subtitle}
-                    variant="flat"
-                    onValueChange={onSubtitleChange}
-                    classNames={inspectorSubtitleFieldClassNames}
-                  />
-                </>
-              )}
+                )}
+              </div>
+              <CardTypePill
+                className={`shrink-0 ${typeVisual.badgeClassName}`}
+                textClassName={typeVisual.badgeTextColor}
+              >
+                {typeVisual.label}
+              </CardTypePill>
+              <InspectorCardMoreMenu
+                disabled={isMoreMenuDisabled}
+                onViewJson={onViewJson}
+              />
             </div>
-            <CardTypePill
-              className={`shrink-0 ${typeVisual.badgeClassName}`}
-              textClassName={typeVisual.badgeTextColor}
-            >
-              {typeVisual.label}
-            </CardTypePill>
-            <InspectorCardMoreMenu
-              disabled={isMoreMenuDisabled}
-              onViewJson={onViewJson}
-            />
+            {readOnly ? (
+              subtitle.trim() ? (
+                <p className="m-0 text-base font-medium leading-snug text-wn-mono-300">
+                  {subtitle}
+                </p>
+              ) : null
+            ) : (
+              <Input
+                id="inspector-modal-subtitle"
+                aria-label="Subtitle"
+                placeholder="Subtitle or alias"
+                value={subtitle}
+                variant="flat"
+                onValueChange={onSubtitleChange}
+                classNames={inspectorSubtitleFieldClassNames}
+              />
+            )}
           </div>
         </div>
       </div>
@@ -136,15 +140,21 @@ export function InfoColumn({
             </div>
           </div>
         ) : null}
-        <InspectorLoreEditor
-          ref={loreEditorRef}
-          value={lore}
-          editable={!readOnly}
-          fillHeight
-          placeholder="Write the lore…"
-          onChange={onLoreChange}
-          onEditorReady={onEditorReady}
-        />
+        {readOnly && !lore.trim() ? (
+          <div className="flex flex-1 items-center justify-center px-6 py-8">
+            <LoreEmptyState compact={false} onStartWriting={onStartWriting} />
+          </div>
+        ) : (
+          <InspectorLoreEditor
+            ref={loreEditorRef}
+            value={lore}
+            editable={!readOnly}
+            fillHeight
+            placeholder="Write the lore…"
+            onChange={onLoreChange}
+            onEditorReady={onEditorReady}
+          />
+        )}
       </div>
     </div>
   );

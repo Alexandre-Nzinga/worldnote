@@ -18,6 +18,7 @@ import { listLinks } from "../../../services/links/listLinks.js";
 import type { Link, WorldCard } from "@worldnote/shared";
 import type {
   CardTypeBadgeOverrides,
+  KinshipBadgeOverride,
   VisibleSocketsByCardType,
 } from "../../../services/settings/settings.js";
 import { cardsRecord, linksRecord } from "../helpers/canvasSelectionHelpers.js";
@@ -28,6 +29,7 @@ type UseCanvasVaultLoaderOptions = {
   loadCanvasManifest: (vaultPath: string) => Promise<CanvasManifest>;
   visibleSocketsSettingsRef: React.RefObject<VisibleSocketsByCardType | undefined>;
   cardTypeBadgeColorsRef: React.RefObject<CardTypeBadgeOverrides | undefined>;
+  kinshipLabelColorsRef: React.RefObject<KinshipBadgeOverride | undefined>;
   setNodes: React.Dispatch<React.SetStateAction<CanvasFlowNode[]>>;
   setEdges: React.Dispatch<React.SetStateAction<Edge[]>>;
   setCardsById: React.Dispatch<React.SetStateAction<Record<string, WorldCard>>>;
@@ -44,6 +46,7 @@ export function useCanvasVaultLoader({
   loadCanvasManifest,
   visibleSocketsSettingsRef,
   cardTypeBadgeColorsRef,
+  kinshipLabelColorsRef,
   setNodes,
   setEdges,
   setCardsById,
@@ -119,6 +122,7 @@ export function useCanvasVaultLoader({
                 data: worldCardToNodeData(card, vaultPath, {
                   visibleSocketsSettings: visibleSocketsSettingsRef.current,
                   cardTypeBadgeColors: cardTypeBadgeColorsRef.current,
+                  kinshipLabelColors: kinshipLabelColorsRef.current,
                   links,
                   cardsById: record,
                 }),
@@ -187,6 +191,7 @@ export function useCanvasVaultLoader({
     };
   }, [
     cardTypeBadgeColorsRef,
+    kinshipLabelColorsRef,
     listCards,
     loadCanvasManifest,
     setCardsById,

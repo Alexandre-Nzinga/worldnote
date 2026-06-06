@@ -98,6 +98,13 @@ pub struct WizardSettings {
     pub quick_commands: Vec<WizardQuickCommand>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct ModulesSettings {
+    #[serde(default)]
+    pub enabled: Vec<String>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AppSettings {
@@ -124,9 +131,18 @@ pub struct AppSettings {
     /// Per card-type badge color overrides.
     #[serde(default)]
     pub card_type_badge_colors: HashMap<String, CardTypeBadgeOverride>,
+    /// Family Tree kinship label pill color overrides.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub kinship_label_colors: Option<CardTypeBadgeOverride>,
     /// Measurement display: "metric" or "imperial". Stored values remain metric.
     #[serde(default)]
     pub unit_system: Option<String>,
+    /// Enabled feature modules.
+    #[serde(default)]
+    pub modules: Option<ModulesSettings>,
+    /// Family Tree: "hide" or "dim" unrelated characters when anchor is selected.
+    #[serde(default)]
+    pub family_tree_unrelated_mode: Option<String>,
 }
 
 fn settings_path(app: &tauri::AppHandle) -> Result<PathBuf, String> {

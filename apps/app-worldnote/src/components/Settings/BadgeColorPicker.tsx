@@ -6,6 +6,7 @@ import {
   BADGE_TEXT_COLOR_OPTIONS,
   resolveBadgeBackgroundSwatchClass,
   resolveBadgeTextSwatchClass,
+  textClassToSwatchClass,
 } from "../../services/settings/cardTypeBadgeSettings.js";
 import { primaryAccentRingOnSurfaceClassName } from "../../services/settings/primaryAccentStyles.js";
 import { surfacePanelClassName } from "../shell/pageShellStyles.js";
@@ -22,9 +23,15 @@ const selectedSwatchButtonClassName = `bg-wn-surface-raised ${primaryAccentRingO
 
 type BadgeColorPickerKind = "background" | "text";
 
+type SwatchDefaults = {
+  background: string;
+  text: string;
+};
+
 type BadgeColorPickerProps = {
   kind: BadgeColorPickerKind;
-  cardType: string;
+  cardType?: string;
+  swatchDefaults?: SwatchDefaults;
   value: string;
   onChange: (value: string) => void;
   disabled?: boolean;
@@ -34,9 +41,20 @@ type BadgeColorPickerProps = {
 
 function resolveSwatchClass(
   kind: BadgeColorPickerKind,
-  cardType: string,
+  cardType: string | undefined,
   value: string,
+  swatchDefaults?: SwatchDefaults,
 ): string {
+  if (swatchDefaults) {
+    if (kind === "background") {
+      return value || swatchDefaults.background;
+    }
+    const textClass = value || swatchDefaults.text || "text-wn-mono-950";
+    return textClassToSwatchClass(textClass);
+  }
+  if (!cardType) {
+    return kind === "background" ? "bg-wn-mono-300" : "bg-wn-mono-950";
+  }
   return kind === "background"
     ? resolveBadgeBackgroundSwatchClass(cardType, value)
     : resolveBadgeTextSwatchClass(cardType, value);
@@ -45,6 +63,7 @@ function resolveSwatchClass(
 export function BadgeColorPicker({
   kind,
   cardType,
+  swatchDefaults,
   value,
   onChange,
   disabled = false,
@@ -70,7 +89,12 @@ export function BadgeColorPicker({
     [options, value],
   );
 
-  const selectedSwatch = resolveSwatchClass(kind, cardType, value);
+  const selectedSwatch = resolveSwatchClass(
+    kind,
+    cardType,
+    value,
+    swatchDefaults,
+  );
 
   const close = useCallback(() => {
     setIsOpen(false);
@@ -129,6 +153,7 @@ export function BadgeColorPicker({
                       kind,
                       cardType,
                       option.value,
+                      swatchDefaults,
                     );
                     return (
                       <button

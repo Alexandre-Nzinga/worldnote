@@ -13,6 +13,7 @@ import { linkToEdge } from "../../../services/links/linkToEdge.js";
 import type { Link, WorldCard } from "@worldnote/shared";
 import type {
   CardTypeBadgeOverrides,
+  KinshipBadgeOverride,
   VisibleSocketsByCardType,
 } from "../../../services/settings/settings.js";
 import type { CanvasImageContextMenuState } from "../context-menus/CanvasImageContextMenu.js";
@@ -25,6 +26,7 @@ type UseCanvasHistoryOptions = {
   linksByIdRef: React.RefObject<Record<string, Link>>;
   visibleSocketsSettingsRef: React.RefObject<VisibleSocketsByCardType | undefined>;
   cardTypeBadgeColorsRef: React.RefObject<CardTypeBadgeOverrides | undefined>;
+  kinshipLabelColorsRef: React.RefObject<KinshipBadgeOverride | undefined>;
   handleSaveCardRef: React.RefObject<
     (card: WorldCard, options?: { notify?: boolean }) => Promise<void>
   >;
@@ -47,6 +49,7 @@ export function useCanvasHistory({
   linksByIdRef,
   visibleSocketsSettingsRef,
   cardTypeBadgeColorsRef,
+  kinshipLabelColorsRef,
   handleSaveCardRef,
   setNodes,
   setEdges,
@@ -128,6 +131,7 @@ export function useCanvasHistory({
               data: worldCardToNodeData(card, vaultPath, {
                 visibleSocketsSettings: visibleSocketsSettingsRef.current,
                 cardTypeBadgeColors: cardTypeBadgeColorsRef.current,
+                kinshipLabelColors: kinshipLabelColorsRef.current,
                 links,
                 cardsById: record,
                 ...cardNodeSaveCallbacks(card, (nextCard, options) =>
@@ -154,6 +158,8 @@ export function useCanvasHistory({
     },
     [
       cardTypeBadgeColorsRef,
+      cardsByIdRef,
+      kinshipLabelColorsRef,
       handleSaveCardRef,
       linksByIdRef,
       nodesRef,

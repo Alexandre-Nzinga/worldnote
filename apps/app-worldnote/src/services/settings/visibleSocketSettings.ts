@@ -61,3 +61,38 @@ export function toggleSocketVisibility(
     [cardType]: cardSettings,
   };
 }
+
+/** Character kinship sockets required by the Family Tree module. */
+export const FAMILY_TREE_KINSHIP_SOCKETS = [
+  "mother",
+  "father",
+  "spouse",
+  "issue",
+] as const;
+
+/** Turns on character kinship sockets when Family Tree is enabled. */
+export function applyFamilyTreeKinshipSocketVisibility(
+  settings: VisibleSocketsByCardType | undefined,
+  familyTreeEnabled: boolean,
+): VisibleSocketsByCardType {
+  const normalized = normalizeVisibleSocketsSettings(settings);
+  if (!familyTreeEnabled) {
+    return normalized;
+  }
+
+  const character = { ...normalized.character };
+  for (const socketId of FAMILY_TREE_KINSHIP_SOCKETS) {
+    character[socketId] = true;
+  }
+
+  const family = { ...(normalized.family ?? {}) };
+  family.members = true;
+
+  return { ...normalized, character, family };
+}
+
+export function enableFamilyTreeKinshipSockets(
+  settings: VisibleSocketsByCardType,
+): VisibleSocketsByCardType {
+  return applyFamilyTreeKinshipSocketVisibility(settings, true);
+}

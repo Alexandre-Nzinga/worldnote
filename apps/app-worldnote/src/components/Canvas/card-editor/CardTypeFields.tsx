@@ -9,6 +9,7 @@ import {
   measurementStoredValue,
   parseMeasurementInput,
   toDisplayValue,
+  type CharacterCard,
   type FaunaCard,
   type FloraCard,
   type ItemCard,
@@ -53,6 +54,12 @@ const faunaDietOptions = [
   { value: "herbivore", label: "Herbivore" },
   { value: "omnivore", label: "Omnivore" },
   { value: "detritivore", label: "Detritivore" },
+] as const;
+
+const genderOptions = [
+  { value: "male", label: "Male" },
+  { value: "female", label: "Female" },
+  { value: "x", label: "X" },
 ] as const;
 
 const structureConditionOptions = [
@@ -106,6 +113,12 @@ export function CardTypeFields({
           <>
             <ReadOnlyField label="Birthdate" value={fields.birthdate} />
             <ReadOnlyField label="Deathdate" value={fields.deathdate} />
+            <ReadOnlyField
+              label="Gender"
+              value={
+                fields.gender ? labelForOption(genderOptions, fields.gender) : ""
+              }
+            />
           </>
         );
       }
@@ -137,6 +150,16 @@ export function CardTypeFields({
               classNames={inspectorInlineInputClassNames}
             />
           </div>
+          <EnumComboBox<NonNullable<CharacterCard["gender"]>>
+            id="card-gender"
+            label="Gender"
+            labelClassName={inspectorFieldLabelClassName}
+            value={fields.gender ?? ""}
+            options={[...genderOptions]}
+            allowEmpty
+            disabled={disabled}
+            onChange={(gender) => patch({ gender })}
+          />
         </>
       );
     case "location":

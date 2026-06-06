@@ -125,8 +125,10 @@ type CanvasToolbarProps = {
   /** Renders above the dock (e.g. sticky note controls). */
   noteToolbar?: ReactNode;
   imageToolbar?: ReactNode;
-  /** Multi-select layout and bulk actions above the dock. */
+  /** Read-only multi-select count above the dock. */
   selectionToolbar?: ReactNode;
+  /** Shown when Family Tree module anchor mode is active. */
+  familyTreeBanner?: ReactNode;
 };
 
 export function CanvasToolbar({
@@ -146,6 +148,7 @@ export function CanvasToolbar({
   noteToolbar,
   imageToolbar,
   selectionToolbar,
+  familyTreeBanner,
 }: CanvasToolbarProps) {
   const [createMenuOpen, setCreateMenuOpen] = useState(false);
   const [createQuery, setCreateQuery] = useState("");
@@ -228,8 +231,6 @@ export function CanvasToolbar({
     onCreate?.(option);
   };
 
-  const dockActiveClassName = primaryAccentFillClassName;
-
   const dockItems = useMemo<DockTabItem[]>(
     () => [
       {
@@ -238,7 +239,9 @@ export function CanvasToolbar({
         icon: "near_me",
         iconClassName: "-scale-x-100",
         colorClassName:
-          activeTool === "select" ? dockActiveClassName : dockInactiveClassName,
+          activeTool === "select"
+            ? primaryAccentFillClassName
+            : dockInactiveClassName,
         isActive: activeTool === "select",
       },
       {
@@ -246,7 +249,9 @@ export function CanvasToolbar({
         name: "Text",
         icon: "title",
         colorClassName:
-          activeTool === "text" ? dockActiveClassName : dockInactiveClassName,
+          activeTool === "text"
+            ? primaryAccentFillClassName
+            : dockInactiveClassName,
         isActive: activeTool === "text",
         disabled: !supportsTextTool,
         onPress: onTextTool,
@@ -256,7 +261,9 @@ export function CanvasToolbar({
         name: "Image tool",
         icon: "image",
         colorClassName:
-          activeTool === "image" ? dockActiveClassName : dockInactiveClassName,
+          activeTool === "image"
+            ? primaryAccentFillClassName
+            : dockInactiveClassName,
         isActive: activeTool === "image",
         disabled: !supportsImageTool,
         onPress: onImageTool,
@@ -274,7 +281,7 @@ export function CanvasToolbar({
           />
         ),
         colorClassName: isWizardOpen
-          ? dockActiveClassName
+          ? primaryAccentFillClassName
           : dockInactiveClassName,
         isActive: isWizardOpen,
         disabled: !onToggleWizard,
@@ -285,7 +292,7 @@ export function CanvasToolbar({
         name: "Graph view",
         icon: "hub",
         colorClassName: isGraphViewOpen
-          ? dockActiveClassName
+          ? primaryAccentFillClassName
           : dockInactiveClassName,
         isActive: isGraphViewOpen,
         disabled: !onToggleGraphView,
@@ -312,7 +319,7 @@ export function CanvasToolbar({
         name: "Create card",
         icon: "add",
         colorClassName: createMenuOpen
-          ? dockActiveClassName
+          ? primaryAccentFillClassName
           : dockInactiveClassName,
         isActive: createMenuOpen,
         disabled: !supportsCreate,
@@ -349,8 +356,11 @@ export function CanvasToolbar({
     <footer
       className={`pointer-events-none absolute inset-x-0 bottom-4 z-20 flex flex-col items-center gap-2 px-4 ${className ?? ""}`}
     >
-      {noteToolbar || imageToolbar || selectionToolbar ? (
+      {noteToolbar || imageToolbar || selectionToolbar || familyTreeBanner ? (
         <div className="pointer-events-auto flex flex-col items-center gap-2">
+          {familyTreeBanner ? (
+            <div className="flex justify-center">{familyTreeBanner}</div>
+          ) : null}
           {noteToolbar ? <div className="flex justify-center">{noteToolbar}</div> : null}
           {imageToolbar ? <div className="flex justify-center">{imageToolbar}</div> : null}
           {selectionToolbar ? (

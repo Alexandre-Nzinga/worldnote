@@ -19,8 +19,23 @@ import {
   type CanvasKeyboardShortcuts,
 } from "../../services/settings/keyboardShortcuts.js";
 import { normalizeCardTypeBadgeOverrides } from "../../services/settings/cardTypeBadgeSettings.js";
-import { normalizeVisibleSocketsSettings } from "../../services/settings/visibleSocketSettings.js";
+import { normalizeKinshipBadgeOverride, hasKinshipBadgeOverride } from "../../services/settings/kinshipBadgeSettings.js";
+import {
+  DEFAULT_FAMILY_TREE_UNRELATED_MODE,
+  normalizeFamilyTreeUnrelatedMode,
+  type FamilyTreeUnrelatedMode,
+} from "../../services/settings/familyTreeSettings.js";
+import {
+  applyFamilyTreeKinshipSocketVisibility,
+  normalizeVisibleSocketsSettings,
+} from "../../services/settings/visibleSocketSettings.js";
 import { normalizeWizardSettings } from "../../services/settings/wizardSettings.js";
+import {
+  applyModuleSettingsChange,
+  isModuleEnabledInSettings,
+  normalizeModulesSettings,
+  type ModulesSettings,
+} from "../../services/settings/modulesSettings.js";
 import { CardTypeBadgeSettings } from "./CardTypeBadgeSettings.js";
 import { useResolvedTheme } from "../../theme/ThemeProvider.js";
 import { KeyboardShortcutsSettings } from "./KeyboardShortcutsSettings.js";
@@ -35,6 +50,7 @@ import { PrimaryColorSetting } from "./PrimaryColorSetting.js";
 import { ThemeSetting } from "./ThemeSetting.js";
 import { UnitSystemSetting } from "./UnitSystemSetting.js";
 import { WorldWizardSettings } from "./WorldWizardSettings.js";
+import { ModulesSettingsPanel } from "./ModulesSettings.js";
 import { modalPrimaryButtonClassName } from "../Onboarding/fieldClassNames.js";
 import {
   settingsFieldInputClassNames,
@@ -78,6 +94,9 @@ export function Settings({ onBack }: SettingsProps) {
   const [cardTypeBadgeColors, setCardTypeBadgeColors] = useState(
     normalizeCardTypeBadgeOverrides(undefined),
   );
+  const [kinshipLabelColors, setKinshipLabelColors] = useState(
+    normalizeKinshipBadgeOverride(undefined),
+  );
   const [canvasShortcuts, setCanvasShortcuts] =
     useState<CanvasKeyboardShortcuts>(
       normalizeCanvasKeyboardShortcuts(undefined),
@@ -85,6 +104,11 @@ export function Settings({ onBack }: SettingsProps) {
   const [wizardSettings, setWizardSettings] = useState(
     normalizeWizardSettings(undefined),
   );
+  const [modulesSettings, setModulesSettings] = useState<ModulesSettings>(
+    normalizeModulesSettings(undefined),
+  );
+  const [familyTreeUnrelatedMode, setFamilyTreeUnrelatedMode] =
+    useState<FamilyTreeUnrelatedMode>(DEFAULT_FAMILY_TREE_UNRELATED_MODE);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -153,6 +177,26 @@ export function Settings({ onBack }: SettingsProps) {
             />
           </div>
         );
+      case "modules":
+        return (
+          <ModulesSettingsPanel
+            value={modulesSettings}
+            onChange={(next) => {
+              const applied = applyModuleSettingsChange(
+                modulesSettings,
+                next,
+                visibleSockets,
+              );
+              setModulesSettings(applied.modules);
+              setVisibleSockets(applied.visibleSockets);
+            }}
+            kinshipLabelColors={kinshipLabelColors}
+            onKinshipLabelColorsChange={setKinshipLabelColors}
+            familyTreeUnrelatedMode={familyTreeUnrelatedMode}
+            onFamilyTreeUnrelatedModeChange={setFamilyTreeUnrelatedMode}
+            disabled={isSaving}
+          />
+        );
       case "wizard":
         return (
           <WorldWizardSettings
@@ -177,7 +221,10 @@ export function Settings({ onBack }: SettingsProps) {
     activeSection,
     canvasShortcuts,
     cardTypeBadgeColors,
+    kinshipLabelColors,
+    familyTreeUnrelatedMode,
     isSaving,
+    modulesSettings,
     settings,
     username,
     visibleSockets,
@@ -189,16 +236,27 @@ export function Settings({ onBack }: SettingsProps) {
       return;
     }
     setUsername(settings.username);
+    const normalizedModules = normalizeModulesSettings(settings.modules);
     setVisibleSockets(
-      normalizeVisibleSocketsSettings(settings.visibleSockets),
+      applyFamilyTreeKinshipSocketVisibility(
+        normalizeVisibleSocketsSettings(settings.visibleSockets),
+        isModuleEnabledInSettings(normalizedModules, "familyTree"),
+      ),
     );
     setCardTypeBadgeColors(
       normalizeCardTypeBadgeOverrides(settings.cardTypeBadgeColors),
+    );
+    setKinshipLabelColors(
+      normalizeKinshipBadgeOverride(settings.kinshipLabelColors),
     );
     setCanvasShortcuts(
       normalizeCanvasKeyboardShortcuts(settings.canvasShortcuts),
     );
     setWizardSettings(normalizeWizardSettings(settings.wizard));
+    setModulesSettings(normalizedModules);
+    setFamilyTreeUnrelatedMode(
+      normalizeFamilyTreeUnrelatedMode(settings.familyTreeUnrelatedMode),
+    );
     setError(null);
     setIsSaving(false);
   }, [settings]);
@@ -227,8 +285,16 @@ export function Settings({ onBack }: SettingsProps) {
         username: username.trim(),
         visibleSockets,
         cardTypeBadgeColors,
+        kinshipLabelColors: hasKinshipBadgeOverride(kinshipLabelColors)
+          ? kinshipLabelColors
+          : undefined,
         canvasShortcuts,
         wizard: wizardSettings,
+        modules: modulesSettings,
+        familyTreeUnrelatedMode:
+          familyTreeUnrelatedMode === DEFAULT_FAMILY_TREE_UNRELATED_MODE
+            ? undefined
+            : familyTreeUnrelatedMode,
       });
       onBack();
     } catch (saveError) {
@@ -241,6 +307,9 @@ export function Settings({ onBack }: SettingsProps) {
   }, [
     canvasShortcuts,
     cardTypeBadgeColors,
+    kinshipLabelColors,
+    familyTreeUnrelatedMode,
+    modulesSettings,
     onBack,
     save,
     settings,

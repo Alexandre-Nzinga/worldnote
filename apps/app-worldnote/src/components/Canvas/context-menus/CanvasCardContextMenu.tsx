@@ -30,6 +30,8 @@ type CanvasCardContextMenuProps = {
   onChangeType: (cardId: string, newType: NewCardType) => void;
   onDelete: (cardId: string) => void;
   onOpenWizard?: () => void;
+  onCreateFamilyCard?: () => void;
+  createFamilyCardLabel?: string;
 };
 
 const menuClassName =
@@ -71,6 +73,8 @@ export function CanvasCardContextMenu({
   onChangeType,
   onDelete,
   onOpenWizard,
+  onCreateFamilyCard,
+  createFamilyCardLabel = "Create family card",
 }: CanvasCardContextMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
   const positionRef = useRef({ x: 0, y: 0 });
@@ -251,6 +255,22 @@ export function CanvasCardContextMenu({
         >
           <MaterialSymbol name="auto_awesome" className="text-base" />
           {multi ? `WorldWizard (${selectionCount})` : "WorldWizard"}
+        </button>
+      ) : null}
+      {onCreateFamilyCard ? (
+        <button
+          type="button"
+          role="menuitem"
+          className={itemClassName}
+          onClick={() => {
+            onCreateFamilyCard();
+            onClose();
+          }}
+        >
+          <MaterialSymbol name="family_restroom" className="text-base" />
+          {multi
+            ? `${createFamilyCardLabel} (${selectionCount})`
+            : createFamilyCardLabel}
         </button>
       ) : null}
       {multi ? null : (

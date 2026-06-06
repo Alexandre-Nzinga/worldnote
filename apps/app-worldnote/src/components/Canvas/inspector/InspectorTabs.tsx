@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 export type InspectorTabId = "info" | "properties";
 
 const TABS: Array<{ id: InspectorTabId; label: string }> = [
-  { id: "info", label: "Info" },
+  { id: "info", label: "Information" },
   { id: "properties", label: "Properties" },
 ];
 

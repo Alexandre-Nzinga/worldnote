@@ -13,7 +13,6 @@ import { openCanvasCardContextMenuRef } from "./canvasCardContextMenuRef.js";
 import { applyCanvasCardSelectionRef } from "./canvasCardSelectionRef.js";
 
 import {
-  CARD_TYPE_LABELS,
   listSocketsForCardType,
   normalizeCardImageDisplay,
   type Link,
@@ -26,9 +25,11 @@ import { withCardPatch } from "../crudWorldCard/withCardPatch.js";
 import { getSocketLinkLabels } from "../links/socketLinks.js";
 import type {
   CardTypeBadgeOverrides,
+  KinshipBadgeOverride,
   VisibleSocketsByCardType,
 } from "../settings/settings.js";
 import { resolveCardBadgeStyle } from "../settings/cardTypeBadgeSettings.js";
+import { resolveKinshipBadgeStyle } from "../settings/kinshipBadgeSettings.js";
 import { getVisibleSocketsForCardType } from "../settings/visibleSocketSettings.js";
 
 export function cardImageSrc(
@@ -76,8 +77,7 @@ function cardDescriptionLine(card: WorldCard): string | undefined {
     .find((line) => line.length > 0);
 }
 
-function subtitleForCard(card: WorldCard): string {
-  const typeLabel = CARD_TYPE_LABELS[card.card_type];
+function subtitleForCard(card: WorldCard): string | undefined {
   const explicitSubtitle = card.subtitle?.trim();
   if (explicitSubtitle) {
     return explicitSubtitle;
@@ -86,57 +86,63 @@ function subtitleForCard(card: WorldCard): string {
 
   switch (card.card_type) {
     case "character":
-      return card.birthdate?.trim() || descriptionLine || typeLabel;
+      return card.birthdate?.trim() || descriptionLine;
     case "location":
-      return card.coordinates?.trim() || descriptionLine || typeLabel;
+      return card.coordinates?.trim() || descriptionLine;
     case "item":
       return card.rarity
         ? `${card.rarity.charAt(0).toUpperCase()}${card.rarity.slice(1)}`
-        : typeLabel;
+        : undefined;
     case "vehicle":
-      return card.max_speed?.trim() || card.sub_type || typeLabel;
+      return card.max_speed?.trim() || card.sub_type || undefined;
     case "flora":
-      return card.toxicity_level || typeLabel;
+      return card.toxicity_level || undefined;
     case "fauna":
       return card.diet
         ? `${card.diet.charAt(0).toUpperCase()}${card.diet.slice(1)}`
-        : typeLabel;
+        : undefined;
     case "structure":
-      return card.condition || typeLabel;
+      return card.condition || undefined;
     case "species":
-      return card.average_lifespan?.trim() || typeLabel;
+      return card.average_lifespan?.trim();
     case "planet":
-      return card.planet_type?.trim() || typeLabel;
+      return card.planet_type?.trim();
     case "organization":
-      return card.founding_date?.trim() || typeLabel;
+      return card.founding_date?.trim();
     case "polity":
-      return card.government_type?.trim() || typeLabel;
+      return card.government_type?.trim();
     case "event":
-      return card.event_date?.trim() || typeLabel;
+      return card.event_date?.trim();
     case "family":
-      return card.motto?.trim() || typeLabel;
+      return card.motto?.trim();
     case "group":
-      return card.group_type?.trim() || typeLabel;
+      return card.group_type?.trim();
     case "star":
-      return card.spectral_class?.trim() || typeLabel;
+      return card.spectral_class?.trim();
     case "moon":
-      return card.orbital_period?.trim() || typeLabel;
+      return card.orbital_period?.trim();
     case "asteroid":
-      return card.composition?.trim() || typeLabel;
+      return card.composition?.trim();
     case "satellite":
-      return card.orbit_type?.trim() || typeLabel;
+      return card.orbit_type?.trim();
     case "building":
-      return descriptionLine || typeLabel;
+      return descriptionLine;
     default:
-      return typeLabel;
+      return undefined;
   }
 }
 
 export type WorldCardToNodeDataOptions = {
   visibleSocketsSettings?: VisibleSocketsByCardType;
   cardTypeBadgeColors?: CardTypeBadgeOverrides;
+  kinshipLabelColors?: KinshipBadgeOverride;
   links?: Link[];
   cardsById?: Record<string, WorldCard>;
+  familyTree?: {
+    kinshipLabel?: string;
+    hidden?: boolean;
+    dimmed?: boolean;
+  };
   onUpdate?: (partial: Record<string, unknown>) => void;
   onViewModeChange?: (viewMode: CardViewMode) => void;
   onSelect?: (modifiers: CardNodeSelectModifiers) => void;
@@ -195,8 +201,10 @@ export function worldCardToNodeData(
   const {
     visibleSocketsSettings,
     cardTypeBadgeColors,
+    kinshipLabelColors,
     links = [],
     cardsById = {},
+    familyTree,
     onUpdate,
     onViewModeChange,
     onSelect = cardNodeOnSelectHandler(card.id),
@@ -204,6 +212,7 @@ export function worldCardToNodeData(
   } = options;
 
   const badgeStyle = resolveCardBadgeStyle(card.card_type, cardTypeBadgeColors);
+  const kinshipBadgeStyle = resolveKinshipBadgeStyle(kinshipLabelColors);
 
   const imageDisplay = normalizeCardImageDisplay(
     card.image_fit,
@@ -274,6 +283,10 @@ export function worldCardToNodeData(
     onSelect,
     onContextMenu,
     onDragCardStart: makeCardDragStartHandler(card.id, card.name),
+    kinshipLabel: familyTree?.kinshipLabel,
+    kinshipBadgeClassName: kinshipBadgeStyle.badgeClassName,
+    kinshipBadgeTextColor: kinshipBadgeStyle.badgeTextColor,
+    dimmed: familyTree?.dimmed || undefined,
     groupMembers:
       groupMembers && groupMembers.length > 0 ? groupMembers : undefined,
   };

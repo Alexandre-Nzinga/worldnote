@@ -1,9 +1,9 @@
-import { MaterialSymbol, Tooltip } from "@worldnote/ui";
+import { Button, MaterialSymbol, Tooltip } from "@worldnote/ui";
 import type { ReactNode } from "react";
 import { cx } from "./cx.js";
 
 export const wizardActionChipClassName = cx(
-  "inline-flex items-center gap-1.5 rounded-full border border-wn-mono-700 bg-wn-mono-950 px-3 py-1.5",
+  "inline-flex min-h-9 items-center gap-1.5 rounded-full border border-wn-mono-700 bg-wn-mono-950 px-3 py-1.5",
   "text-xs font-medium text-wn-mono-200 transition-colors",
   "hover:border-wn-mono-50 hover:text-wn-mono-50",
   "disabled:cursor-not-allowed disabled:opacity-50",
@@ -38,6 +38,48 @@ function WizardActionChipIcon({ name }: { name: string }) {
   );
 }
 
+type WizardActionIconChipProps = {
+  icon: ReactNode;
+  disabled?: boolean;
+  tooltip?: ReactNode;
+  "aria-label": string;
+  onClick: () => void;
+};
+
+export function WizardActionIconChip({
+  icon,
+  disabled = false,
+  tooltip,
+  "aria-label": ariaLabel,
+  onClick,
+}: WizardActionIconChipProps) {
+  const button = (
+    <Button
+      variant="tertiary"
+      size="sm"
+      isIconOnly
+      className="min-w-9 shrink-0 px-0"
+      isDisabled={disabled}
+      onPress={onClick}
+      aria-label={ariaLabel}
+    >
+      <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center">
+        {icon}
+      </span>
+    </Button>
+  );
+
+  if (!tooltip) {
+    return button;
+  }
+
+  return (
+    <Tooltip content={tooltip} placement="top">
+      <span className="inline-flex items-center">{button}</span>
+    </Tooltip>
+  );
+}
+
 export function WizardActionChip({
   icon,
   label,
@@ -67,7 +109,7 @@ export function WizardActionChip({
 
   return (
     <Tooltip content={tooltip} placement="top">
-      <span className="inline-flex">{button}</span>
+      <span className="inline-flex items-center">{button}</span>
     </Tooltip>
   );
 }

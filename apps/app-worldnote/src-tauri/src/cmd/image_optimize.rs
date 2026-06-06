@@ -3,6 +3,7 @@ use std::path::Path;
 
 use image::imageops::FilterType;
 use image::{DynamicImage, GenericImageView};
+use uuid::Uuid;
 
 /// Longest edge for card cover images saved to the vault.
 pub const COVER_MAX_EDGE_PX: u32 = 1200;
@@ -64,14 +65,16 @@ pub fn write_optimized_card_asset(
     fs::create_dir_all(dest_dir).map_err(|error| error.to_string())?;
 
     let ext = extension_lower(source).unwrap_or_else(|| "png".to_string());
+    // Unique filenames bust the webview cache when a cover or crest is replaced.
+    let file_id = Uuid::new_v4().to_string();
 
     let filename = if should_copy_without_optimization(&ext) {
-        let dest_name = format!("{file_prefix}{ext}");
+        let dest_name = format!("{file_prefix}{file_id}.{ext}");
         let dest = dest_dir.join(&dest_name);
         fs::copy(source, &dest).map_err(|error| error.to_string())?;
         dest_name
     } else {
-        let dest_name = format!("{file_prefix}webp");
+        let dest_name = format!("{file_prefix}{file_id}.webp");
         let dest = dest_dir.join(&dest_name);
         let bytes = optimize_raster_to_webp(source, max_edge)?;
         fs::write(&dest, bytes).map_err(|error| error.to_string())?;

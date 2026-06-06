@@ -112,6 +112,7 @@ export const SOCKET_REGISTRY = {
       cardinality: "single",
     },
     polity: { accepts: ["polity"], cardinality: "single" },
+    members: { accepts: ["character"], cardinality: "many" },
   },
   group: {
     parent_group: { accepts: ["group"], cardinality: "single" },

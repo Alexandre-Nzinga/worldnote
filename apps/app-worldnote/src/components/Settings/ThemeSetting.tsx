@@ -1,4 +1,4 @@
-import { MaterialSymbol, getBodyTextStyle } from "@worldnote/ui";
+import { fieldLabelClassName, MaterialSymbol, getBodyTextStyle } from "@worldnote/ui";
 import { useCallback } from "react";
 import { useSettings } from "../../hooks/useSettings.js";
 import type { ThemePreference } from "../../services/settings/settings.js";
@@ -38,9 +38,12 @@ export function ThemeSetting({ disabled = false }: ThemeSettingProps) {
 
   return (
     <section className={settingsPanelClassName}>
-      <p style={getBodyTextStyle("small")}>
-        Choose how WorldNote looks. System follows your operating system.
-      </p>
+      <div className="flex flex-col gap-1">
+        <span className={fieldLabelClassName}>Theme</span>
+        <p style={getBodyTextStyle("small")}>
+          Choose how WorldNote looks. System follows your operating system.
+        </p>
+      </div>
       <div className="mt-4 inline-flex w-fit gap-1 rounded-full bg-wn-surface-sunken p-1">
         {THEME_OPTIONS.map((option) => {
           const isActive = option.value === current;

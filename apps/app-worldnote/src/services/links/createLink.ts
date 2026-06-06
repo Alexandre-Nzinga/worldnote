@@ -1,5 +1,8 @@
 import { invoke } from "@tauri-apps/api/core";
-import { trackPersist } from "../../hooks/useSaveStatus.js";
+import {
+  trackPersist,
+  type PersistOptions,
+} from "../../hooks/useSaveStatus.js";
 import {
   getSocketDescriptor,
   LinkSchema,
@@ -21,6 +24,7 @@ type CreateLinkInput = {
   targetCard: WorldCard;
   /** When false, skips mirroring father/mother ↔ issue on the other character. */
   mirrorKinship?: boolean;
+  notify?: boolean;
 };
 
 function isCharacter(card: WorldCard): card is CharacterCard {
@@ -51,7 +55,10 @@ export async function createLink({
   sourceSocket,
   targetCard,
   mirrorKinship = true,
+  notify,
 }: CreateLinkInput): Promise<Link> {
+  const persistOptions: PersistOptions | undefined =
+    notify === undefined ? undefined : { notify };
   return trackPersist(async () => {
     const descriptor = getSocketDescriptor(sourceCard.card_type, sourceSocket);
     if (!descriptor) {
@@ -140,5 +147,5 @@ export async function createLink({
 
     recordRecentLinkTarget(vault, targetCard.id);
     return link;
-  });
+  }, persistOptions);
 }

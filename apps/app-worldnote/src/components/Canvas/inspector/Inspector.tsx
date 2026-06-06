@@ -3,6 +3,7 @@ import {
   cardImageObjectStyles,
   DEFAULT_CARD_IMAGE_POSITION,
   normalizeCardImageDisplay,
+  resetCardImagePosition,
   type CardImagePosition,
   listSocketsForCardType,
   type Link,
@@ -41,6 +42,7 @@ import {
 } from "./inspectorFieldStyles.js";
 import { cardImageSrc } from "../../../services/canvas/cardNodeData.js";
 import { cardsInGroup } from "../../../services/canvas/groupMemberCards.js";
+import { withCardPatch } from "../../../services/crudWorldCard/withCardPatch.js";
 import { openCardJsonInExternalApp } from "../../../services/desktop/openCardJson.js";
 import {
   pickCardImageFile,
@@ -137,7 +139,7 @@ type InspectorProps = {
   links: Link[];
   cardsById: Record<string, WorldCard>;
   onClose: () => void;
-  onSave: (card: WorldCard) => Promise<void>;
+  onSave: (card: WorldCard, options?: { notify?: boolean }) => Promise<void>;
   onDelete: (cardId: string) => Promise<void>;
   onNavigateToCard?: (cardId: string) => void;
   onCreateSocketLink?: (socketId: string, targetCardId: string) => void;
@@ -554,6 +556,10 @@ export function Inspector({
     }
   }, [buildCard, name, onModeChange, onSave]);
 
+  const handleStartWritingLore = useCallback(() => {
+    onModeChange("edit");
+  }, [onModeChange]);
+
   const handlePickImage = useCallback(async () => {
     if (!activeCard) {
       return;
@@ -565,13 +571,22 @@ export function Inspector({
         return;
       }
       const relativePath = await saveCardImage(vaultPath, activeCard.id, sourcePath);
+      const nextPosition = resetCardImagePosition();
       setImagePath(relativePath);
+      setImagePosition(nextPosition);
+      await onSave(
+        withCardPatch(buildCard(), {
+          image_path: relativePath,
+          image_position: nextPosition,
+        }),
+        { notify: false },
+      );
     } catch (imageError) {
       setError(
         imageError instanceof Error ? imageError.message : String(imageError),
       );
     }
-  }, [activeCard, vaultPath]);
+  }, [activeCard, buildCard, onSave, vaultPath]);
 
   const handlePickCrest = useCallback(async () => {
     if (!activeCard || activeCard.card_type !== "family") {
@@ -589,12 +604,16 @@ export function Inspector({
         sourcePath,
       );
       setCrestPath(relativePath);
+      await onSave(
+        withCardPatch(buildCard(), { crest_path: relativePath }),
+        { notify: false },
+      );
     } catch (crestError) {
       setError(
         crestError instanceof Error ? crestError.message : String(crestError),
       );
     }
-  }, [activeCard, vaultPath]);
+  }, [activeCard, buildCard, onSave, vaultPath]);
 
   const handleDelete = useCallback(async () => {
     if (!activeCard) {
@@ -764,6 +783,7 @@ export function Inspector({
             }}
             wizardSection={wizardSection}
             isLoreGenerating={inspectorWizard.isGeneratingLore}
+            onStartWriting={handleStartWritingLore}
           />
         </div>
         <div className={inspectorModalPropertiesClassName}>
@@ -872,28 +892,21 @@ export function Inspector({
         ) : null}
       </div>
 
-      <div className="px-5 pb-2 pt-5">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex min-w-0 flex-1 flex-col gap-1">
-            {readOnly ? (
-              <>
+      <div className="border-b border-wn-border px-5 pb-5 pt-5">
+        <div className="flex min-w-0 flex-col gap-1">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              {readOnly ? (
                 <h2
                   {...getHeadingProps("h4", {
                     tone: "inverse",
                     weight: "bold",
-                    className: "m-0",
+                    className: "m-0 break-words",
                   })}
                 >
                   {name}
                 </h2>
-                {subtitle.trim() ? (
-                  <p className="m-0 text-base font-medium leading-snug text-wn-mono-300">
-                    {subtitle}
-                  </p>
-                ) : null}
-              </>
-            ) : (
-              <>
+              ) : (
                 <Input
                   id="inspector-name"
                   aria-label="Name"
@@ -903,34 +916,42 @@ export function Inspector({
                   onValueChange={setName}
                   classNames={inspectorNameFieldClassNames}
                 />
-                <Input
-                  id="inspector-subtitle"
-                  aria-label="Subtitle"
-                  placeholder="Subtitle or alias"
-                  value={subtitle}
-                  variant="flat"
-                  onValueChange={setSubtitle}
-                  classNames={inspectorSubtitleFieldClassNames}
-                />
-              </>
-            )}
+              )}
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              {typeVisual ? (
+                <CardTypePill
+                  className={typeVisual.badgeClassName}
+                  textClassName={typeVisual.badgeTextColor}
+                >
+                  {typeLabel}
+                </CardTypePill>
+              ) : null}
+              <InspectorCardMoreMenu
+                disabled={isBusy}
+                onViewJson={() => {
+                  void handleViewJson();
+                }}
+              />
+            </div>
           </div>
-          <div className="flex shrink-0 items-center gap-2">
-            {typeVisual ? (
-              <CardTypePill
-                className={typeVisual.badgeClassName}
-                textClassName={typeVisual.badgeTextColor}
-              >
-                {typeLabel}
-              </CardTypePill>
-            ) : null}
-            <InspectorCardMoreMenu
-              disabled={isBusy}
-              onViewJson={() => {
-                void handleViewJson();
-              }}
+          {readOnly ? (
+            subtitle.trim() ? (
+              <p className="m-0 text-base font-medium leading-snug text-wn-mono-300">
+                {subtitle}
+              </p>
+            ) : null
+          ) : (
+            <Input
+              id="inspector-subtitle"
+              aria-label="Subtitle"
+              placeholder="Subtitle or alias"
+              value={subtitle}
+              variant="flat"
+              onValueChange={setSubtitle}
+              classNames={inspectorSubtitleFieldClassNames}
             />
-          </div>
+          )}
         </div>
       </div>
 
@@ -976,6 +997,7 @@ export function Inspector({
                   onNavigateToCard={onNavigateToCard}
                   groupMembers={groupMembers}
                   isLoreGenerating={inspectorWizard.isGeneratingLore}
+                  onStartWriting={handleStartWritingLore}
                 />
               ) : (
                 <PropertiesTab

@@ -7,6 +7,7 @@ import type { ReactNode, Ref } from "react";
 import { inspectorTabPaddingXClassName } from "./inspectorFieldStyles.js";
 import { GroupMembersSection } from "./GroupMembersSection.js";
 import { LoreEditorSkeleton } from "./LoreEditorSkeleton.js";
+import { LoreEmptyState } from "./LoreEmptyState.js";
 import { MarkdownView } from "./MarkdownView.js";
 
 type InfoTabProps = {
@@ -19,6 +20,7 @@ type InfoTabProps = {
   groupMembers?: WorldCard[];
   wizardSection?: ReactNode;
   isLoreGenerating?: boolean;
+  onStartWriting?: () => void;
 };
 
 export function InfoTab({
@@ -31,6 +33,7 @@ export function InfoTab({
   groupMembers = [],
   wizardSection,
   isLoreGenerating = false,
+  onStartWriting,
 }: InfoTabProps) {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -42,11 +45,15 @@ export function InfoTab({
         ].join(" ")}
       >
         {readOnly ? (
-          <div className="scrollbar-wn min-h-0 flex-1 overflow-y-auto px-5 py-3">
+          <div className="scrollbar-wn flex min-h-0 flex-1 flex-col overflow-y-auto px-5 py-3">
             {isLoreGenerating ? (
               <LoreEditorSkeleton />
+            ) : !lore.trim() ? (
+              <div className="flex flex-1 items-center justify-center py-6">
+                <LoreEmptyState onStartWriting={onStartWriting} />
+              </div>
             ) : (
-              <MarkdownView content={lore} emptyMessage="No lore yet." />
+              <MarkdownView content={lore} />
             )}
           </div>
         ) : (

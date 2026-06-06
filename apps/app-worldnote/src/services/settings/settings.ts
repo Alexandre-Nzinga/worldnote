@@ -14,6 +14,9 @@ export type CardTypeBadgeOverride = {
 
 export type CardTypeBadgeOverrides = Record<string, CardTypeBadgeOverride>;
 
+/** User overrides for Family Tree kinship label pill colors. */
+export type KinshipBadgeOverride = CardTypeBadgeOverride;
+
 /** Local LLM (Ollama) connection config for the WorldWizard. */
 export type WizardSettings = {
   host: string;
@@ -30,6 +33,14 @@ export type ThemePreference = "light" | "dark" | "system";
 /** Display preference for weight, height, and temperature fields. */
 export type UnitSystemPreference = "metric" | "imperial";
 
+/** Toggleable feature modules (built-in today; installable later). */
+export type ModulesSettings = {
+  enabled?: string[];
+};
+
+/** How unrelated characters appear when Family Tree anchor is selected. */
+export type FamilyTreeUnrelatedMode = "hide" | "dim";
+
 export type AppSettings = {
   username: string;
   worldnoteRoot: string;
@@ -37,6 +48,8 @@ export type AppSettings = {
   visibleSockets?: VisibleSocketsByCardType;
   /** User overrides for card-type badge colors. */
   cardTypeBadgeColors?: CardTypeBadgeOverrides;
+  /** User overrides for Family Tree kinship label pill colors. */
+  kinshipLabelColors?: KinshipBadgeOverride;
   /** Home-only; world folder paths, max 3. */
   pinnedWorldPaths?: string[];
   /** Local LLM (Ollama) connection config for the WorldWizard. */
@@ -49,6 +62,10 @@ export type AppSettings = {
   canvasShortcuts?: CanvasKeyboardShortcuts;
   /** Measurement display: metric (kg, cm, °C) or imperial (lb, ft/in, °F). */
   unitSystem?: UnitSystemPreference;
+  /** Enabled feature modules (see moduleRegistry). */
+  modules?: ModulesSettings;
+  /** Family Tree: hide or dim characters unrelated to the selected anchor. */
+  familyTreeUnrelatedMode?: FamilyTreeUnrelatedMode;
 };
 
 export async function getSettings(): Promise<AppSettings | null> {

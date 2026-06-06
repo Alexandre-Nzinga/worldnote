@@ -1,11 +1,14 @@
 import type { WorldCard } from "@worldnote/shared";
+import { WorldNoteLogo } from "@worldnote/ui";
 import type { WizardSuggestion } from "../../../services/wizard/analyzeSuggestions.js";
 import {
   describeInspectorExpandAction,
   describeInspectorFillGapsAction,
 } from "../../../services/settings/wizardQuickCommands.js";
+import { useResolvedTheme } from "../../../theme/ThemeProvider.js";
 import {
   WizardActionChip,
+  WizardActionIconChip,
 } from "../wizard/WizardActionChip.js";
 import type { InspectorWizardStatus } from "./useInspectorWizard.js";
 
@@ -36,6 +39,8 @@ export function InspectorWizardSection({
   onRunSuggestion,
   onOpenWizard,
 }: InspectorWizardSectionProps) {
+  const theme = useResolvedTheme();
+  const logoTone = theme === "dark" ? "white" : "black";
   const wizardDisabled =
     isBusy || status === "generating" || healthy !== true;
   const isGenerating = status === "generating";
@@ -47,29 +52,14 @@ export function InspectorWizardSection({
       className="shrink-0 border-b border-wn-mono-800 px-5 py-2.5"
       aria-label="WorldWizard actions"
     >
-      <div className="mb-2 flex items-center justify-between gap-2">
-        <span className="text-xs font-semibold uppercase tracking-wide text-wn-mono-400">
-          WorldWizard
-        </span>
-        {onOpenWizard ? (
-          <button
-            type="button"
-            className="text-xs text-wn-mono-400 underline-offset-2 hover:text-wn-mono-200 hover:underline"
-            disabled={wizardDisabled}
-            onClick={onOpenWizard}
-          >
-            Open panel
-          </button>
-        ) : null}
-      </div>
-
       {healthy === false ? (
         <p className="mb-2 text-xs text-wn-mono-400">
           Ollama offline — configure in Settings.
         </p>
       ) : null}
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex items-center gap-2">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
         <WizardActionChip
           icon="auto_fix_high"
           label={isFillingGaps ? "Filling…" : "Fill gaps"}
@@ -107,12 +97,25 @@ export function InspectorWizardSection({
             />
           );
         })}
+        </div>
+        {onOpenWizard ? (
+          <WizardActionIconChip
+            aria-label="Open WorldWizard"
+            tooltip="Open WorldWizard"
+            disabled={wizardDisabled}
+            icon={
+              <WorldNoteLogo
+                variant="icon"
+                format="svg"
+                tone={logoTone}
+                className="h-4 w-4 opacity-90"
+                alt=""
+              />
+            }
+            onClick={onOpenWizard}
+          />
+        ) : null}
       </div>
-
-      <p className="mt-2 text-[11px] text-wn-mono-500">
-        Actions apply to {selectedCard.name}. Linked suggestions may update
-        other cards.
-      </p>
     </section>
   );
 }
