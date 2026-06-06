@@ -1,6 +1,6 @@
 [package]
 name = "app-worldnote"
-version = "0.1.0"
+version = "0.1.1"
 description = "WorldNote desktop"
 authors = ["WorldNote"]
 edition = "2021"

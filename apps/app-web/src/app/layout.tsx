@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Urbanist } from "next/font/google";
+import { Inter, Urbanist } from "next/font/google";
 import { Providers } from "@/components/Providers";
 import "./globals.css";
 
@@ -9,9 +9,16 @@ const urbanist = Urbanist({
   display: "swap",
 });
 
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "WorldNote",
-  description: "Building better worlds — local-first worldbuilding.",
+  title: "WorldNote — Breathe life into the abyss",
+  description:
+    " ",
 };
 
 export default function RootLayout({
@@ -20,8 +27,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${urbanist.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col bg-wn-mono-950 text-wn-mono-50">
+    <html
+      lang="en"
+      className={`${urbanist.variable} ${inter.variable} dark h-full antialiased`}
+    >
+      <body className="min-h-full flex flex-col bg-wn-bg text-wn-text">
         <Providers>{children}</Providers>
       </body>
     </html>
