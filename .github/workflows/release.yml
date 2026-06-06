@@ -1,5 +1,8 @@
 name: Release
 
+permissions:
+  contents: write
+
 on:
   push:
     tags:
@@ -7,9 +10,67 @@ on:
   workflow_dispatch:
 
 jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    outputs:
+      release_id: ${{ steps.create_release.outputs.release_id }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve release tag
+        id: tag
+        run: |
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            echo "name=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+          else
+            version=$(node -p "require('./apps/app-worldnote/src-tauri/tauri.conf.json').version")
+            echo "name=v${version}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create or reuse GitHub release
+        id: create_release
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const tag = `${{ steps.tag.outputs.name }}`;
+            const body = [
+              "Install WorldNote for your platform:",
+              "",
+              "- **Windows** — NSIS setup wizard (.exe)",
+              "- **macOS** — Apple Silicon & Intel (.dmg)",
+              "- **Linux** — AppImage & Debian (.deb / .AppImage)",
+              "",
+              `See [all assets](https://github.com/${context.repo.owner}/${context.repo.repo}/releases/tag/${tag}) below.`,
+            ].join("\n");
+
+            try {
+              const existing = await github.rest.repos.getReleaseByTag({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tag,
+              });
+              core.setOutput("release_id", String(existing.data.id));
+              return;
+            } catch (error) {
+              if (error.status !== 404) {
+                throw error;
+              }
+            }
+
+            const release = await github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: tag,
+              name: `WorldNote ${tag}`,
+              body,
+              draft: false,
+              prerelease: false,
+              generate_release_notes: false,
+            });
+            core.setOutput("release_id", String(release.data.id));
+
   release:
-    permissions:
-      contents: write
+    needs: create-release
     strategy:
       fail-fast: false
       matrix:
@@ -52,15 +113,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           projectPath: apps/app-worldnote
-          tagName: ${{ github.ref_type == 'tag' && github.ref_name || 'v__VERSION__' }}
-          releaseName: WorldNote __VERSION__
-          releaseBody: |
-            Install WorldNote for your platform:
-
-            - **Windows** — NSIS setup wizard (.exe)
-            - **macOS** — Apple Silicon & Intel (.dmg)
-            - **Linux** — AppImage & Debian (.deb / .AppImage)
-
-            See [all assets](https://github.com/${{ github.repository }}/releases/tag/v__VERSION__) below.
+          releaseId: ${{ needs.create-release.outputs.release_id }}
+          tagName: v__VERSION__
           releaseDraft: false
           prerelease: false
