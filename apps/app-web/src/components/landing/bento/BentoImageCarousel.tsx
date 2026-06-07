@@ -52,12 +52,7 @@ export function BentoImageCarousel({
   );
 
   useEffect(() => {
-    if (
-      reducedMotion ||
-      isPaused ||
-      intervalSeconds <= 0 ||
-      slideCount <= 1
-    ) {
+    if (reducedMotion || isPaused || intervalSeconds <= 0 || slideCount <= 1) {
       return;
     }
 

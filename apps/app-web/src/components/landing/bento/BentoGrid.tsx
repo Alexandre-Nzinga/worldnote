@@ -36,9 +36,7 @@ export function BentoGrid() {
               title={card.title}
               description={card.description}
               slides={"slides" in card ? card.slides : undefined}
-              imageAspect={
-                "imageAspect" in card ? card.imageAspect : undefined
-              }
+              imageAspect={"imageAspect" in card ? card.imageAspect : undefined}
             />
           </RevealItem>
         ))}

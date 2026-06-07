@@ -7,7 +7,11 @@ import {
 } from "@worldnote/canvas";
 import type { WorldCard } from "@worldnote/shared";
 import { CARD_TYPE_LABELS } from "@worldnote/shared";
-import { EnumComboBox, MaterialSymbol, usePrefersReducedMotion } from "@worldnote/ui";
+import {
+  EnumComboBox,
+  MaterialSymbol,
+  usePrefersReducedMotion,
+} from "@worldnote/ui";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   useCallback,

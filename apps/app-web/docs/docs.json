@@ -41,10 +41,7 @@
       },
       {
         "group": "Local-First & Security",
-        "pages": [
-          "local-first/offline-storage",
-          "local-first/sqlite-indexing"
-        ]
+        "pages": ["local-first/offline-storage", "local-first/sqlite-indexing"]
       }
     ]
   },
