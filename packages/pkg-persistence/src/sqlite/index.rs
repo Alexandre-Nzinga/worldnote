@@ -49,6 +49,12 @@ impl SqliteIndex {
               start_year INTEGER NOT NULL,
               end_year INTEGER NOT NULL
             );
+            CREATE TABLE IF NOT EXISTS chronology (
+              id TEXT PRIMARY KEY,
+              name TEXT NOT NULL,
+              start_year INTEGER NOT NULL,
+              end_year INTEGER NOT NULL
+            );
             ",
         )?;
         Self::ensure_lore_column(&conn)?;
@@ -381,6 +387,46 @@ impl SqliteIndex {
             .map_err(PersistenceError::from)
     }
 
+    pub fn upsert_chronology(
+        &self,
+        id: &str,
+        name: &str,
+        start_year: i64,
+        end_year: i64,
+    ) -> Result<(), PersistenceError> {
+        self.conn.execute(
+            "INSERT OR REPLACE INTO chronology (id, name, start_year, end_year) VALUES (?1, ?2, ?3, ?4)",
+            (id, name, start_year, end_year),
+        )?;
+        Ok(())
+    }
+
+    pub fn delete_chronology(&self, id: &str) -> Result<(), PersistenceError> {
+        self.conn
+            .execute("DELETE FROM chronology WHERE id = ?1", (id,))?;
+        self.conn
+            .execute("DELETE FROM eras WHERE id = ?1", (id,))?;
+        self.conn
+            .execute("DELETE FROM periods WHERE id = ?1", (id,))?;
+        Ok(())
+    }
+
+    pub fn list_chronology(&self) -> Result<Vec<TimelineEntry>, PersistenceError> {
+        let mut stmt = self.conn.prepare(
+            "SELECT id, name, start_year, end_year FROM chronology ORDER BY start_year, name COLLATE NOCASE",
+        )?;
+        let rows = stmt.query_map([], |row| {
+            Ok(TimelineEntry {
+                id: row.get(0)?,
+                name: row.get(1)?,
+                start_year: row.get(2)?,
+                end_year: row.get(3)?,
+            })
+        })?;
+        rows.collect::<Result<Vec<_>, _>>()
+            .map_err(PersistenceError::from)
+    }
+
     fn rebuild_timeline_table(
         conn: &Connection,
         table: &str,
@@ -437,6 +483,13 @@ impl SqliteIndex {
         Self::rebuild_timeline_table(&self.conn, "eras", eras_dir)
     }
 
+    pub fn rebuild_chronology_from_json(
+        &self,
+        chronology_dir: &Path,
+    ) -> Result<u32, PersistenceError> {
+        Self::rebuild_timeline_table(&self.conn, "chronology", chronology_dir)
+    }
+
     pub fn rebuild_periods_from_json(&self, periods_dir: &Path) -> Result<u32, PersistenceError> {
         Self::rebuild_timeline_table(&self.conn, "periods", periods_dir)
     }
@@ -445,6 +498,7 @@ impl SqliteIndex {
         &self,
         eras_dir: &Path,
         periods_dir: &Path,
+        chronology_dir: &Path,
     ) -> Result<(), PersistenceError> {
         let era_count: i64 = self
             .conn
@@ -479,6 +533,24 @@ impl SqliteIndex {
                 .count();
             if json_count > 0 {
                 self.rebuild_periods_from_json(periods_dir)?;
+            }
+        }
+
+        let chronology_count: i64 = self
+            .conn
+            .query_row("SELECT COUNT(*) FROM chronology", [], |row| row.get(0))?;
+        if chronology_count == 0 && chronology_dir.is_dir() {
+            let json_count = fs::read_dir(chronology_dir)?
+                .filter_map(Result::ok)
+                .filter(|entry| {
+                    entry
+                        .path()
+                        .extension()
+                        .is_some_and(|ext| ext.to_string_lossy().eq_ignore_ascii_case("json"))
+                })
+                .count();
+            if json_count > 0 {
+                self.rebuild_chronology_from_json(chronology_dir)?;
             }
         }
 

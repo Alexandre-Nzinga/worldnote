@@ -2,6 +2,7 @@ import { fieldLabelClassName, MaterialSymbol, getBodyTextStyle } from "@worldnot
 import { useCallback } from "react";
 import { useSettings } from "../../hooks/useSettings.js";
 import type { ThemePreference } from "../../services/settings/settings.js";
+import { applyThemeClass } from "../../theme/ThemeProvider.js";
 import { settingsPanelClassName } from "./settingsStyles.js";
 
 type ThemeOption = {
@@ -30,6 +31,20 @@ export function ThemeSetting({ disabled = false }: ThemeSettingProps) {
     (value: ThemePreference) => {
       if (!settings || value === current) {
         return;
+      }
+      if (value === "light" || value === "dark") {
+        applyThemeClass(value);
+      } else {
+        applyThemeClass(
+          window.matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "light",
+        );
+      }
+      try {
+        window.localStorage.setItem("wn-theme", value);
+      } catch {
+        // Boot script falls back to system/dark when storage is unavailable.
       }
       void save({ ...settings, theme: value });
     },

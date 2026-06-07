@@ -100,6 +100,10 @@ export const selectTriggerClassName =
 /** Native `<button>` select trigger (color swatch, icon pickers). */
 export const selectButtonTriggerClassName = `${selectTriggerClassName} flex items-center gap-2.5 text-left text-sm text-wn-text outline-none focus-visible:ring-2 focus-visible:ring-wn-mono-600`;
 
+/** Like `selectButtonTriggerClassName`, but with a tight left inset for a leading swatch. */
+export const selectSwatchButtonTriggerClassName =
+  "relative flex h-10 min-h-10 w-full items-center gap-2 rounded-full border border-wn-border-strong bg-wn-surface pl-1 pr-9 text-left text-sm text-wn-text shadow-none outline-none transition-colors hover:border-wn-mono-600 hover:bg-wn-surface focus-visible:ring-2 focus-visible:ring-wn-mono-600";
+
 /** Compact inline select trigger (toolbars). */
 export const selectInlineTriggerClassName =
   "relative h-8 min-h-8 max-w-40 rounded-lg border-0 bg-transparent px-2 pr-7 shadow-none data-[hover=true]:bg-wn-mono-800 group-data-[focus=true]:bg-wn-mono-800";

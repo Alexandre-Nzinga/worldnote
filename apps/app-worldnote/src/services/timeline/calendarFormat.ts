@@ -71,6 +71,23 @@ export function formatYear(year: number, suffix = ""): string {
   return trimmedSuffix ? `${year} ${trimmedSuffix}` : String(year);
 }
 
+/** Human-readable date label for timeline hover cards and tooltips. */
+export function formatTimelineDateLabel(
+  startYear: number,
+  endYear: number | undefined,
+  suffix: string,
+  options?: { bornLabel?: boolean },
+): string {
+  const start = formatYear(startYear, suffix);
+  if (endYear === undefined) {
+    return options?.bornLabel ? `Born ${start}` : start;
+  }
+  if (endYear === startYear) {
+    return start;
+  }
+  return `${start} – ${formatYear(endYear, suffix)}`;
+}
+
 /** Parse a year input string; returns undefined when empty or invalid. */
 export function parseYearInput(value: string): number | undefined {
   const trimmed = value.trim();

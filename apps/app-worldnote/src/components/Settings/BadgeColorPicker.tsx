@@ -10,11 +10,14 @@ import {
 } from "../../services/settings/cardTypeBadgeSettings.js";
 import { primaryAccentRingOnSurfaceClassName } from "../../services/settings/primaryAccentStyles.js";
 import { surfacePanelClassName } from "../shell/pageShellStyles.js";
-import { settingsSelectClassName } from "./settingsStyles.js";
+import { settingsSwatchSelectClassName } from "./settingsStyles.js";
 import { useAnchoredPopoverPosition } from "./useAnchoredPopoverPosition.js";
 
 const swatchClassName =
   "h-7 w-7 shrink-0 rounded-full ring-1 ring-wn-border ring-inset";
+
+const triggerSwatchClassName =
+  "size-8 shrink-0 rounded-full ring-1 ring-wn-border ring-inset";
 
 const swatchButtonClassName =
   "flex flex-col items-center gap-1.5 rounded-xl p-2 transition-colors hover:bg-wn-surface-raised";
@@ -202,10 +205,10 @@ export function BadgeColorPicker({
         aria-expanded={isOpen}
         aria-labelledby={`${listboxId}-label`}
         onClick={() => setIsOpen((open) => !open)}
-        className={`${settingsSelectClassName} text-left`}
+        className={settingsSwatchSelectClassName}
       >
         <span
-          className={`${swatchClassName} ${selectedSwatch}`}
+          className={`${triggerSwatchClassName} ${selectedSwatch}`}
           aria-hidden
         />
         <span className="min-w-0 flex-1 truncate">{selectedOption?.label}</span>

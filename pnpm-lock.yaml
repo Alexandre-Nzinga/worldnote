@@ -403,6 +403,9 @@ importers:
       '@fontsource-variable/material-symbols-outlined':
         specifier: ^5.2.45
         version: 5.2.45
+      '@fontsource-variable/urbanist':
+        specifier: ^5.2.5
+        version: 5.2.7
       '@heroui/react':
         specifier: ^2.8.10
         version: 2.8.10(@react-spectrum/provider@3.11.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(@types/react@19.2.14)(framer-motion@11.18.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(tailwindcss@4.2.4)
@@ -866,6 +869,9 @@ packages:
 
   '@fontsource-variable/material-symbols-outlined@5.2.45':
     resolution: {integrity: sha512-Hx6KX6W3rtMWEte72lTmV/4dJIpcAOi/tappR19Tz2dbvlWpboGqu0m7sJu7uIlLlDNuHjr/QComLCap6gSCug==}
+
+  '@fontsource-variable/urbanist@5.2.7':
+    resolution: {integrity: sha512-OYeUoBQhwm3pbXG5yUxq1omO9H64Dx1eKxldKYOztrf+8GFG1vu3FP/zZpmFOwtgsPj2h6JYHX9VVWopSxvOyQ==}
 
   '@formatjs/ecma402-abstract@2.3.6':
     resolution: {integrity: sha512-HJnTFeRM2kVFVr5gr5kH1XP6K0JcJtE7Lzvtr3FS/so5f1kpsqqqxy5JF+FRaO6H2qmcMfAUIox7AJteieRtVw==}
@@ -7024,6 +7030,8 @@ snapshots:
   '@floating-ui/utils@0.2.11': {}
 
   '@fontsource-variable/material-symbols-outlined@5.2.45': {}
+
+  '@fontsource-variable/urbanist@5.2.7': {}
 
   '@formatjs/ecma402-abstract@2.3.6':
     dependencies:

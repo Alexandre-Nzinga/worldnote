@@ -1,5 +1,11 @@
-import type { Era, Period, WorldCard } from "@worldnote/shared";
-import { yearToDate } from "./calendarFormat.js";
+import type { ChronologyEntry, WorldCard } from "@worldnote/shared";
+import { formatTimelineDateLabel, yearToDate } from "./calendarFormat.js";
+import { chronologyTimelineStyle } from "./chronologyPeriodColors.js";
+import {
+  buildChronologyTimelineGroups,
+  chronologyGroupId,
+  chronologyItemId,
+} from "./timelineChronology.js";
 import {
   resolveCharacterTimelineYears,
   resolveEventTimelineYears,
@@ -8,7 +14,15 @@ import {
 export const TIMELINE_GROUP_CHARACTERS = "characters";
 export const TIMELINE_GROUP_EVENTS = "events";
 
-export type TimelineItemKind = "character" | "event" | "era" | "period";
+export type TimelineItemKind = "character" | "event" | "chronology";
+
+export type TimelineItemPreview = {
+  title: string;
+  kindLabel: string;
+  dateLabel: string;
+  imageUrl?: string;
+  cardType?: WorldCard["card_type"];
+};
 
 export type TimelineVisItem = {
   id: string;
@@ -18,15 +32,40 @@ export type TimelineVisItem = {
   type?: "range" | "point" | "box" | "background";
   group?: string;
   className?: string;
+  style?: string;
   title?: string;
+  preview: TimelineItemPreview;
   /** Internal metadata for drag persistence. */
   itemKind: TimelineItemKind;
   sourceId: string;
 };
 
+const TIMELINE_KIND_LABELS: Record<TimelineItemKind, string> = {
+  character: "Character",
+  event: "Event",
+  chronology: "Period",
+};
+
+function itemPreview(
+  title: string,
+  itemKind: TimelineItemKind,
+  startYear: number,
+  endYear: number | undefined,
+  suffix: string,
+): TimelineItemPreview {
+  return {
+    title,
+    kindLabel: TIMELINE_KIND_LABELS[itemKind],
+    dateLabel: formatTimelineDateLabel(startYear, endYear, suffix, {
+      bornLabel: itemKind === "character" && endYear === undefined,
+    }),
+  };
+}
+
 export type TimelineVisGroup = {
   id: string;
   content: string;
+  nestedGroups?: string[];
 };
 
 export type TimelineData = {
@@ -36,8 +75,8 @@ export type TimelineData = {
 
 type BuildTimelineItemsInput = {
   cardsById: Record<string, WorldCard>;
-  eras: Era[];
-  periods: Period[];
+  chronology: ChronologyEntry[];
+  suffix?: string;
 };
 
 function characterLabel(
@@ -51,39 +90,46 @@ function characterLabel(
   return `${card.name} is born`;
 }
 
-function backgroundItem(
-  entry: Era | Period,
-  kind: "era" | "period",
+function chronologyTimelineItem(
+  entry: ChronologyEntry,
+  suffix: string,
 ): TimelineVisItem {
   return {
-    id: `${kind}-${entry.id}`,
+    id: chronologyItemId(entry.id),
     content: entry.name,
     start: yearToDate(entry.start_year),
     end: yearToDate(entry.end_year),
-    type: "background",
-    className: kind === "era" ? "wn-era-bg" : "wn-period-bg",
+    type: "range",
+    group: chronologyGroupId(entry.id),
+    className: "wn-chronology-bg",
+    style: chronologyTimelineStyle(entry.color),
     title: entry.name,
-    itemKind: kind,
+    preview: itemPreview(
+      entry.name,
+      "chronology",
+      entry.start_year,
+      entry.end_year,
+      suffix,
+    ),
+    itemKind: "chronology",
     sourceId: entry.id,
   };
 }
 
 export function buildTimelineItems({
   cardsById,
-  eras,
-  periods,
+  chronology,
+  suffix = "",
 }: BuildTimelineItemsInput): TimelineData {
   const items: TimelineVisItem[] = [];
   const groups: TimelineVisGroup[] = [
+    ...buildChronologyTimelineGroups(chronology),
     { id: TIMELINE_GROUP_CHARACTERS, content: "Characters" },
     { id: TIMELINE_GROUP_EVENTS, content: "World Events" },
   ];
 
-  for (const era of eras) {
-    items.push(backgroundItem(era, "era"));
-  }
-  for (const period of periods) {
-    items.push(backgroundItem(period, "period"));
+  for (const entry of chronology) {
+    items.push(chronologyTimelineItem(entry, suffix));
   }
 
   for (const card of Object.values(cardsById)) {
@@ -99,6 +145,7 @@ export function buildTimelineItems({
         group: TIMELINE_GROUP_CHARACTERS,
         className: "wn-timeline-character",
         title: card.name,
+        preview: itemPreview(card.name, "character", startYear, endYear, suffix),
         itemKind: "character",
         sourceId: card.id,
       });
@@ -118,6 +165,13 @@ export function buildTimelineItems({
         group: TIMELINE_GROUP_EVENTS,
         className: "wn-timeline-event",
         title: card.name,
+        preview: itemPreview(
+          card.name,
+          "event",
+          startYear,
+          hasRange ? endYear : undefined,
+          suffix,
+        ),
         itemKind: "event",
         sourceId: card.id,
       });

@@ -11,8 +11,6 @@ import type { ReactNode } from "react";
 type StepLayoutProps = {
   eyebrow: ReactNode;
   title: string;
-  stepNumber?: number;
-  totalSteps?: number;
   children?: ReactNode;
   actionLabel: string;
   onAction: () => void;
@@ -22,8 +20,6 @@ type StepLayoutProps = {
 export function StepLayout({
   eyebrow,
   title,
-  stepNumber,
-  totalSteps = 3,
   children,
   actionLabel,
   onAction,
@@ -44,15 +40,10 @@ export function StepLayout({
         animate="visible"
       >
         <motion.div
-          className="mb-6 flex items-center justify-between gap-4"
+          className="mb-6 text-sm text-wn-mono-50"
           variants={contentItemVariants}
         >
-          <div className="text-sm text-wn-mono-50">{eyebrow}</div>
-          {stepNumber !== undefined && stepNumber > 0 ? (
-            <span className="shrink-0 rounded-full border border-wn-mono-700 bg-wn-mono-900 px-3 py-1 text-[11px] font-medium text-wn-mono-400">
-              Step {stepNumber} of {totalSteps}
-            </span>
-          ) : null}
+          {eyebrow}
         </motion.div>
 
         <motion.h1

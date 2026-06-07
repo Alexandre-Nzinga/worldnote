@@ -12,8 +12,21 @@ export function useVaultCommands() {
         invoke<string>("save_world_cover", { worldPath, sourcePath }),
       renameWorld: (worldPath: string, newName: string) =>
         invoke<string>("rename_world", { worldPath, newName }),
+      updateWorldDescription: (worldPath: string, description: string) =>
+        invoke<void>("update_world_description", { worldPath, description }),
       deleteWorld: (worldPath: string) =>
         invoke<void>("delete_world", { worldPath }),
+      exportWorld: (worldPath: string, destinationPath: string) =>
+        invoke<string>("export_world", { worldPath, destinationPath }),
+      importWorld: (worldnoteRoot: string, archivePath: string) =>
+        invoke<{
+          path: string;
+          name: string;
+          description: string;
+          cardCount: number;
+          lastEdited: number;
+          coverImage?: string;
+        }>("import_world", { worldnoteRoot, archivePath }),
       listAllCards: (root: string) =>
         invoke<
           Array<{

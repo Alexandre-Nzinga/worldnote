@@ -39,8 +39,7 @@ import {
   type FamilyCard,
   type Link,
   type CalendarConfig,
-  type Era,
-  type Period,
+  type ChronologyEntry,
   type WorldCard,
 } from "@worldnote/shared";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -183,6 +182,10 @@ import { familyTreeNodeStateForCard } from "../../services/familyTree/familyTree
 import { syncFamilyCardMembers } from "../../services/familyTree/syncFamilyCardMembers.js";
 import { normalizeFamilyTreeUnrelatedMode } from "../../services/settings/familyTreeSettings.js";
 import { normalizeTimelineEraSuffix } from "../../services/settings/timelineSettings.js";
+import {
+  orphanChronologyChildren,
+  sortChronologyEntries,
+} from "../../services/timeline/timelineChronology.js";
 
 const nodeTypes = {
   worldnoteCard: CardNode,
@@ -236,10 +239,9 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
   );
   const { listCards, upsertCard, loadCanvasManifest } = useCardCommands();
   const {
-    listEras,
-    upsertEra,
-    listPeriods,
-    upsertPeriod,
+    listChronology,
+    upsertChronology,
+    deleteChronology,
     loadCalendarConfig,
   } = useTimelineCommands();
   const [nodes, setNodes, onNodesChange] = useNodesState<CanvasFlowNode>([]);
@@ -260,8 +262,7 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
   );
   const [isGraphViewOpen, setIsGraphViewOpen] = useState(false);
   const [isTimelineOpen, setIsTimelineOpen] = useState(false);
-  const [eras, setEras] = useState<Era[]>([]);
-  const [periods, setPeriods] = useState<Period[]>([]);
+  const [chronology, setChronology] = useState<ChronologyEntry[]>([]);
   const [calendarConfig, setCalendarConfig] = useState<CalendarConfig>({
     suffix: "",
   });
@@ -1050,40 +1051,39 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
     [vaultPath],
   );
 
-  const handleSaveEra = useCallback(
-    async (era: Era) => {
+  const handleSaveChronology = useCallback(
+    async (entry: ChronologyEntry) => {
       if (!vaultPath) {
         return;
       }
-      const saved = await upsertEra(vaultPath, era);
-      setEras((prev) => {
-        const next = prev.filter((entry) => entry.id !== saved.id);
-        return [...next, saved].sort(
-          (left, right) =>
-            left.start_year - right.start_year ||
-            left.name.localeCompare(right.name),
-        );
-      });
+      const saved = await upsertChronology(vaultPath, entry);
+      setChronology((prev) =>
+        sortChronologyEntries([
+          ...prev.filter((item) => item.id !== saved.id),
+          saved,
+        ]),
+      );
     },
-    [upsertEra, vaultPath],
+    [upsertChronology, vaultPath],
   );
 
-  const handleSavePeriod = useCallback(
-    async (period: Period) => {
+  const handleDeleteChronology = useCallback(
+    async (id: string) => {
       if (!vaultPath) {
         return;
       }
-      const saved = await upsertPeriod(vaultPath, period);
-      setPeriods((prev) => {
-        const next = prev.filter((entry) => entry.id !== saved.id);
-        return [...next, saved].sort(
-          (left, right) =>
-            left.start_year - right.start_year ||
-            left.name.localeCompare(right.name),
-        );
+      const orphaned = orphanChronologyChildren(id, chronology);
+      const changed = orphaned.filter((entry) => {
+        const previous = chronology.find((item) => item.id === entry.id);
+        return previous && previous.parent_id !== entry.parent_id;
       });
+      await Promise.all(
+        changed.map((entry) => upsertChronology(vaultPath, entry)),
+      );
+      await deleteChronology(vaultPath, id);
+      setChronology(orphaned.filter((entry) => entry.id !== id));
     },
-    [upsertPeriod, vaultPath],
+    [chronology, deleteChronology, upsertChronology, vaultPath],
   );
 
 
@@ -1207,8 +1207,7 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
 
   useEffect(() => {
     if (!vaultPath) {
-      setEras([]);
-      setPeriods([]);
+      setChronology([]);
       setCalendarConfig({ suffix: "" });
       return;
     }
@@ -1218,14 +1217,12 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
     let disposed = false;
     void (async () => {
       try {
-        const [nextEras, nextPeriods, nextCalendar] = await Promise.all([
-          listEras(vaultPath),
-          listPeriods(vaultPath),
+        const [nextChronology, nextCalendar] = await Promise.all([
+          listChronology(vaultPath),
           loadCalendarConfig(vaultPath),
         ]);
         if (!disposed) {
-          setEras(nextEras);
-          setPeriods(nextPeriods);
+          setChronology(nextChronology);
           setCalendarConfig({
             suffix: nextCalendar.suffix || appSuffix,
           });
@@ -1240,8 +1237,7 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
     };
   }, [
     appSettings?.timelineEraSuffix,
-    listEras,
-    listPeriods,
+    listChronology,
     loadCalendarConfig,
     vaultPath,
   ]);
@@ -3885,12 +3881,11 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
           onClose={() => setIsTimelineOpen(false)}
           vaultPath={vaultPath}
           cardsById={cardsById}
-          eras={eras}
-          periods={periods}
+          chronology={chronology}
           calendarConfig={calendarConfig}
           onSaveCard={handleSaveCard}
-          onSaveEra={handleSaveEra}
-          onSavePeriod={handleSavePeriod}
+          onSaveChronology={handleSaveChronology}
+          onDeleteChronology={handleDeleteChronology}
         />
       ) : null}
 

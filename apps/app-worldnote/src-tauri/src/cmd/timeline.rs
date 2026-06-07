@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 use worldnote_persistence::repository::{CardRepository, JsonCardRepository};
@@ -12,6 +13,10 @@ fn periods_root(vault: &str) -> PathBuf {
     PathBuf::from(vault).join("periods")
 }
 
+fn chronology_root(vault: &str) -> PathBuf {
+    PathBuf::from(vault).join("chronology")
+}
+
 fn sqlite_path(vault: &str) -> PathBuf {
     PathBuf::from(vault).join(".worldnote").join("index.db")
 }
@@ -23,7 +28,11 @@ fn calendar_config_path(vault: &str) -> PathBuf {
 fn open_timeline_index(vault: &str) -> Result<SqliteIndex, String> {
     let index = SqliteIndex::open(sqlite_path(vault)).map_err(|error| error.to_string())?;
     index
-        .ensure_timeline_synced(&eras_root(vault), &periods_root(vault))
+        .ensure_timeline_synced(
+            &eras_root(vault),
+            &periods_root(vault),
+            &chronology_root(vault),
+        )
         .map_err(|error| error.to_string())?;
     Ok(index)
 }
@@ -43,6 +52,49 @@ fn extract_str(value: &serde_json::Value, field: &str) -> Result<String, String>
         .ok_or_else(|| format!("Payload is missing required '{field}'"))
 }
 
+fn normalize_chronology_entry(entry: serde_json::Value) -> serde_json::Value {
+    let Some(object) = entry.as_object().cloned() else {
+        return entry;
+    };
+
+    let mut normalized = object;
+    normalized.remove("parent_kind");
+    serde_json::Value::Object(normalized)
+}
+
+fn sort_chronology(entries: &mut [serde_json::Value]) {
+    entries.sort_by(|left, right| {
+        let left_start = left
+            .get("start_year")
+            .and_then(|value| value.as_i64())
+            .unwrap_or(0);
+        let right_start = right
+            .get("start_year")
+            .and_then(|value| value.as_i64())
+            .unwrap_or(0);
+        left_start
+            .cmp(&right_start)
+            .then_with(|| {
+                left.get("name")
+                    .and_then(|value| value.as_str())
+                    .unwrap_or_default()
+                    .cmp(right.get("name").and_then(|value| value.as_str()).unwrap_or_default())
+            })
+    });
+}
+
+fn load_chronology_from_repo(
+    repo: &JsonCardRepository,
+    merged: &mut HashMap<String, serde_json::Value>,
+) -> Result<(), String> {
+    for id in repo.list_ids().map_err(|error| error.to_string())? {
+        if let Some(entry) = repo.find_by_id(&id).map_err(|error| error.to_string())? {
+            merged.insert(id, normalize_chronology_entry(entry));
+        }
+    }
+    Ok(())
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CalendarConfigPayload {
@@ -51,108 +103,52 @@ pub struct CalendarConfigPayload {
 }
 
 #[tauri::command]
-pub fn list_eras(vault: String) -> Result<Vec<serde_json::Value>, String> {
-    let repo = JsonCardRepository::new(eras_root(&vault));
-    let mut eras = Vec::new();
-    for id in repo.list_ids().map_err(|error| error.to_string())? {
-        if let Some(era) = repo.find_by_id(&id).map_err(|error| error.to_string())? {
-            eras.push(era);
-        }
+pub fn list_chronology(vault: String) -> Result<Vec<serde_json::Value>, String> {
+    let mut merged = HashMap::new();
+
+    load_chronology_from_repo(&JsonCardRepository::new(eras_root(&vault)), &mut merged)?;
+    load_chronology_from_repo(&JsonCardRepository::new(periods_root(&vault)), &mut merged)?;
+    load_chronology_from_repo(&JsonCardRepository::new(chronology_root(&vault)), &mut merged)?;
+
+    let mut entries: Vec<serde_json::Value> = merged.into_values().collect();
+    sort_chronology(&mut entries);
+    Ok(entries)
+}
+
+#[tauri::command]
+pub fn upsert_chronology(vault: String, entry: serde_json::Value) -> Result<(), String> {
+    let normalized = normalize_chronology_entry(entry);
+    let id = extract_str(&normalized, "id")?;
+    let name = extract_str(&normalized, "name")?;
+    let start_year = extract_i64(&normalized, "start_year")?;
+    let end_year = extract_i64(&normalized, "end_year")?;
+
+    fs::create_dir_all(chronology_root(&vault)).map_err(|error| error.to_string())?;
+    let repo = JsonCardRepository::new(chronology_root(&vault));
+    repo.upsert(&id, &normalized)
+        .map_err(|error| error.to_string())?;
+
+    let index = open_timeline_index(&vault)?;
+    index
+        .upsert_chronology(&id, &name, start_year, end_year)
+        .map_err(|error| error.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
+pub fn delete_chronology(vault: String, id: String) -> Result<(), String> {
+    for root in [
+        eras_root(&vault),
+        periods_root(&vault),
+        chronology_root(&vault),
+    ] {
+        let repo = JsonCardRepository::new(root);
+        let _ = repo.delete(&id);
     }
-    eras.sort_by(|left, right| {
-        let left_start = left.get("start_year").and_then(|value| value.as_i64()).unwrap_or(0);
-        let right_start = right.get("start_year").and_then(|value| value.as_i64()).unwrap_or(0);
-        left_start
-            .cmp(&right_start)
-            .then_with(|| {
-                left.get("name")
-                    .and_then(|value| value.as_str())
-                    .unwrap_or_default()
-                    .cmp(right.get("name").and_then(|value| value.as_str()).unwrap_or_default())
-            })
-    });
-    Ok(eras)
-}
-
-#[tauri::command]
-pub fn upsert_era(vault: String, era: serde_json::Value) -> Result<(), String> {
-    let id = extract_str(&era, "id")?;
-    let name = extract_str(&era, "name")?;
-    let start_year = extract_i64(&era, "start_year")?;
-    let end_year = extract_i64(&era, "end_year")?;
-
-    fs::create_dir_all(eras_root(&vault)).map_err(|error| error.to_string())?;
-    let repo = JsonCardRepository::new(eras_root(&vault));
-    repo.upsert(&id, &era).map_err(|error| error.to_string())?;
 
     let index = open_timeline_index(&vault)?;
     index
-        .upsert_era(&id, &name, start_year, end_year)
-        .map_err(|error| error.to_string())?;
-    Ok(())
-}
-
-#[tauri::command]
-pub fn delete_era(vault: String, id: String) -> Result<(), String> {
-    let repo = JsonCardRepository::new(eras_root(&vault));
-    repo.delete(&id).map_err(|error| error.to_string())?;
-
-    let index = open_timeline_index(&vault)?;
-    index.delete_era(&id).map_err(|error| error.to_string())?;
-    Ok(())
-}
-
-#[tauri::command]
-pub fn list_periods(vault: String) -> Result<Vec<serde_json::Value>, String> {
-    let repo = JsonCardRepository::new(periods_root(&vault));
-    let mut periods = Vec::new();
-    for id in repo.list_ids().map_err(|error| error.to_string())? {
-        if let Some(period) = repo.find_by_id(&id).map_err(|error| error.to_string())? {
-            periods.push(period);
-        }
-    }
-    periods.sort_by(|left, right| {
-        let left_start = left.get("start_year").and_then(|value| value.as_i64()).unwrap_or(0);
-        let right_start = right.get("start_year").and_then(|value| value.as_i64()).unwrap_or(0);
-        left_start
-            .cmp(&right_start)
-            .then_with(|| {
-                left.get("name")
-                    .and_then(|value| value.as_str())
-                    .unwrap_or_default()
-                    .cmp(right.get("name").and_then(|value| value.as_str()).unwrap_or_default())
-            })
-    });
-    Ok(periods)
-}
-
-#[tauri::command]
-pub fn upsert_period(vault: String, period: serde_json::Value) -> Result<(), String> {
-    let id = extract_str(&period, "id")?;
-    let name = extract_str(&period, "name")?;
-    let start_year = extract_i64(&period, "start_year")?;
-    let end_year = extract_i64(&period, "end_year")?;
-
-    fs::create_dir_all(periods_root(&vault)).map_err(|error| error.to_string())?;
-    let repo = JsonCardRepository::new(periods_root(&vault));
-    repo.upsert(&id, &period)
-        .map_err(|error| error.to_string())?;
-
-    let index = open_timeline_index(&vault)?;
-    index
-        .upsert_period(&id, &name, start_year, end_year)
-        .map_err(|error| error.to_string())?;
-    Ok(())
-}
-
-#[tauri::command]
-pub fn delete_period(vault: String, id: String) -> Result<(), String> {
-    let repo = JsonCardRepository::new(periods_root(&vault));
-    repo.delete(&id).map_err(|error| error.to_string())?;
-
-    let index = open_timeline_index(&vault)?;
-    index
-        .delete_period(&id)
+        .delete_chronology(&id)
         .map_err(|error| error.to_string())?;
     Ok(())
 }

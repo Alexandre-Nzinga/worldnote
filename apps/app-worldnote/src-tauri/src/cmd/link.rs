@@ -11,7 +11,7 @@ fn bonds_root(vault: &str) -> PathBuf {
 }
 
 /// Move any `{id}.json` from legacy `bonds/` into `links/`, then remove `bonds/`.
-fn migrate_legacy_bonds(vault: &str) -> Result<(), String> {
+pub(crate) fn migrate_legacy_bonds(vault: &str) -> Result<(), String> {
     let bonds_dir = bonds_root(vault);
     if !bonds_dir.is_dir() {
         return Ok(());

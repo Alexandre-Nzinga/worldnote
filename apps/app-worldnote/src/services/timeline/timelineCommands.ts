@@ -1,41 +1,44 @@
 import { invoke } from "@tauri-apps/api/core";
-import { CalendarConfigSchema, EraSchema, PeriodSchema } from "@worldnote/shared";
-import type { CalendarConfig, Era, Period } from "@worldnote/shared";
+import { CalendarConfigSchema, ChronologyEntrySchema } from "@worldnote/shared";
+import type { CalendarConfig, ChronologyEntry } from "@worldnote/shared";
 
-export async function listEras(vault: string): Promise<Era[]> {
-  const raw = await invoke<unknown[]>("list_eras", { vault });
+function stripLegacyParentKind(raw: unknown): unknown {
+  if (typeof raw !== "object" || raw === null) {
+    return raw;
+  }
+  return Object.fromEntries(
+    Object.entries(raw).filter(([key]) => key !== "parent_kind"),
+  );
+}
+
+function parseChronologyEntry(raw: unknown): ChronologyEntry | null {
+  const parsed = ChronologyEntrySchema.safeParse(raw);
+  if (parsed.success) {
+    return parsed.data;
+  }
+  const legacy = ChronologyEntrySchema.safeParse(stripLegacyParentKind(raw));
+  return legacy.success ? legacy.data : null;
+}
+
+export async function listChronology(vault: string): Promise<ChronologyEntry[]> {
+  const raw = await invoke<unknown[]>("list_chronology", { vault });
   return raw.flatMap((entry) => {
-    const parsed = EraSchema.safeParse(entry);
-    return parsed.success ? [parsed.data] : [];
+    const parsed = parseChronologyEntry(entry);
+    return parsed ? [parsed] : [];
   });
 }
 
-export async function upsertEra(vault: string, era: Era): Promise<Era> {
-  const validated = EraSchema.parse(era);
-  await invoke<void>("upsert_era", { vault, era: validated });
+export async function upsertChronology(
+  vault: string,
+  entry: ChronologyEntry,
+): Promise<ChronologyEntry> {
+  const validated = ChronologyEntrySchema.parse(entry);
+  await invoke<void>("upsert_chronology", { vault, entry: validated });
   return validated;
 }
 
-export async function deleteEra(vault: string, id: string): Promise<void> {
-  await invoke<void>("delete_era", { vault, id });
-}
-
-export async function listPeriods(vault: string): Promise<Period[]> {
-  const raw = await invoke<unknown[]>("list_periods", { vault });
-  return raw.flatMap((entry) => {
-    const parsed = PeriodSchema.safeParse(entry);
-    return parsed.success ? [parsed.data] : [];
-  });
-}
-
-export async function upsertPeriod(vault: string, period: Period): Promise<Period> {
-  const validated = PeriodSchema.parse(period);
-  await invoke<void>("upsert_period", { vault, period: validated });
-  return validated;
-}
-
-export async function deletePeriod(vault: string, id: string): Promise<void> {
-  await invoke<void>("delete_period", { vault, id });
+export async function deleteChronology(vault: string, id: string): Promise<void> {
+  await invoke<void>("delete_chronology", { vault, id });
 }
 
 export async function loadCalendarConfig(vault: string): Promise<CalendarConfig> {

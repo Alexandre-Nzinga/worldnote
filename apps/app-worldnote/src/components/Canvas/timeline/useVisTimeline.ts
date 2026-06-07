@@ -4,12 +4,18 @@ import type { DataItem, TimelineOptions } from "vis-timeline";
 import type { RefObject } from "react";
 import { useEffect, useRef, useState } from "react";
 
-type VisTimelineGroup = { id: string; content: string };
+type VisTimelineGroup = { id: string; content: string; nestedGroups?: string[] };
+
+type HostSize = {
+  width: number;
+  height: number;
+};
 
 type UseVisTimelineOptions = {
   isOpen: boolean;
   mountRef: RefObject<HTMLDivElement | null>;
-  createOptions: (height: number) => TimelineOptions;
+  containerRef: RefObject<HTMLDivElement | null>;
+  createOptions: (size: HostSize) => TimelineOptions;
   onReady?: (api: {
     timeline: Timeline;
     items: DataSet<DataItem, "id">;
@@ -20,6 +26,7 @@ type UseVisTimelineOptions = {
 export function useVisTimeline({
   isOpen,
   mountRef,
+  containerRef,
   createOptions,
   onReady,
 }: UseVisTimelineOptions) {
@@ -28,7 +35,7 @@ export function useVisTimeline({
   const groupsRef = useRef<DataSet<VisTimelineGroup, "id"> | null>(null);
   const createOptionsRef = useRef(createOptions);
   const onReadyRef = useRef(onReady);
-  const [hostHeight, setHostHeight] = useState(0);
+  const [hostSize, setHostSize] = useState<HostSize>({ width: 0, height: 0 });
   const [initError, setInitError] = useState<string | null>(null);
   const [isReady, setIsReady] = useState(false);
 
@@ -36,20 +43,23 @@ export function useVisTimeline({
   onReadyRef.current = onReady;
 
   useEffect(() => {
-    if (!isOpen || !mountRef.current) {
+    if (!isOpen || !containerRef.current) {
       return;
     }
 
-    const element = mountRef.current;
+    const element = containerRef.current;
     const measure = () => {
-      setHostHeight(element.clientHeight);
+      setHostSize({
+        width: element.clientWidth,
+        height: element.clientHeight,
+      });
     };
 
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(element);
     return () => observer.disconnect();
-  }, [isOpen, mountRef]);
+  }, [containerRef, isOpen]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -63,7 +73,12 @@ export function useVisTimeline({
     }
 
     const mountNode = mountRef.current;
-    if (!mountNode || hostHeight <= 0 || timelineRef.current) {
+    if (
+      !mountNode ||
+      hostSize.height <= 0 ||
+      hostSize.width <= 0 ||
+      timelineRef.current
+    ) {
       return;
     }
 
@@ -81,7 +96,7 @@ export function useVisTimeline({
           mountRef.current,
           items,
           groups,
-          createOptionsRef.current(hostHeight),
+          createOptionsRef.current(hostSize),
         );
 
         timelineRef.current = timeline;
@@ -105,23 +120,26 @@ export function useVisTimeline({
       cancelled = true;
       window.cancelAnimationFrame(frame);
     };
-  }, [hostHeight, isOpen, mountRef]);
+  }, [hostSize.height, hostSize.width, isOpen, mountRef]);
 
   useEffect(() => {
     const timeline = timelineRef.current;
-    if (!timeline || hostHeight <= 0) {
+    if (!timeline || hostSize.height <= 0 || hostSize.width <= 0) {
       return;
     }
-    timeline.setOptions({ height: hostHeight, width: "100%" });
+    timeline.setOptions({
+      height: hostSize.height,
+      width: hostSize.width,
+    });
     timeline.redraw();
-  }, [hostHeight]);
+  }, [hostSize.height, hostSize.width]);
 
   return {
     timelineRef,
     itemsRef,
     groupsRef,
-    hostHeight,
+    hostSize,
     initError,
     isReady,
   };
-}
+};

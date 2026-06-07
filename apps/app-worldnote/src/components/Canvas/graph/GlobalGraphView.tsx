@@ -251,7 +251,7 @@ export function GlobalGraphView({
       }
       const label = node.label;
       const fontSize = LABEL_FONT_SIZE_PX / globalScale;
-      ctx.font = `${LABEL_FONT_WEIGHT} ${fontSize}px "Urbanist", sans-serif`;
+      ctx.font = `${LABEL_FONT_WEIGHT} ${fontSize}px "Urbanist Variable", "Urbanist", sans-serif`;
       ctx.textAlign = "center";
       ctx.textBaseline = "top";
       const x = node.x ?? 0;
@@ -265,7 +265,7 @@ export function GlobalGraphView({
         node.tags.length > 0
       ) {
         const tagFontSize = TAG_FONT_SIZE_PX / globalScale;
-        ctx.font = `${LABEL_FONT_WEIGHT} ${tagFontSize}px "Urbanist", sans-serif`;
+        ctx.font = `${LABEL_FONT_WEIGHT} ${tagFontSize}px "Urbanist Variable", "Urbanist", sans-serif`;
         ctx.fillStyle = graphTagLabelColor();
         ctx.fillText(node.tags.join(", "), x, y + TAG_LINE_HEIGHT_PX / globalScale);
       }

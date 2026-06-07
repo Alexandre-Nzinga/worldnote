@@ -1,4 +1,4 @@
-import { Input } from "@heroui/react";
+import { Input, Textarea } from "@heroui/react";
 import {
   AnimatedModal,
   Button,
@@ -6,6 +6,7 @@ import {
   fieldLabelClassName,
   getBodyTextStyle,
   getHeadingProps,
+  InlineAlert,
   MaterialSymbol,
 } from "@worldnote/ui";
 import { useCallback, useEffect, useState } from "react";
@@ -13,6 +14,10 @@ import { useVault } from "../../hooks/useVault.js";
 import { useVaultCommands } from "../../hooks/useVaultCommands.js";
 import { toast } from "../../services/notifications/toast.js";
 import { pickCardImageFile } from "../../services/desktop/saveCardImage.js";
+import {
+  exportWorld,
+  pickWorldExportDestination,
+} from "../../services/worlds/worldTransfer.js";
 import type { WorldSummary } from "../../services/worlds/listWorlds.js";
 import {
   darkFieldInputClassNames,
@@ -36,11 +41,13 @@ export function WorldSettingsModal({
   onWorldRenamed,
   onWorldDeleted,
 }: WorldSettingsModalProps) {
-  const { renameWorld, saveWorldCover, deleteWorld } = useVaultCommands();
+  const { renameWorld, updateWorldDescription, saveWorldCover, deleteWorld } =
+    useVaultCommands();
   const currentVaultPath = useVault((state) => state.currentVaultPath);
   const setCurrentVault = useVault((state) => state.setCurrentVault);
 
   const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
   const [worldPath, setWorldPath] = useState("");
   const [isBusy, setIsBusy] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -48,12 +55,14 @@ export function WorldSettingsModal({
   useEffect(() => {
     if (!isOpen || !world) {
       setName("");
-    setWorldPath("");
-    setConfirmDelete(false);
-    setIsBusy(false);
+      setDescription("");
+      setWorldPath("");
+      setConfirmDelete(false);
+      setIsBusy(false);
       return;
     }
     setName(world.name);
+    setDescription(world.description ?? "");
     setWorldPath(world.path);
     setConfirmDelete(false);
   }, [isOpen, world]);
@@ -73,42 +82,61 @@ export function WorldSettingsModal({
     };
   }, [isBusy, isOpen, onClose]);
 
-  const handleSaveRename = useCallback(async () => {
-    const trimmed = name.trim();
-    if (!worldPath || !trimmed || trimmed === world?.name) {
+  const handleSaveChanges = useCallback(async () => {
+    const trimmedName = name.trim();
+    const trimmedDescription = description.trim();
+    if (!worldPath || !trimmedName) {
+      return;
+    }
+
+    const shouldRename = world ? trimmedName !== world.name : false;
+    const shouldUpdateDescription = world
+      ? trimmedDescription !== (world.description ?? "")
+      : false;
+
+    if (!shouldRename && !shouldUpdateDescription) {
       onClose();
       return;
     }
+
     setIsBusy(true);
     try {
-      const oldPath = worldPath;
-      const newPath = await renameWorld(worldPath, trimmed);
-      if (currentVaultPath === worldPath) {
-        setCurrentVault(newPath, trimmed);
+      let nextPath = worldPath;
+      if (shouldRename) {
+        const oldPath = worldPath;
+        nextPath = await renameWorld(worldPath, trimmedName);
+        if (currentVaultPath === worldPath) {
+          setCurrentVault(nextPath, trimmedName);
+        }
+        setWorldPath(nextPath);
+        onWorldRenamed?.(oldPath, nextPath);
       }
-      setWorldPath(newPath);
-      onWorldRenamed?.(oldPath, newPath);
+
+      if (shouldUpdateDescription) {
+        await updateWorldDescription(nextPath, trimmedDescription);
+      }
+
       onWorldsChanged();
-      toast.success("World renamed");
+      toast.success("World updated");
       onClose();
-    } catch (renameError) {
+    } catch (saveError) {
       toast.error(
-        renameError instanceof Error
-          ? renameError.message
-          : String(renameError),
+        saveError instanceof Error ? saveError.message : String(saveError),
       );
     } finally {
       setIsBusy(false);
     }
   }, [
     currentVaultPath,
+    description,
     name,
     onClose,
     onWorldRenamed,
     onWorldsChanged,
     renameWorld,
     setCurrentVault,
-    world?.name,
+    updateWorldDescription,
+    world,
     worldPath,
   ]);
 
@@ -134,6 +162,30 @@ export function WorldSettingsModal({
       setIsBusy(false);
     }
   }, [onClose, onWorldsChanged, saveWorldCover, worldPath]);
+
+  const handleExport = useCallback(async () => {
+    if (!worldPath || !world) {
+      return;
+    }
+    setIsBusy(true);
+    try {
+      const destinationPath = await pickWorldExportDestination(world.name);
+      if (!destinationPath) {
+        return;
+      }
+      await exportWorld(worldPath, destinationPath);
+      toast.success(`"${world.name}" exported`);
+      onClose();
+    } catch (exportError) {
+      toast.error(
+        exportError instanceof Error
+          ? exportError.message
+          : String(exportError),
+      );
+    } finally {
+      setIsBusy(false);
+    }
+  }, [onClose, world, worldPath]);
 
   const handleDelete = useCallback(async () => {
     if (!worldPath) {
@@ -169,8 +221,15 @@ export function WorldSettingsModal({
     worldPath,
   ]);
 
-  const nameChanged = world ? name.trim() !== world.name : false;
-  const canSaveRename = name.trim().length > 0 && nameChanged && !isBusy;
+  const trimmedName = name.trim();
+  const trimmedDescription = description.trim();
+  const nameChanged = world ? trimmedName !== world.name : false;
+  const descriptionChanged = world
+    ? trimmedDescription !== (world.description ?? "")
+    : false;
+  const hasUnsavedChanges = nameChanged || descriptionChanged;
+  const canSaveChanges =
+    trimmedName.length > 0 && hasUnsavedChanges && !isBusy;
 
   return (
     <AnimatedModal
@@ -188,8 +247,8 @@ export function WorldSettingsModal({
             World settings
           </h2>
           <p style={getBodyTextStyle("small")}>
-            Rename this world, change its cover image, or delete it from your
-            vault.
+            Rename this world, edit its description, export a backup, change its
+            cover image, or delete it from your vault.
           </p>
         </div>
         <CloseIconButton
@@ -199,8 +258,8 @@ export function WorldSettingsModal({
         />
       </header>
 
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-2">
           <label htmlFor="world-settings-name" className={fieldLabelClassName}>
             Rename
           </label>
@@ -216,7 +275,49 @@ export function WorldSettingsModal({
           />
         </div>
 
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-2">
+          <label
+            htmlFor="world-settings-description"
+            className={fieldLabelClassName}
+          >
+            Description
+          </label>
+          <Textarea
+            id="world-settings-description"
+            aria-label="World description"
+            placeholder="A short summary of your world (optional)"
+            minRows={3}
+            value={description}
+            onValueChange={setDescription}
+            isDisabled={isBusy}
+            classNames={darkFieldInputClassNames}
+          />
+        </div>
+
+        <div className="flex flex-col gap-3">
+          <span className={fieldLabelClassName}>Backup</span>
+          <div className="self-start">
+            <Button
+              variant="secondary"
+              size="base"
+              isDisabled={isBusy}
+              onPress={() => {
+                void handleExport();
+              }}
+              startContent={
+                <MaterialSymbol name="upload" className="text-base" />
+              }
+            >
+              Export world…
+            </Button>
+          </div>
+          <p className="text-sm leading-relaxed text-wn-mono-500">
+            Saves cards, links, images, timeline data, sticky notes, and canvas
+            layout to a `.worldnote.zip` file.
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-3">
           <span className={fieldLabelClassName}>Edit cover image</span>
           <div className="self-start">
             <Button
@@ -236,36 +337,37 @@ export function WorldSettingsModal({
         </div>
 
         {confirmDelete ? (
-          <p className="text-sm text-wn-mono-400">
-            Delete &ldquo;{world?.name}&rdquo; and all of its cards? This cannot
-            be undone.
-          </p>
+          <InlineAlert tone="danger" title="Delete this world?">
+            This will permanently delete &ldquo;{world?.name}&rdquo; and all of
+            its cards. This cannot be undone.
+          </InlineAlert>
         ) : null}
       </div>
 
-      <footer className="flex shrink-0 items-center justify-end gap-2 pt-2">
-          {confirmDelete ? (
-            <>
-              <Button
-                variant="secondary"
-                size="base"
-                isDisabled={isBusy}
-                onPress={() => setConfirmDelete(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="danger"
-                size="base"
-                isDisabled={isBusy}
-                onPress={() => {
-                  void handleDelete();
-                }}
-              >
-                Delete permanently
-              </Button>
-            </>
-          ) : (
+      <footer className="flex shrink-0 flex-wrap items-center justify-end gap-3 pt-6">
+        {confirmDelete ? (
+          <>
+            <Button
+              variant="secondary"
+              size="base"
+              isDisabled={isBusy}
+              onPress={() => setConfirmDelete(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="danger"
+              size="base"
+              isDisabled={isBusy}
+              onPress={() => {
+                void handleDelete();
+              }}
+            >
+              Delete permanently
+            </Button>
+          </>
+        ) : (
+          <>
             <Button
               variant="danger"
               size="base"
@@ -277,18 +379,25 @@ export function WorldSettingsModal({
             >
               Delete world
             </Button>
-          )}
-          <Button
-            variant="white"
-            size="base"
-            className={modalPrimaryButtonClassName}
-            isDisabled={!canSaveRename}
-            onPress={() => {
-              void handleSaveRename();
-            }}
-          >
-            Save name
-          </Button>
+            {hasUnsavedChanges ? (
+              <Button
+                variant="white"
+                size="base"
+                className={modalPrimaryButtonClassName}
+                isDisabled={!canSaveChanges}
+                onPress={() => {
+                  void handleSaveChanges();
+                }}
+              >
+                {nameChanged && descriptionChanged
+                  ? "Save changes"
+                  : nameChanged
+                    ? "Save name"
+                    : "Save description"}
+              </Button>
+            ) : null}
+          </>
+        )}
       </footer>
     </AnimatedModal>
   );

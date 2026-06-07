@@ -27,8 +27,8 @@ export const useSettings = create<SettingsState>((set) => ({
     }
   },
   save: async (settings) => {
-    await persistSettings(settings);
     set({ status: "ready", settings });
+    await persistSettings(settings);
   },
 }));
 

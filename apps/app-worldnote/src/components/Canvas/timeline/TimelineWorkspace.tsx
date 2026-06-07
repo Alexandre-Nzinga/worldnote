@@ -1,23 +1,39 @@
-import type { CalendarConfig, Era, Period, WorldCard } from "@worldnote/shared";
+import type { CalendarConfig, ChronologyEntry, WorldCard } from "@worldnote/shared";
 import {
   AnimatedModal,
   CloseIconButton,
   getBodyTextStyle,
   getHeadingProps,
 } from "@worldnote/ui";
-import type { DataItem, TimelineOptionsItemCallbackFunction } from "vis-timeline";
+import type { DataItem, TimelineEventPropertiesResult, TimelineOptionsItemCallbackFunction } from "vis-timeline";
 import "vis-timeline/styles/vis-timeline-graph2d.min.css";
-import { useCallback, useEffect, useMemo, useRef } from "react";
-import { pageBackdropClassName } from "../../shell/pageShellStyles.js";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   buildTimelineItems,
   computeTimelineWindow,
   type TimelineItemKind,
+  type TimelineItemPreview,
   type TimelineVisItem,
 } from "../../../services/timeline/buildTimelineItems.js";
-import { coerceTimelineDate, dateToYear, formatYear, yearToDate } from "../../../services/timeline/calendarFormat.js";
-import { createTimelineOptions } from "./timelineOptions.js";
+import { coerceTimelineDate, dateToYear, yearToDate } from "../../../services/timeline/calendarFormat.js";
+import {
+  createTimelineAxisFormat,
+  createTimelineOptions,
+} from "./timelineOptions.js";
+import { TimelineChronologyEditorModal } from "./TimelineChronologyEditorModal.js";
+import { TimelineChronologySidebar } from "./TimelineChronologySidebar.js";
+import { TimelineItemHoverCard } from "./TimelineItemHoverCard.js";
+import {
+  computeTimelineHoverCardPosition,
+  findTimelineItemElement,
+  TIMELINE_HOVER_CARD_HEIGHT,
+  TIMELINE_HOVER_CARD_WIDTH,
+  TIMELINE_PERIOD_HOVER_CARD_HEIGHT,
+} from "./timelineHoverPosition.js";
 import { useVisTimeline } from "./useVisTimeline.js";
+import { cardImageSrc } from "../../../services/canvas/cardNodeData.js";
+import { chronologyItemId } from "../../../services/timeline/timelineChronology.js";
+import { RichEmptyState } from "../../ui/RichEmptyState.js";
 import "./timeline.css";
 
 const timelineDialogClassName =
@@ -31,17 +47,22 @@ type TimelineWorkspaceProps = {
   onClose: () => void;
   vaultPath: string;
   cardsById: Record<string, WorldCard>;
-  eras: Era[];
-  periods: Period[];
+  chronology: ChronologyEntry[];
   calendarConfig: CalendarConfig;
   onSaveCard: (card: WorldCard) => Promise<void>;
-  onSaveEra: (era: Era) => Promise<void>;
-  onSavePeriod: (period: Period) => Promise<void>;
+  onSaveChronology: (entry: ChronologyEntry) => Promise<void>;
+  onDeleteChronology: (id: string) => Promise<void>;
 };
 
 type ItemMeta = {
   itemKind: TimelineItemKind;
   sourceId: string;
+  preview: TimelineItemPreview;
+};
+
+type TimelineHoverState = {
+  itemId: string;
+  anchorRect: DOMRect;
 };
 
 function toVisItem(item: TimelineVisItem): DataItem {
@@ -53,6 +74,7 @@ function toVisItem(item: TimelineVisItem): DataItem {
     type: item.type,
     group: item.group,
     className: item.className,
+    style: item.style,
     title: item.title,
   };
 }
@@ -77,29 +99,61 @@ export function TimelineWorkspace({
   onClose,
   vaultPath,
   cardsById,
-  eras,
-  periods,
+  chronology,
   calendarConfig,
   onSaveCard,
-  onSaveEra,
-  onSavePeriod,
+  onSaveChronology,
+  onDeleteChronology,
 }: TimelineWorkspaceProps) {
   const mountRef = useRef<HTMLDivElement>(null);
+  const timelineRootRef = useRef<HTMLDivElement>(null);
   const itemMetaRef = useRef<Map<string, ItemMeta>>(new Map());
+  const [hoverState, setHoverState] = useState<TimelineHoverState | null>(null);
+  const [selectedChronologyId, setSelectedChronologyId] = useState<string | null>(
+    null,
+  );
+  const [editorEntry, setEditorEntry] = useState<ChronologyEntry | null>(null);
   const cardsByIdRef = useRef(cardsById);
-  const erasRef = useRef(eras);
-  const periodsRef = useRef(periods);
+  const chronologyRef = useRef(chronology);
   const calendarSuffixRef = useRef(calendarConfig.suffix);
 
   cardsByIdRef.current = cardsById;
-  erasRef.current = eras;
-  periodsRef.current = periods;
+  chronologyRef.current = chronology;
   calendarSuffixRef.current = calendarConfig.suffix;
 
   const timelineData = useMemo(
-    () => buildTimelineItems({ cardsById, eras, periods }),
-    [cardsById, eras, periods],
+    () =>
+      buildTimelineItems({
+        cardsById,
+        chronology,
+        suffix: calendarConfig.suffix,
+      }),
+    [calendarConfig.suffix, cardsById, chronology],
   );
+
+  const itemMetaById = useMemo(() => {
+    const map = new Map<string, ItemMeta>();
+    for (const item of timelineData.items) {
+      let preview = item.preview;
+      if (item.itemKind === "character" || item.itemKind === "event") {
+        const card = cardsById[item.sourceId];
+        if (card) {
+          preview = {
+            ...preview,
+            cardType: card.card_type,
+            imageUrl: cardImageSrc(vaultPath, card.image_path),
+          };
+        }
+      }
+
+      map.set(item.id, {
+        itemKind: item.itemKind,
+        sourceId: item.sourceId,
+        preview,
+      });
+    }
+    return map;
+  }, [cardsById, timelineData.items, vaultPath]);
 
   const windowRange = useMemo(
     () => computeTimelineWindow(timelineData.items),
@@ -142,32 +196,21 @@ export function TimelineWorkspace({
         return;
       }
 
-      if (meta.itemKind === "era") {
-        const era = erasRef.current.find((entry) => entry.id === meta.sourceId);
-        if (!era || endYear === undefined) {
+      if (meta.itemKind === "chronology") {
+        const entry = chronologyRef.current.find(
+          (item) => item.id === meta.sourceId,
+        );
+        if (!entry || endYear === undefined) {
           return;
         }
-        await onSaveEra({
-          ...era,
-          start_year: startYear,
-          end_year: endYear,
-        });
-        return;
-      }
-
-      if (meta.itemKind === "period") {
-        const period = periodsRef.current.find((entry) => entry.id === meta.sourceId);
-        if (!period || endYear === undefined) {
-          return;
-        }
-        await onSavePeriod({
-          ...period,
+        await onSaveChronology({
+          ...entry,
           start_year: startYear,
           end_year: endYear,
         });
       }
     },
-    [onSaveCard, onSaveEra, onSavePeriod],
+    [onSaveCard, onSaveChronology],
   );
 
   const debouncedPersistRef = useRef(
@@ -205,22 +248,24 @@ export function TimelineWorkspace({
   windowRangeRef.current = windowRange;
 
   const createOptions = useCallback(
-    (height: number) =>
+    (size: { width: number; height: number }) =>
       createTimelineOptions({
         suffix: calendarSuffixRef.current,
         min: windowRangeRef.current.min,
         max: windowRangeRef.current.max,
-        height,
+        width: size.width,
+        height: size.height,
         onMoving: handleMoving,
         onMove: handleMove,
       }),
     [handleMove, handleMoving],
   );
 
-  const { timelineRef, itemsRef, groupsRef, initError, isReady, hostHeight } =
+  const { timelineRef, itemsRef, groupsRef, initError, isReady, hostSize } =
     useVisTimeline({
       isOpen,
       mountRef,
+      containerRef: timelineRootRef,
       createOptions,
     });
 
@@ -238,7 +283,11 @@ export function TimelineWorkspace({
 
     const meta = new Map<string, ItemMeta>();
     for (const item of timelineData.items) {
-      meta.set(item.id, { itemKind: item.itemKind, sourceId: item.sourceId });
+      meta.set(item.id, {
+        itemKind: item.itemKind,
+        sourceId: item.sourceId,
+        preview: item.preview,
+      });
     }
     itemMetaRef.current = meta;
 
@@ -256,18 +305,15 @@ export function TimelineWorkspace({
       max: windowRange.max,
       start: windowRange.min,
       end: windowRange.max,
-      height: hostHeight > 0 ? hostHeight : undefined,
-      format: {
-        minorLabels: (date: unknown) =>
-          formatYear(dateToYear(date), calendarConfig.suffix),
-        majorLabels: (date: unknown) =>
-          formatYear(dateToYear(date), calendarConfig.suffix),
-      },
+      height: hostSize.height > 0 ? hostSize.height : undefined,
+      width: hostSize.width > 0 ? hostSize.width : "100%",
+      format: createTimelineAxisFormat(calendarConfig.suffix),
     });
     timeline.redraw();
   }, [
     calendarConfig.suffix,
-    hostHeight,
+    hostSize.height,
+    hostSize.width,
     isReady,
     itemsRef,
     groupsRef,
@@ -276,6 +322,98 @@ export function TimelineWorkspace({
     windowRange.max,
     windowRange.min,
   ]);
+
+  useEffect(() => {
+    if (!isReady) {
+      return;
+    }
+
+    const timeline = timelineRef.current;
+    if (!timeline) {
+      return;
+    }
+
+    const handleItemOver = (properties: TimelineEventPropertiesResult) => {
+      if (properties.item == null) {
+        return;
+      }
+      const itemId = String(properties.item);
+      if (!itemMetaById.has(itemId)) {
+        return;
+      }
+
+      const itemElement = findTimelineItemElement(
+        properties.event,
+        mountRef.current,
+      );
+      if (!itemElement) {
+        return;
+      }
+
+      setHoverState({
+        itemId,
+        anchorRect: itemElement.getBoundingClientRect(),
+      });
+    };
+
+    const handleItemOut = () => {
+      setHoverState(null);
+    };
+
+    timeline.on("itemover", handleItemOver);
+    timeline.on("itemout", handleItemOut);
+
+    return () => {
+      timeline.off("itemover", handleItemOver);
+      timeline.off("itemout", handleItemOut);
+    };
+  }, [isReady, itemMetaById, timelineRef]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setHoverState(null);
+      setEditorEntry(null);
+      setSelectedChronologyId(null);
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isReady || !selectedChronologyId) {
+      return;
+    }
+    const timeline = timelineRef.current;
+    if (!timeline) {
+      return;
+    }
+    timeline.focus(chronologyItemId(selectedChronologyId), { animation: true });
+  }, [isReady, selectedChronologyId, timelineRef]);
+
+  const hoveredItem = hoverState ? itemMetaById.get(hoverState.itemId) : undefined;
+
+  const hoverCardStyle = useMemo(() => {
+    if (!hoverState || !timelineRootRef.current) {
+      return undefined;
+    }
+
+    const rootRect = timelineRootRef.current.getBoundingClientRect();
+    const cardHeight =
+      hoveredItem?.itemKind === "chronology"
+        ? TIMELINE_PERIOD_HOVER_CARD_HEIGHT
+        : TIMELINE_HOVER_CARD_HEIGHT;
+    const { left, top } = computeTimelineHoverCardPosition(
+      hoverState.anchorRect,
+      rootRect,
+      TIMELINE_HOVER_CARD_WIDTH,
+      cardHeight,
+    );
+
+    return {
+      position: "absolute" as const,
+      left,
+      top,
+      zIndex: 30,
+    };
+  }, [hoverState, hoveredItem]);
 
   const worldName = vaultPath.split(/[/\\]/).pop();
 
@@ -288,46 +426,77 @@ export function TimelineWorkspace({
       labelledBy="timeline-workspace-title"
       backdropLabel="Close timeline"
     >
-      <div aria-hidden className={pageBackdropClassName} />
-      <header className="relative z-10 flex shrink-0 items-center justify-between gap-3 border-b border-wn-border px-4 py-3">
-        <div className="flex min-w-0 items-center gap-3">
-          <h1 id="timeline-workspace-title" {...getHeadingProps("h2", { tone: "inverse" })}>
+      <header className="relative z-10 flex shrink-0 items-center justify-between px-5 py-4">
+        <div>
+          <h2
+            id="timeline-workspace-title"
+            {...getHeadingProps("h3", { tone: "inverse" })}
+          >
             Timeline
-          </h1>
-          <p style={getBodyTextStyle("small")} className="text-wn-text-muted">
+          </h2>
+          <p className="mt-0.5" style={getBodyTextStyle("small")}>
             {worldName}
           </p>
         </div>
         <CloseIconButton aria-label="Close timeline" onPress={onClose} />
       </header>
 
-      <div className="relative z-10 flex min-h-0 flex-1 flex-col p-3">
-        <div className="wn-timeline-root relative min-h-0 flex-1 overflow-hidden rounded-lg border border-wn-border bg-wn-surface/40">
-          <div className="absolute inset-0 min-h-80">
-            <div ref={mountRef} className="wn-timeline-mount h-full w-full" />
+      <div className="relative z-10 flex min-h-0 flex-1">
+        <TimelineChronologySidebar
+          chronology={chronology}
+          suffix={calendarConfig.suffix}
+          selectedId={selectedChronologyId}
+          onSelect={setSelectedChronologyId}
+          onEdit={setEditorEntry}
+          onCreate={setEditorEntry}
+          onDelete={(id) => {
+            void onDeleteChronology(id);
+          }}
+        />
+
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col px-4 pb-4 pr-5">
+          <div
+            ref={timelineRootRef}
+            className="wn-timeline-root relative min-h-0 flex-1 overflow-hidden rounded-2xl border border-wn-border bg-wn-surface"
+          >
+            <div ref={mountRef} className="wn-timeline-mount absolute inset-0" />
+
+            {hoveredItem && hoverCardStyle ? (
+              <TimelineItemHoverCard
+                preview={hoveredItem.preview}
+                itemKind={hoveredItem.itemKind}
+                style={hoverCardStyle}
+              />
+            ) : null}
+
+            {initError ? (
+              <div className="absolute inset-0 z-10 flex items-center justify-center bg-wn-surface/90 p-6">
+                <p style={getBodyTextStyle("small")} className="text-wn-text-muted">
+                  {initError}
+                </p>
+              </div>
+            ) : null}
+
+            {!initError && isReady && timelineData.items.length === 0 ? (
+              <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center p-6">
+                <RichEmptyState
+                  title="Nothing on the timeline yet"
+                  description="Add time periods in the sidebar, or set birth and start years on character and event cards."
+                  className="pointer-events-auto max-w-md shadow-lg"
+                />
+              </div>
+            ) : null}
           </div>
-
-          {initError ? (
-            <div className="absolute inset-0 flex items-center justify-center bg-wn-bg/80 p-6">
-              <p style={getBodyTextStyle("small")} className="text-wn-text-muted">
-                {initError}
-              </p>
-            </div>
-          ) : null}
-
-          {!initError && isReady && timelineData.items.length === 0 ? (
-            <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-6">
-              <p
-                style={getBodyTextStyle("small")}
-                className="max-w-md text-center text-wn-text-muted"
-              >
-                Add birth/start years on character or event cards to populate the timeline.
-                Legacy birthdate strings with a number (e.g. 10191 AG) also work.
-              </p>
-            </div>
-          ) : null}
         </div>
       </div>
+
+      <TimelineChronologyEditorModal
+        isOpen={editorEntry !== null}
+        entry={editorEntry}
+        chronology={chronology}
+        onClose={() => setEditorEntry(null)}
+        onSave={onSaveChronology}
+      />
     </AnimatedModal>
   );
 }

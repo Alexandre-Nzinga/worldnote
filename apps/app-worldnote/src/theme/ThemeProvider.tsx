@@ -2,6 +2,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useLayoutEffect,
   useState,
   type ReactNode,
 } from "react";
@@ -42,14 +43,37 @@ function resolveTheme(
   return preference;
 }
 
-function applyThemeClass(resolved: ResolvedTheme) {
+function readStoredThemePreference(): ThemePreference | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  try {
+    const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
+    if (stored === "light" || stored === "dark" || stored === "system") {
+      return stored;
+    }
+  } catch {
+    // Storage may be unavailable.
+  }
+  return null;
+}
+
+function resolveThemePreference(
+  saved: ThemePreference | undefined,
+): ThemePreference {
+  return saved ?? readStoredThemePreference() ?? "system";
+}
+
+/** Sync `html` class for Tailwind/HeroUI theme tokens and the boot script. */
+export function applyThemeClass(resolved: ResolvedTheme) {
   const root = document.documentElement;
-  root.classList.toggle("dark", resolved === "dark");
-  root.classList.toggle("light", resolved === "light");
+  root.classList.remove("dark", "light");
+  root.classList.add(resolved);
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const preference = useSettings((state) => state.settings?.theme) ?? "system";
+  const savedTheme = useSettings((state) => state.settings?.theme);
+  const preference = resolveThemePreference(savedTheme);
   const primaryColor = useSettings((state) => state.settings?.primaryColor);
   const [systemDark, setSystemDark] = useState(systemPrefersDark);
 
@@ -69,7 +93,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const resolved = resolveTheme(preference, systemDark);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     applyThemeClass(resolved);
   }, [resolved]);
 

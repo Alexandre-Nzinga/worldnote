@@ -1,3 +1,4 @@
+@import "@fontsource-variable/urbanist";
 @import "tailwindcss";
 @import "./material-symbols.css";
 
@@ -12,7 +13,7 @@
  */
 
 @theme inline {
-  --font-sans: "Urbanist", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Urbanist Variable", "Urbanist", ui-sans-serif, system-ui, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
   --font-weight-wn-thin: 100;
@@ -200,12 +201,12 @@
 }
 
 /*
- * Theme resolution. `:root` defaults to dark (preserves current look and avoids
- * a flash before the theme class is applied). `.light` overrides the primitive
- * mono ramp with hand-tuned light values plus the semantic role tokens.
+ * Theme resolution. Default to dark before the boot script runs (`:root:not(.light)`).
+ * When `html.light` is set, only the `.light` block below applies — do not pair
+ * `:root` with `.dark` or dark tokens win the cascade on the same element.
  */
-:root,
-.dark {
+.dark,
+:root:not(.light) {
   /* WORLDNOTE-MONO — dark */
   --wn-mono-50: oklch(98.5% 0 0);
   --wn-mono-100: oklch(96.7% 0 0);

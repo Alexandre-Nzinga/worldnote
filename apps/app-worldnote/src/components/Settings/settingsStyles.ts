@@ -8,7 +8,10 @@ export {
   panelFieldInputClassNames as settingsFieldInputClassNames,
 } from "../shell/pageShellStyles.js";
 
-export { selectButtonTriggerClassName as settingsSelectClassName } from "@worldnote/ui";
+export {
+  selectButtonTriggerClassName as settingsSelectClassName,
+  selectSwatchButtonTriggerClassName as settingsSwatchSelectClassName,
+} from "@worldnote/ui";
 
 export const settingsReadOnlyValueClassName =
   "rounded-full border border-wn-border-strong bg-wn-surface px-3 py-2.5 text-sm text-wn-text";

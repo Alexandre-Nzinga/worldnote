@@ -1,6 +1,8 @@
-import { Button } from "@worldnote/ui";
+import { Input } from "@heroui/react";
+import { Button, fieldLabelClassName } from "@worldnote/ui";
 import { useCallback, useMemo, useState } from "react";
 import { pickDirectory } from "../../services/desktop/pickDirectory.js";
+import { darkFieldInputClassNames } from "./fieldClassNames.js";
 import { StepLayout } from "./StepLayout.js";
 
 const WORLDNOTE_FOLDER = "WorldNote";
@@ -64,47 +66,43 @@ export function StorageStep({
         </button>
       }
       title="Where should we store your worlds?"
-      stepNumber={2}
       actionLabel="Save"
       onAction={onSave}
       actionDisabled={!parentDir || isSaving}
     >
-      <div className="flex flex-col gap-3">
-        <span className="text-sm text-wn-mono-50">Browse location</span>
-
-        <button
-          type="button"
-          disabled={isBrowsing || isSaving}
-          className="w-full rounded-xl border border-wn-mono-700 bg-wn-mono-900 px-4 py-3 text-left transition-colors hover:border-wn-mono-500 hover:bg-wn-mono-800 disabled:cursor-not-allowed disabled:opacity-50"
-          onClick={() => {
-            void handleBrowse();
-          }}
-        >
-          <span className="block text-xs text-wn-mono-500">WorldNote folder</span>
-          <span className="mt-1 block truncate text-sm text-wn-mono-50">
-            {displayPath || "Choose a folder on your machine"}
-          </span>
-        </button>
-
-        <Button
-          variant="secondary"
-          size="base"
-          className="self-start"
-          isDisabled={isBrowsing || isSaving}
-          onPress={() => {
-            void handleBrowse();
-          }}
-        >
-          {isBrowsing ? "Opening…" : "Browse…"}
-        </Button>
+      <div className="flex flex-col gap-1">
+        <span className={fieldLabelClassName}>Browse location</span>
+        <div className="flex gap-2">
+          <Input
+            isReadOnly
+            aria-label="Browse location"
+            placeholder="Choose a folder on your machine"
+            value={displayPath}
+            isDisabled={isBrowsing || isSaving}
+            classNames={{
+              ...darkFieldInputClassNames,
+              base: "flex-1",
+            }}
+          />
+          <Button
+            variant="secondary"
+            size="base"
+            isDisabled={isBrowsing || isSaving}
+            onPress={() => {
+              void handleBrowse();
+            }}
+          >
+            {isBrowsing ? "Opening…" : "Browse…"}
+          </Button>
+        </div>
 
         {browseError ? (
-          <p className="text-sm text-wn-red-400" role="alert">
+          <p className="mt-2 text-sm text-wn-red-400" role="alert">
             {browseError}
           </p>
         ) : null}
         {error ? (
-          <p className="text-sm text-wn-red-400" role="alert">
+          <p className="mt-2 text-sm text-wn-red-400" role="alert">
             {error}
           </p>
         ) : null}

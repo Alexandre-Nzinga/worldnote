@@ -17,12 +17,29 @@ describe("buildTimelineItems", () => {
 
     const { items } = buildTimelineItems({
       cardsById: { [paul.id]: paul },
-      eras: [],
-      periods: [],
+      chronology: [],
     });
 
     expect(items).toHaveLength(1);
     expect(items[0]?.content).toContain("Paul Atreides");
     expect(items[0]?.start.getUTCFullYear()).toBe(10191);
+  });
+
+  it("applies period colors to chronology bars", () => {
+    const { items } = buildTimelineItems({
+      cardsById: {},
+      chronology: [
+        {
+          id: "00000000-0000-4000-8000-000000000010",
+          name: "Golden Age",
+          start_year: 0,
+          end_year: 500,
+          color: "#6366f1",
+        },
+      ],
+    });
+
+    expect(items).toHaveLength(1);
+    expect(items[0]?.style).toContain("#6366f1");
   });
 });

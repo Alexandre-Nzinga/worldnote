@@ -1,6 +1,5 @@
-import { Input } from "@heroui/react";
+import { Field } from "@worldnote/ui";
 import { useState } from "react";
-import { onboardingFieldClassNames } from "./fieldClassNames.js";
 import { StepLayout } from "./StepLayout.js";
 
 type UsernameStepProps = {
@@ -26,11 +25,10 @@ export function UsernameStep({ value, onChange, onNext }: UsernameStepProps) {
     <StepLayout
       eyebrow="Welcome to WorldNote"
       title="What should we call you?"
-      stepNumber={1}
       actionLabel="Next"
       onAction={handleNext}
     >
-      <Input
+      <Field
         autoFocus
         label="Username"
         placeholder="Enter name here"
@@ -43,7 +41,9 @@ export function UsernameStep({ value, onChange, onNext }: UsernameStepProps) {
         }}
         isInvalid={isInvalid}
         errorMessage={isInvalid ? "Username is required" : undefined}
-        classNames={onboardingFieldClassNames}
+        classNames={{
+          errorMessage: "text-wn-red-400",
+        }}
       />
     </StepLayout>
   );

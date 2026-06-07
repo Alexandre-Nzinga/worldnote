@@ -12,7 +12,6 @@ import {
   primaryColorSwatchRingClassName,
   type PrimaryColorToken,
 } from "../../services/settings/primaryColorSettings.js";
-import { primaryAccentRingOnSurfaceClassName } from "../../services/settings/primaryAccentStyles.js";
 import { settingsPanelClassName } from "./settingsStyles.js";
 
 const swatchClassName =
@@ -21,7 +20,8 @@ const swatchClassName =
 const swatchButtonClassName =
   "flex flex-col items-center gap-1.5 rounded-xl p-2 transition-colors hover:bg-wn-surface-raised";
 
-const selectedSwatchButtonClassName = `bg-wn-surface-raised ${primaryAccentRingOnSurfaceClassName}`;
+const selectedSwatchButtonClassName =
+  "bg-wn-surface-raised shadow-sm ring-2 ring-wn-border-strong ring-offset-2 ring-offset-wn-surface";
 
 type PrimaryColorSettingProps = {
   disabled?: boolean;

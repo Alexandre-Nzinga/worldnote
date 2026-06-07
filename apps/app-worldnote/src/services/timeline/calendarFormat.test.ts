@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { coerceTimelineDate, dateToYear, formatYear, yearToDate } from "./calendarFormat.js";
+import {
+  coerceTimelineDate,
+  dateToYear,
+  formatTimelineDateLabel,
+  formatYear,
+  yearToDate,
+} from "./calendarFormat.js";
 
 describe("dateToYear", () => {
   it("reads UTC years from Date values", () => {
@@ -30,5 +36,17 @@ describe("coerceTimelineDate", () => {
 describe("formatYear", () => {
   it("appends the era suffix when provided", () => {
     expect(formatYear(10191, "AG")).toBe("10191 AG");
+  });
+});
+
+describe("formatTimelineDateLabel", () => {
+  it("labels character birth points", () => {
+    expect(formatTimelineDateLabel(234, undefined, "AG", { bornLabel: true })).toBe(
+      "Born 234 AG",
+    );
+  });
+
+  it("labels year ranges", () => {
+    expect(formatTimelineDateLabel(234, 256, "AG")).toBe("234 AG – 256 AG");
   });
 });

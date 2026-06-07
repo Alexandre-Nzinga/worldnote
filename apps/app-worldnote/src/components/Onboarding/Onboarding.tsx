@@ -98,22 +98,28 @@ export function Onboarding({ onComplete }: OnboardingProps) {
     }
   };
 
+  const showHeader = step !== "welcome";
+
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-wn-mono-950 text-wn-mono-100">
-      <motion.header
-        className="flex items-center gap-3 px-[46px] pt-7"
-        initial={{ opacity: 0, y: -8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-      >
-        <WorldNoteLogo
-          variant="icon"
-          tone={theme === "dark" ? "white" : "black"}
-          className="h-7 w-7 opacity-90"
-          alt="WorldNote"
-        />
-        <span className="text-2xl font-semibold text-wn-mono-50">WorldNote</span>
-      </motion.header>
+      {showHeader ? (
+        <motion.header
+          className="flex items-center gap-3 px-[46px] pt-7"
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <WorldNoteLogo
+            variant="icon"
+            tone={theme === "dark" ? "white" : "black"}
+            className="h-7 w-7 opacity-90"
+            alt="WorldNote"
+          />
+          <span className="text-2xl font-semibold text-wn-mono-50">
+            WorldNote
+          </span>
+        </motion.header>
+      ) : null}
 
       <div className="flex min-h-0 flex-1 flex-col overflow-x-hidden">
         <AnimatePresence mode="wait" custom={direction}>

@@ -27,3 +27,5 @@ futures-util = "0.3"
 worldnote_persistence = { path = "../../../packages/pkg-persistence" }
 image = { version = "0.25", default-features = false, features = ["jpeg", "png", "gif", "webp", "bmp", "tiff"] }
 webp = "0.3"
+walkdir = "2"
+zip = "2"

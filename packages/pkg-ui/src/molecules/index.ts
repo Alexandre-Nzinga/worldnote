@@ -11,5 +11,5 @@ export * from "./menus/ActionMenu/ActionMenu.js";
 export * from "./navigation/Tabs/Tabs.js";
 export * from "./navigation/Accordion/Accordion.js";
 
-/** Content surfaces (cards, panels). */
-export * from "./surfaces/Card/Card.js";
+/** Content surfaces (cards, panels, inline alerts). */
+export * from "./surfaces/index.js";

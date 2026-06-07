@@ -43,7 +43,7 @@ pub struct WorldSummary {
     pub cover_image: Option<String>,
 }
 
-fn world_paths(root: &Path) -> (PathBuf, PathBuf, PathBuf, PathBuf) {
+pub(crate) fn world_paths(root: &Path) -> (PathBuf, PathBuf, PathBuf, PathBuf) {
     let worldnote_dir = root.join(".worldnote");
     let lore_dir = root.join("lore");
     let manifest_path = root.join("canvas_manifest.json");
@@ -196,7 +196,7 @@ fn latest_modified_in_tree(dir: &Path) -> u64 {
 }
 
 /// Latest modification time across vault content (cards, canvas, links, metadata).
-fn world_last_edited_secs(world_path: &Path) -> u64 {
+pub(crate) fn world_last_edited_secs(world_path: &Path) -> u64 {
     let (worldnote_dir, lore_dir, manifest_path, _) = world_paths(world_path);
     let metadata_path = worldnote_dir.join("world.json");
     let links_dir = world_path.join("links");
@@ -338,6 +338,37 @@ pub fn rename_world(world_path: String, new_name: String) -> Result<String, Stri
     fs::rename(&world_root, &new_root).map_err(|error| error.to_string())?;
 
     Ok(new_root.to_string_lossy().into_owned())
+}
+
+#[tauri::command]
+pub fn update_world_description(world_path: String, description: String) -> Result<(), String> {
+    let world_root = PathBuf::from(&world_path);
+    if !world_root.is_dir() {
+        return Err("World folder does not exist".to_string());
+    }
+
+    let mut metadata = read_world_metadata(&world_root)?;
+    metadata.description = description.trim().to_string();
+    write_world_metadata(&world_root, &metadata)?;
+
+    Ok(())
+}
+
+pub(crate) fn world_display_name(world_path: &Path) -> Result<String, String> {
+    Ok(read_world_metadata(world_path)?.name)
+}
+
+pub(crate) fn summarize_world(world_path: &Path) -> Result<WorldSummary, String> {
+    let metadata = read_world_metadata(world_path)?;
+    let (_, lore_dir, _, _) = world_paths(world_path);
+    Ok(WorldSummary {
+        path: world_path.to_string_lossy().into_owned(),
+        name: metadata.name,
+        description: metadata.description,
+        card_count: count_lore_cards(&lore_dir),
+        last_edited: world_last_edited_secs(world_path),
+        cover_image: metadata.cover_image,
+    })
 }
 
 #[tauri::command]
