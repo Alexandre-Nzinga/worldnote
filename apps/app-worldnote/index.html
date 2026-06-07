@@ -1,22 +1,45 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>WorldNote</title>
     <script>
-      // Apply the saved theme before first paint to avoid a flash of the wrong theme.
+      // Apply saved primary accent before first paint.
       (function () {
         try {
-          var pref = localStorage.getItem("wn-theme") || "system";
-          var prefersDark =
-            window.matchMedia &&
-            window.matchMedia("(prefers-color-scheme: dark)").matches;
-          var dark = pref === "dark" || (pref === "system" && prefersDark);
           var root = document.documentElement;
-          root.classList.remove("dark", "light");
-          root.classList.add(dark ? "dark" : "light");
+          root.classList.remove("light");
+          root.classList.add("dark");
+
+          var storedPrimary = localStorage.getItem("wn-primary-color-style");
+          if (storedPrimary) {
+            var primaryStyle = JSON.parse(storedPrimary);
+            if (primaryStyle.primary) {
+              root.style.setProperty("--wn-primary", primaryStyle.primary);
+            }
+            if (primaryStyle.hover) {
+              root.style.setProperty("--wn-primary-hover", primaryStyle.hover);
+            }
+            if (primaryStyle.foreground) {
+              root.style.setProperty(
+                "--wn-primary-foreground",
+                primaryStyle.foreground,
+              );
+            }
+            var style = document.createElement("style");
+            style.id = "wn-primary-accent";
+            style.textContent =
+              ":root { --wn-primary: " +
+              primaryStyle.primary +
+              " !important; --wn-primary-hover: " +
+              primaryStyle.hover +
+              " !important; --wn-primary-foreground: " +
+              primaryStyle.foreground +
+              " !important; }";
+            document.head.appendChild(style);
+          }
         } catch (error) {
           document.documentElement.classList.add("dark");
         }
@@ -28,4 +51,3 @@
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
-

@@ -1,8 +1,10 @@
 import type { Link, WorldCard } from "@worldnote/shared";
 import {
   AnimatedPanel,
+  Button,
   CloseIconButton,
   getHeadingProps,
+  MaterialSymbol,
   WorldNoteLogo,
 } from "@worldnote/ui";
 import {
@@ -24,6 +26,7 @@ import { useWizardCardDropListener } from "./useWizardCardDropListener.js";
 import { WizardActionChips } from "./WizardActionChips.js";
 import { WizardChatInput } from "./WizardChatInput.js";
 import { WizardMessage } from "./WizardMessage.js";
+import { WizardSessionList } from "./WizardSessionList.js";
 import { useWorldWizard } from "./useWorldWizard.js";
 
 const panelClassName =
@@ -79,8 +82,10 @@ export function WorldWizardPanel({
     links,
     isOpen,
     seedCardIds,
+    onSpawnGeneratedCard: onSpawnCard,
   });
   const [input, setInput] = useState("");
+  const [showSessions, setShowSessions] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const quickCommands = useSettings(
     (state) => state.settings?.wizard?.quickCommands,
@@ -95,6 +100,12 @@ export function WorldWizardPanel({
   const canSend = Boolean(wizard.model) && !busy && input.trim().length > 0;
 
   useWizardCardDropListener(wizard.addCard, isOpen);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setShowSessions(false);
+    }
+  }, [isOpen]);
 
   const scrollKey = `${wizard.messages.length}:${wizard.messages.at(-1)?.content.length ?? 0}`;
 
@@ -162,14 +173,59 @@ export function WorldWizardPanel({
           </h2>
           <StatusDot healthy={wizard.healthy} />
         </div>
-        <CloseIconButton aria-label="Close WorldWizard" onPress={onClose} />
+        <div className="flex items-center gap-1">
+          <Button
+            isIconOnly
+            variant="ghost"
+            size="sm"
+            aria-label="New conversation"
+            title="New conversation"
+            onPress={() => {
+              wizard.startNewSession();
+              setShowSessions(false);
+            }}
+            className="text-wn-mono-400"
+          >
+            <MaterialSymbol name="edit_square" className="text-base" />
+          </Button>
+          <Button
+            isIconOnly
+            variant="ghost"
+            size="sm"
+            aria-label="Conversation history"
+            title="Conversation history"
+            onPress={() => setShowSessions((current) => !current)}
+            className={showSessions ? "text-wn-mono-50" : "text-wn-mono-400"}
+          >
+            <MaterialSymbol name="history" className="text-base" />
+          </Button>
+          <CloseIconButton aria-label="Close WorldWizard" onPress={onClose} />
+        </div>
       </header>
 
       <div
         ref={scrollRef}
         className="scrollbar-wn flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-3"
       >
-        {wizard.messages.length === 0 ? (
+        {showSessions ? (
+          <WizardSessionList
+            activeSessionId={wizard.activeSessionId}
+            activeSessions={wizard.activeSessions}
+            archivedSessions={wizard.archivedSessions}
+            onSelectSession={(sessionId) => {
+              wizard.switchSession(sessionId);
+              setShowSessions(false);
+            }}
+            onStartNewSession={() => {
+              wizard.startNewSession();
+              setShowSessions(false);
+            }}
+            onArchiveSession={wizard.archiveSession}
+            onUnarchiveSession={wizard.unarchiveSession}
+            onDeleteSession={wizard.deleteSession}
+            onBack={() => setShowSessions(false)}
+          />
+        ) : wizard.messages.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center gap-2 text-center text-xs text-wn-mono-500">
             <WorldNoteLogo
               variant="icon"
@@ -181,7 +237,7 @@ export function WorldWizardPanel({
             <p className="max-w-[16rem]">
               {wizard.contextScope === "focused" && wizard.droppedCards.length > 0
                 ? `${wizard.droppedCards.length} card(s) loaded as context. Drop more cards or chat to expand.`
-                : "Drop cards into the chat box, then ask the wizard to simulate conversations, events, or breed new cards."}
+                : "Try \"create a wizard character\" to spawn a card, or open history to revisit past conversations."}
             </p>
           </div>
         ) : (
@@ -197,18 +253,19 @@ export function WorldWizardPanel({
       </div>
 
       <div className="flex flex-col gap-2 px-4 py-3">
-        {actions.length > 0 ? (
+        {showSessions ? null : actions.length > 0 ? (
           <WizardActionChips
             actions={actions}
             disabled={busy || !wizard.model}
             onRun={wizard.runAction}
           />
         ) : null}
-        {wizard.healthy === false ? (
+        {showSessions ? null : wizard.healthy === false ? (
           <p className="text-xs text-wn-red-400">
             Could not reach Ollama at {wizard.host}. Make sure it is running.
           </p>
         ) : null}
+        {showSessions ? null : (
         <WizardChatInput
           cards={wizard.droppedCards}
           cardsById={cardsById}
@@ -233,6 +290,7 @@ export function WorldWizardPanel({
               : "Connect a local model to begin"
           }
         />
+        )}
       </div>
       </div>
     </AnimatedPanel>

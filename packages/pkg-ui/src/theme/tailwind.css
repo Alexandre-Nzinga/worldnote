@@ -66,6 +66,13 @@
   --text-wn-small: 0.889rem;
   --text-wn-xs: 0.79rem;
 
+  /* Semantic form/panel text — aliases; constants in molecules/forms/fieldStyles.ts */
+  --text-wn-title: var(--text-wn-h5);
+  --text-wn-subtitle: var(--text-wn-body);
+  --text-wn-description: var(--text-wn-small);
+  --text-wn-hint: var(--text-wn-xs);
+  --text-wn-label: 0.875rem;
+
   --radius-xl: 0.75rem;
   --radius-2xl: 1rem;
   --radius-wn-card: 1.25rem;

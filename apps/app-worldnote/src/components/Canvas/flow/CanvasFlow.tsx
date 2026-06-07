@@ -53,7 +53,6 @@ import { useCanvasPointerTracking } from "../hooks/useCanvasPointerTracking.js";
 import type { CanvasPointerApi } from "../hooks/useCanvasPointerTracking.js";
 import type { CanvasFlowPointer } from "../../../services/canvas/canvasSpawnPosition.js";
 import { CANVAS_SNAP_GRID_SIZE } from "../../../services/canvas/canvasLayout.js";
-import { useResolvedTheme } from "../../../theme/ThemeProvider.js";
 import { CANVAS_VIRTUALIZE_NODE_THRESHOLD } from "../helpers/canvasSelectionHelpers.js";
 
 type CanvasFlowProps = {
@@ -222,7 +221,6 @@ export function CanvasFlow({
   const onNodeMouseEnter = onCardMouseEnter as NodeMouseHandler<Node>;
   const onNodeMouseLeave = onCardMouseLeave as NodeMouseHandler<Node>;
 
-  const resolvedTheme = useResolvedTheme();
   const onlyRenderVisibleElements =
     nodes.length >= CANVAS_VIRTUALIZE_NODE_THRESHOLD;
 
@@ -250,7 +248,7 @@ export function CanvasFlow({
       backgroundVariant={BackgroundVariant.Dots}
       backgroundColor="var(--color-wn-mono-700)"
       backgroundGap={CANVAS_SNAP_GRID_SIZE}
-      colorMode={resolvedTheme}
+      colorMode="dark"
       panOnDrag={[1, 2]}
       panOnScroll={false}
       zoomOnScroll

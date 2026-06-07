@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 
 export type SettingsSection =
   | "profile"
-  | "measurements"
+  | "worldDefaults"
   | "appearance"
   | "canvas"
   | "modules"
@@ -22,19 +22,19 @@ export const SETTINGS_SECTIONS: SettingsNavItem[] = [
     id: "profile",
     label: "Profile",
     icon: "person",
-    description: "Username and storage location.",
+    description: "Username, avatar color, and storage location.",
   },
   {
-    id: "measurements",
-    label: "Measurements",
-    icon: "straighten",
-    description: "How weight, height, temperature, and other units appear on cards.",
+    id: "worldDefaults",
+    label: "World defaults",
+    icon: "public",
+    description: "Defaults that define how your world works.",
   },
   {
     id: "appearance",
     label: "Appearance",
     icon: "palette",
-    description: "Theme and primary accent color for main actions.",
+    description: "Primary accent color for main actions.",
   },
   {
     id: "canvas",
@@ -46,7 +46,7 @@ export const SETTINGS_SECTIONS: SettingsNavItem[] = [
     id: "modules",
     label: "Modules",
     icon: "extension",
-    description: "Optional features you can turn on or off.",
+    description: "Optional canvas features and their display options.",
   },
   {
     id: "wizard",

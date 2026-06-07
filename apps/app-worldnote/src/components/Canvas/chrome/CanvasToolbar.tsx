@@ -7,7 +7,7 @@ import {
 } from "@worldnote/shared";
 import {
   AnimatedPopover,
-  fieldLabelClassName,
+  wnLabelClassName,
   getBodyTextStyle,
   getHeadingProps,
   MaterialSymbol,
@@ -432,7 +432,7 @@ function CreateCardClassColumn({
 }: CreateCardClassColumnProps) {
   return (
     <div className={createColumnPanelClassName}>
-      <span className={`${fieldLabelClassName} mb-2 block`}>
+      <span className={`${wnLabelClassName} mb-2 block`}>
         {CARD_CLASS_LABELS[cardClass]}
       </span>
       <div className="flex flex-col gap-0.5">

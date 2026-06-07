@@ -1,4 +1,4 @@
-import { fieldLabelClassName } from "@worldnote/ui";
+import { wnLabelClassName } from "@worldnote/ui";
 import {
   CHRONOLOGY_PERIOD_COLOR_OPTIONS,
   normalizeChronologyColor,
@@ -28,7 +28,7 @@ export function ChronologyColorPicker({
 
   return (
     <div className="flex flex-col gap-2">
-      <span className={fieldLabelClassName}>Color</span>
+      <span className={wnLabelClassName}>Color</span>
       <fieldset
         className="m-0 min-w-0 border-0 p-0"
         aria-label="Period color"

@@ -1,5 +1,5 @@
 import { CardTypePill } from "@worldnote/canvas";
-import { fieldLabelClassName, getBodyTextStyle } from "@worldnote/ui";
+import { wnDescriptionClassName, wnSubtitleClassName } from "@worldnote/ui";
 import {
   KINSHIP_BADGE_SWATCH_DEFAULTS,
   hasKinshipBadgeOverride,
@@ -31,8 +31,8 @@ export function KinshipBadgeSettings({
   return (
     <section className="mt-4">
       <div className="mb-4 flex flex-col gap-1">
-        <span className={fieldLabelClassName}>Kinship label colors</span>
-        <p style={getBodyTextStyle("small")}>
+        <span className={wnSubtitleClassName}>Kinship label colors</span>
+        <p className={wnDescriptionClassName}>
           Customize the relation badge shown on character cards when Family Tree
           is active.
         </p>

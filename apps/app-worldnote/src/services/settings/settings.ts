@@ -27,9 +27,6 @@ export type WizardSettings = {
   quickCommands?: WizardQuickCommandConfig[];
 };
 
-/** User-facing theme preference. "system" follows the OS appearance. */
-export type ThemePreference = "light" | "dark" | "system";
-
 /** Display preference for weight, height, and temperature fields. */
 export type UnitSystemPreference = "metric" | "imperial";
 
@@ -54,10 +51,10 @@ export type AppSettings = {
   pinnedWorldPaths?: string[];
   /** Local LLM (Ollama) connection config for the WorldWizard. */
   wizard?: WizardSettings;
-  /** Appearance preference; defaults to "system" when unset. */
-  theme?: ThemePreference;
   /** Accent color for primary CTAs (e.g. "azure-500"); defaults to mono-50. */
   primaryColor?: string;
+  /** Profile avatar gradient preset; defaults to "mono". */
+  avatarColor?: string;
   /** Canvas copy / paste / duplicate shortcuts. */
   canvasShortcuts?: CanvasKeyboardShortcuts;
   /** Measurement display: metric (kg, cm, °C) or imperial (lb, ft/in, °F). */

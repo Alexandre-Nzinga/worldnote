@@ -1,8 +1,12 @@
 import { Input } from "@heroui/react";
-import { Button, fieldLabelClassName } from "@worldnote/ui";
+import {
+  Button,
+  fieldInputRowButtonClassName,
+  fieldInputRowClassNames,
+  wnLabelClassName,
+} from "@worldnote/ui";
 import { useCallback, useMemo, useState } from "react";
 import { pickDirectory } from "../../services/desktop/pickDirectory.js";
-import { darkFieldInputClassNames } from "./fieldClassNames.js";
 import { StepLayout } from "./StepLayout.js";
 
 const WORLDNOTE_FOLDER = "WorldNote";
@@ -71,8 +75,8 @@ export function StorageStep({
       actionDisabled={!parentDir || isSaving}
     >
       <div className="flex flex-col gap-1">
-        <span className={fieldLabelClassName}>Browse location</span>
-        <div className="flex gap-2">
+        <span className={wnLabelClassName}>Browse location</span>
+        <div className="flex items-center gap-2">
           <Input
             isReadOnly
             aria-label="Browse location"
@@ -80,13 +84,14 @@ export function StorageStep({
             value={displayPath}
             isDisabled={isBrowsing || isSaving}
             classNames={{
-              ...darkFieldInputClassNames,
+              ...fieldInputRowClassNames,
               base: "flex-1",
             }}
           />
           <Button
             variant="secondary"
-            size="base"
+            size="sm"
+            className={fieldInputRowButtonClassName}
             isDisabled={isBrowsing || isSaving}
             onPress={() => {
               void handleBrowse();

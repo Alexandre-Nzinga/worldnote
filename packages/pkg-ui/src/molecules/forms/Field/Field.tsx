@@ -6,7 +6,7 @@ import {
   fieldClearButtonClassName,
   fieldInputClassName,
   fieldInputClassNames,
-  fieldLabelClassName,
+  wnLabelClassName,
   fieldStackClassName,
 } from "../fieldStyles.js";
 
@@ -34,7 +34,7 @@ export function Field({
   return (
     <div className={clsx(fieldStackClassName, wrapperClassName)}>
       {label ? (
-        <label htmlFor={inputId} className={fieldLabelClassName}>
+        <label htmlFor={inputId} className={wnLabelClassName}>
           {label}
         </label>
       ) : null}

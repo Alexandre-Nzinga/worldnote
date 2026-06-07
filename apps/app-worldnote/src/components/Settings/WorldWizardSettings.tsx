@@ -1,5 +1,5 @@
 import { Input } from "@heroui/react";
-import { Button, fieldLabelClassName, fieldStackClassName, getBodyTextStyle, MaterialSymbol } from "@worldnote/ui";
+import { Button, fieldStackClassName, MaterialSymbol, wnDescriptionClassName, wnHintClassName, wnLabelClassName, wnTitleClassName } from "@worldnote/ui";
 import { useCallback, useEffect, useState } from "react";
 import {
   checkOllamaHealth,
@@ -114,7 +114,7 @@ export function WorldWizardSettings({
         </div>
 
         <div className={fieldStackClassName}>
-          <label htmlFor="wizard-host" className={fieldLabelClassName}>
+          <label htmlFor="wizard-host" className={wnLabelClassName}>
             Ollama host
           </label>
           <Input
@@ -126,7 +126,7 @@ export function WorldWizardSettings({
             onValueChange={(host) => onChange({ ...value, host })}
             classNames={settingsFieldInputClassNames}
           />
-          <p style={getBodyTextStyle("xs")}>
+          <p className={wnHintClassName}>
             WorldWizard talks to a local Ollama instance at this address.
           </p>
         </div>
@@ -134,7 +134,7 @@ export function WorldWizardSettings({
 
       <section className={settingsPanelClassName}>
         <div className="mb-4 flex items-center justify-between gap-3">
-          <span className={fieldLabelClassName}>Available models</span>
+          <span className={wnTitleClassName}>Available models</span>
           {value.defaultModel ? (
             <span className="text-xs text-wn-text-muted">
               Default: {value.defaultModel}
@@ -143,9 +143,9 @@ export function WorldWizardSettings({
         </div>
 
         {isRefreshing ? (
-          <p style={getBodyTextStyle("small")}>Loading models…</p>
+          <p className={wnDescriptionClassName}>Loading models…</p>
         ) : models.length === 0 ? (
-          <p style={getBodyTextStyle("small")}>
+          <p className={wnDescriptionClassName}>
             {healthy === false
               ? "Start Ollama, then refresh to list installed models."
               : "No models found. Pull a model in Ollama, then refresh."}
@@ -184,7 +184,7 @@ export function WorldWizardSettings({
 
       <section className={`${settingsPanelClassName} flex flex-col gap-3`}>
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="wizard-guidelines" className={fieldLabelClassName}>
+          <label htmlFor="wizard-guidelines" className={wnTitleClassName}>
             Behavior guidelines
           </label>
           <textarea
@@ -198,7 +198,7 @@ export function WorldWizardSettings({
             }
             className={guidelinesTextareaClassName}
           />
-          <p style={getBodyTextStyle("xs")}>
+          <p className={wnHintClassName}>
             Optional instructions appended to the wizard&apos;s system prompt.
             Leave empty to use the default narrator persona.
           </p>

@@ -8,7 +8,7 @@ import {
   fieldClearButtonClassName,
   fieldInputClassName,
   fieldInnerWrapperClassName,
-  fieldLabelClassName,
+  wnLabelClassName,
   fieldLabelRowClassName,
   fieldStackClassName,
   selectItemClassName,
@@ -208,7 +208,7 @@ export function CardReferenceComboBox({
   placeholder = "Search cards…",
   className,
   hideLabel = false,
-  labelClassName = fieldLabelClassName,
+  labelClassName = wnLabelClassName,
 }: CardReferenceComboBoxProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const overflowRestoreRef = useRef<{ el: HTMLElement; value: string } | null>(

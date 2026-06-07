@@ -1,4 +1,4 @@
-import { AnimatedPopover, fieldLabelClassName, fieldStackClassName, MaterialSymbol } from "@worldnote/ui";
+import { AnimatedPopover, wnLabelClassName, fieldStackClassName, MaterialSymbol } from "@worldnote/ui";
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
@@ -193,7 +193,7 @@ export function BadgeColorPicker({
 
   return (
     <div ref={rootRef} className={fieldStackClassName}>
-      <span id={`${listboxId}-label`} className={fieldLabelClassName}>
+      <span id={`${listboxId}-label`} className={wnLabelClassName}>
         {label}
       </span>
       <button

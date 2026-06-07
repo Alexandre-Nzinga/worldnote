@@ -1,3 +1,5 @@
+import clsx from "clsx";
+
 export type WorldNoteLogoVariant = "icon" | "wordmark";
 export type WorldNoteLogoTone = "white" | "black";
 export type WorldNoteLogoFormat = "png" | "svg";
@@ -43,6 +45,16 @@ type WorldNoteLogoProps = {
   alt?: string;
 };
 
+/** Portrait icon mark: keep caller height, drop square width utilities. */
+function iconMarkClassName(className: string): string {
+  const withoutWidth = className
+    .replace(/\bw-\[[^\]]+\]/g, "")
+    .replace(/\bw-\S+/g, "")
+    .trim();
+
+  return clsx("block w-auto shrink-0", withoutWidth);
+}
+
 function WorldNoteIconMark({
   className,
   tone,
@@ -59,7 +71,8 @@ function WorldNoteIconMark({
       viewBox="0 0 78 124"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className={className}
+      preserveAspectRatio="xMidYMid meet"
+      className={iconMarkClassName(className ?? "")}
       aria-hidden={decorative ? true : undefined}
       aria-label={decorative ? undefined : alt}
       role={decorative ? undefined : "img"}

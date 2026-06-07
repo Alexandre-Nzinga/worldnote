@@ -3,7 +3,7 @@ import {
   AnimatedModal,
   Button,
   CloseIconButton,
-  fieldLabelClassName,
+  wnLabelClassName,
   getBodyTextStyle,
   getHeadingProps,
   InlineAlert,
@@ -260,7 +260,7 @@ export function WorldSettingsModal({
 
       <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-2">
-          <label htmlFor="world-settings-name" className={fieldLabelClassName}>
+          <label htmlFor="world-settings-name" className={wnLabelClassName}>
             Rename
           </label>
           <Input
@@ -278,7 +278,7 @@ export function WorldSettingsModal({
         <div className="flex flex-col gap-2">
           <label
             htmlFor="world-settings-description"
-            className={fieldLabelClassName}
+            className={wnLabelClassName}
           >
             Description
           </label>
@@ -295,7 +295,7 @@ export function WorldSettingsModal({
         </div>
 
         <div className="flex flex-col gap-3">
-          <span className={fieldLabelClassName}>Backup</span>
+          <span className={wnLabelClassName}>Backup</span>
           <div className="self-start">
             <Button
               variant="secondary"
@@ -318,7 +318,7 @@ export function WorldSettingsModal({
         </div>
 
         <div className="flex flex-col gap-3">
-          <span className={fieldLabelClassName}>Edit cover image</span>
+          <span className={wnLabelClassName}>Edit cover image</span>
           <div className="self-start">
             <Button
               variant="secondary"

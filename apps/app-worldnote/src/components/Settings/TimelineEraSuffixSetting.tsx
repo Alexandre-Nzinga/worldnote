@@ -1,5 +1,5 @@
 import { Input } from "@heroui/react";
-import { fieldLabelClassName, fieldStackClassName, getBodyTextStyle } from "@worldnote/ui";
+import { fieldStackClassName, wnDescriptionClassName, wnSubtitleClassName } from "@worldnote/ui";
 import { settingsFieldInputClassNames } from "./settingsStyles.js";
 
 type TimelineEraSuffixSettingProps = {
@@ -7,6 +7,8 @@ type TimelineEraSuffixSettingProps = {
   onChange: (value: string) => void;
   worldName?: string;
   disabled?: boolean;
+  /** When true, parent supplies the section title and description. */
+  hideHeading?: boolean;
 };
 
 export function TimelineEraSuffixSetting({
@@ -14,17 +16,20 @@ export function TimelineEraSuffixSetting({
   onChange,
   worldName,
   disabled = false,
+  hideHeading = false,
 }: TimelineEraSuffixSettingProps) {
   return (
-    <section className="mt-4">
-      <div className="mb-4 flex flex-col gap-1">
-        <span className={fieldLabelClassName}>Era suffix</span>
-        <p style={getBodyTextStyle("small")}>
-          {worldName
-            ? `Suffix for year labels in ${worldName} (e.g. AG → 10191 AG).`
-            : "Default suffix for year labels on the timeline axis (e.g. AG → 10191 AG). Open a world from the canvas to edit a specific world's calendar."}
-        </p>
-      </div>
+    <section className={hideHeading ? "mt-4" : undefined}>
+      {hideHeading ? null : (
+        <div className="mb-4 flex flex-col gap-1">
+          <span className={wnSubtitleClassName}>Era suffix</span>
+          <p className={wnDescriptionClassName}>
+            {worldName
+              ? `Era suffix for ${worldName} timeline (e.g. AG).`
+              : "Default era suffix for timeline years. Open a world to customize its calendar."}
+          </p>
+        </div>
+      )}
 
       <div className={fieldStackClassName}>
         <Input

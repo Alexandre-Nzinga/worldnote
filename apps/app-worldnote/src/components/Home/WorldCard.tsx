@@ -138,7 +138,11 @@ export function WorldCard({
           <div className="truncate text-base font-semibold text-wn-mono-50">
             {world.name}
           </div>
-          <Pill size="sm" className={pillClassName} textClassName="text-wn-mono-50">
+          <Pill
+            size="sm"
+            className={`${pillClassName} self-start`}
+            textClassName="text-wn-mono-50"
+          >
             {world.cardCount} card{world.cardCount === 1 ? "" : "s"}
           </Pill>
         </div>

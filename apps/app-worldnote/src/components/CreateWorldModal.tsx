@@ -2,7 +2,9 @@ import { Input, Textarea } from "@heroui/react";
 import {
   AnimatedModal,
   Button,
-  fieldLabelClassName,
+  fieldInputRowButtonClassName,
+  fieldInputRowClassNames,
+  wnLabelClassName,
   getBodyTextStyle,
   getHeadingProps,
 } from "@worldnote/ui";
@@ -141,7 +143,7 @@ export function CreateWorldModal({
         <div className="flex flex-col gap-1">
           <label
             htmlFor="create-world-name"
-            className={fieldLabelClassName}
+            className={wnLabelClassName}
           >
             Name <span className="text-wn-red-500">*</span>
           </label>
@@ -160,7 +162,7 @@ export function CreateWorldModal({
         <div className="flex flex-col gap-1">
           <label
             htmlFor="create-world-description"
-            className={fieldLabelClassName}
+            className={wnLabelClassName}
           >
             Description
           </label>
@@ -177,23 +179,24 @@ export function CreateWorldModal({
 
         {!forcedRoot ? (
           <div className="flex flex-col gap-1">
-            <span className={fieldLabelClassName}>
+            <span className={wnLabelClassName}>
               Location <span className="text-wn-red-500">*</span>
             </span>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2">
               <Input
                 isReadOnly
                 aria-label="Location"
                 placeholder="Browse for a folder…"
                 value={location ?? ""}
                 classNames={{
-                  ...darkFieldInputClassNames,
+                  ...fieldInputRowClassNames,
                   base: "flex-1",
                 }}
               />
               <Button
                 variant="secondary"
-                size="base"
+                size="sm"
+                className={fieldInputRowButtonClassName}
                 onPress={() => {
                   void handleBrowse();
                 }}

@@ -6,8 +6,9 @@ import {
 import {
   Eyebrow,
   MaterialSymbol,
-  getBodyTextStyle,
-  getHeadingProps,
+  wnDescriptionClassName,
+  wnHintClassName,
+  wnTitleClassName,
 } from "@worldnote/ui";
 import type { VisibleSocketsByCardType } from "../../services/settings/settings.js";
 import { formatSocketId } from "../../services/settings/visibleSocketSettings.js";
@@ -35,8 +36,8 @@ export function SocketVisibilitySettings({
   return (
     <div className={settingsPanelStackClassName}>
       <div>
-        <h3 {...getHeadingProps("h5", { tone: "inverse" })}>Canvas sockets</h3>
-        <p className="mt-1.5" style={getBodyTextStyle("small")}>
+        <span className={wnTitleClassName}>Canvas sockets</span>
+        <p className={`mt-1.5 ${wnDescriptionClassName}`}>
           Choose which connection handles appear on cards in the world canvas.
           Link cards on the canvas to fill connection fields in the inspector.
         </p>
@@ -95,7 +96,7 @@ export function SocketVisibilitySettings({
                       <p className="text-sm font-medium text-wn-text">
                         {formatSocketId(id)}
                       </p>
-                      <p className="mt-0.5" style={getBodyTextStyle("xs")}>
+                      <p className={`mt-0.5 ${wnHintClassName}`}>
                         {descriptor.cardinality === "many" ? "many" : "single"}{" "}
                         · accepts {descriptor.accepts.join(", ")}
                       </p>

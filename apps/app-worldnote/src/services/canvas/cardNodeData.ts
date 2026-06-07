@@ -63,35 +63,19 @@ function scalarsFromCard(card: WorldCard): CardNodeScalars {
   }
 }
 
-function cardDescriptionLine(card: WorldCard): string | undefined {
-  const fromDescription = card.description?.trim();
-  if (fromDescription) {
-    return fromDescription;
-  }
-  const fromLore = card.lore?.trim();
-  if (!fromLore) {
-    return undefined;
-  }
-  return fromLore
-    .split("\n")
-    .map((line) => line.trim())
-    .find((line) => line.length > 0);
-}
-
 function subtitleForCard(card: WorldCard): string | undefined {
   const explicitSubtitle = card.subtitle?.trim();
   if (explicitSubtitle) {
     return explicitSubtitle;
   }
-  const descriptionLine = cardDescriptionLine(card);
 
   switch (card.card_type) {
     case "character":
       return card.start_year !== undefined
         ? formatYear(card.start_year)
-        : descriptionLine;
+        : undefined;
     case "location":
-      return card.coordinates?.trim() || descriptionLine;
+      return card.coordinates?.trim() || undefined;
     case "item":
       return card.rarity
         ? `${card.rarity.charAt(0).toUpperCase()}${card.rarity.slice(1)}`
@@ -130,8 +114,6 @@ function subtitleForCard(card: WorldCard): string | undefined {
       return card.composition?.trim();
     case "satellite":
       return card.orbit_type?.trim();
-    case "building":
-      return descriptionLine;
     default:
       return undefined;
   }
@@ -265,7 +247,6 @@ export function worldCardToNodeData(
     cardType: card.card_type,
     badgeClassName: badgeStyle.badgeClassName,
     badgeTextColor: badgeStyle.badgeTextColor,
-    description: cardDescriptionLine(card),
     imageUrl: cardImageSrc(vaultPath, card.image_path),
     crestUrl,
     imageFit: imageDisplay.fit,

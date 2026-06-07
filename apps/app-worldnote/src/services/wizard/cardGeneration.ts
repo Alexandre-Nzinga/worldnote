@@ -12,6 +12,13 @@ import { buildExpandPrompt, buildFillGapsPrompt } from "./expandPrompts.js";
 
 type JsonSchema = Record<string, unknown>;
 
+export const CARD_GENERATION_SYSTEM_SUFFIX = [
+  "You must respond with ONLY valid JSON that matches the provided schema.",
+  "Do not include any prose, explanation, or markdown.",
+  "Invent all missing creative details yourself — names, lore, appearance, personality, and every other field.",
+  "Never ask the user for more information or say you cannot complete the request.",
+] as const;
+
 type Position = { x: number; y: number };
 
 export type CardGenerationMode = "expand" | "fill-gaps";
@@ -165,7 +172,7 @@ export async function generateCard(
   const messages: WizardChatMessage[] = [
     {
       role: "system",
-      content: `${options.systemPrompt}\nYou must respond with ONLY valid JSON that matches the provided schema. Do not include any prose, explanation, or markdown.`,
+      content: `${options.systemPrompt}\n${CARD_GENERATION_SYSTEM_SUFFIX.join(" ")}`,
     },
     {
       role: "user",
@@ -236,7 +243,7 @@ export async function generateCardPatch(
   const messages: WizardChatMessage[] = [
     {
       role: "system",
-      content: `${options.systemPrompt}\nYou must respond with ONLY valid JSON that matches the provided schema. Do not include any prose, explanation, or markdown.`,
+      content: `${options.systemPrompt}\n${CARD_GENERATION_SYSTEM_SUFFIX.join(" ")}`,
     },
     {
       role: "user",

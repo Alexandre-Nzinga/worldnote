@@ -4,7 +4,7 @@ import { MaterialSymbol } from "../../../atoms/MaterialSymbol/MaterialSymbol.js"
 import { resolveOverlayContainer } from "../../../overlay/resolveOverlayContainer.js";
 import {
   fieldClearButtonClassName,
-  fieldLabelClassName,
+  wnLabelClassName,
   fieldLabelRowClassName,
   fieldStackClassName,
   selectInlineSelectorIconClassName,
@@ -70,7 +70,7 @@ export function EnumComboBox<V extends string = string>({
   allowEmpty = false,
   className,
   hideLabel = false,
-  labelClassName = fieldLabelClassName,
+  labelClassName = wnLabelClassName,
   clearable,
   variant = "field",
 }: EnumComboBoxProps<V>) {

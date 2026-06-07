@@ -1,4 +1,4 @@
-import { fieldLabelClassName } from "@worldnote/ui";
+import { wnLabelClassName } from "@worldnote/ui";
 
 type ToggleSwitchProps = {
   checked: boolean;
@@ -50,7 +50,7 @@ export function ToggleSwitchRow({
 }: ToggleSwitchRowProps) {
   return (
     <div className="flex items-center justify-between gap-3">
-      <span className={fieldLabelClassName}>{label}</span>
+      <span className={wnLabelClassName}>{label}</span>
       <ToggleSwitch
         checked={checked}
         onChange={onChange}

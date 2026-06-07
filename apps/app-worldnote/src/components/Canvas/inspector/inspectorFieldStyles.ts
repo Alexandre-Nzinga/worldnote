@@ -1,7 +1,7 @@
 /** Inspector field styles — aliases over @worldnote/ui design tokens. */
 
 import {
-  fieldLabelSubtleClassName,
+  wnLabelSubtleClassName,
   fieldValueClassName,
   inlineFieldInputClassNames,
   inlineTextareaFieldInputClassNames,
@@ -34,7 +34,7 @@ export const inspectorSectionEyebrowClassName =
 /** Horizontal inset for inspector tab sections (lore editor is full-bleed). */
 export const inspectorTabPaddingXClassName = "px-4";
 
-export const inspectorFieldLabelClassName = fieldLabelSubtleClassName;
+export const inspectorFieldLabelClassName = wnLabelSubtleClassName;
 
 export const inspectorFieldValueClassName = fieldValueClassName;
 

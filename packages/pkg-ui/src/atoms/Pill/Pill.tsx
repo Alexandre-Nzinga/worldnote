@@ -53,9 +53,8 @@ export function Pill({
       className={clsx(
         "inline-flex shrink-0 items-center rounded-full font-semibold",
         pillSizeClassNames[size],
-        tone && pillToneClassNames[tone],
-        !tone && className,
-        !tone && (textClassName ?? "text-wn-mono-950"),
+        tone ? pillToneClassNames[tone] : (textClassName ?? "text-wn-mono-950"),
+        className,
       )}
       {...props}
     >

@@ -5,7 +5,7 @@ import {
   CARD_CLASS_ORDER,
   CARD_TYPE_LABELS,
 } from "@worldnote/shared";
-import { Eyebrow, getBodyTextStyle, getHeadingProps } from "@worldnote/ui";
+import { Eyebrow, wnDescriptionClassName, wnTitleClassName } from "@worldnote/ui";
 import {
   badgeBackgroundSelectValue,
   badgeTextSelectValue,
@@ -45,8 +45,8 @@ export function CardTypeBadgeSettings({
   return (
     <div className={settingsPanelStackClassName}>
       <div>
-        <h3 {...getHeadingProps("h5", { tone: "inverse" })}>Card type colors</h3>
-        <p className="mt-1.5" style={getBodyTextStyle("small")}>
+        <span className={wnTitleClassName}>Card type colors</span>
+        <p className={`mt-1.5 ${wnDescriptionClassName}`}>
           Customize badge background and text colors for each card type on the
           canvas and in the inspector.
         </p>

@@ -18,11 +18,52 @@ export const fieldInputClassNames = {
   innerWrapper: fieldInnerWrapperClassName,
 };
 
-export const fieldLabelClassName = "text-sm font-wn-medium text-wn-text";
+/** Fixed h-10 input for rows beside action buttons (browse pickers, path fields). */
+export const fieldInputRowClassNames = {
+  ...fieldInputClassNames,
+  inputWrapper: `${fieldInputClassNames.inputWrapper} h-10 min-h-10`,
+};
 
-/** Subtle label for read-only rows and inspector fields (below section titles). */
-export const fieldLabelSubtleClassName =
-  "text-wn-xs font-wn-medium text-wn-text-subtle";
+/** Matches `fieldInputRowClassNames` input height in a horizontal field row. */
+export const fieldInputRowButtonClassName = "!h-10 !min-h-10 shrink-0";
+
+/**
+ * Form / panel text hierarchy.
+ * Use these constants — do not invent parallel title or label classes.
+ *
+ * | Token | Const | Use |
+ * |-------|-------|-----|
+ * | wn-title | `wnTitleClassName` | Card/section title (~18px, semibold) |
+ * | wn-subtitle | `wnSubtitleClassName` | Nested group title (16px, semibold) |
+ * | wn-description | `wnDescriptionClassName` | Helper copy under titles (~14px, muted) |
+ * | wn-hint | `wnHintClassName` | Fine print under inputs (xs, subtle) |
+ * | wn-label | `wnLabelClassName` | Input/picker label (14px, medium) |
+ * | wn-label-subtle | `wnLabelSubtleClassName` | Compact inspector labels (xs, subtle) |
+ */
+
+/** `wn-title` — card/section title (~18px, semibold). */
+export const wnTitleClassName =
+  "text-wn-title font-wn-semibold leading-snug text-wn-text";
+
+/** `wn-subtitle` — nested group title within a section (16px, semibold). */
+export const wnSubtitleClassName =
+  "text-wn-subtitle font-wn-semibold text-wn-text";
+
+/** `wn-description` — helper copy under titles (~14px, muted). */
+export const wnDescriptionClassName =
+  "text-wn-description font-wn-regular text-wn-text-muted";
+
+/** `wn-hint` — fine print under inputs (xs, subtle). */
+export const wnHintClassName =
+  "text-wn-hint font-wn-regular text-wn-text-subtle";
+
+/** `wn-label` — input/picker label (14px, medium). */
+export const wnLabelClassName =
+  "text-wn-label font-wn-medium text-wn-text";
+
+/** `wn-label-subtle` — compact inspector labels below section titles. */
+export const wnLabelSubtleClassName =
+  "text-wn-hint font-wn-medium text-wn-text-subtle";
 
 /** Stacked inspector/form sections with dividers between blocks. */
 export const sectionStackClassName = "flex flex-col divide-y divide-wn-border";

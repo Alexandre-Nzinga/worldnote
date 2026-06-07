@@ -1,4 +1,4 @@
-import { Button, fieldLabelClassName, getBodyTextStyle } from "@worldnote/ui";
+import { Button, wnDescriptionClassName, wnTitleClassName } from "@worldnote/ui";
 import { useCallback } from "react";
 import { useSettings } from "../../hooks/useSettings.js";
 import {
@@ -48,9 +48,9 @@ export function PrimaryColorSetting({ disabled = false }: PrimaryColorSettingPro
     <section className={settingsPanelClassName}>
       <div aria-hidden className={`hidden ${PRIMARY_COLOR_RUNTIME_CLASSES}`} />
       <div className="flex flex-col gap-1">
-        <span className={fieldLabelClassName}>Primary color</span>
-        <p style={getBodyTextStyle("small")}>
-          Accent for main actions
+        <span className={wnTitleClassName}>Theme color</span>
+        <p className={wnDescriptionClassName}>
+          Primary accent color for the application
         </p>
       </div>
 

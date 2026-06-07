@@ -32,7 +32,6 @@ import {
   type MouseEvent,
   type PointerEvent,
 } from "react";
-import { useResolvedTheme } from "../../../theme/ThemeProvider.js";
 import { InspectorCardMoreMenu } from "./InspectorCardMoreMenu.js";
 import {
   inspectorHeaderActionClassName,
@@ -234,8 +233,7 @@ export function Inspector({
   const readOnly = mode === "read";
 
   const reducedMotion = usePrefersReducedMotion();
-  const theme = useResolvedTheme();
-  const logoTone = theme === "dark" ? "white" : "black";
+  const logoTone = "white";
   const [layout, setLayout] = useState<InspectorLayout>("sidebar");
   const layoutTransitionLockRef = useRef(false);
 

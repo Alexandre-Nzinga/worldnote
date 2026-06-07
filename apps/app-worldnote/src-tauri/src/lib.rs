@@ -83,6 +83,8 @@ pub fn run() {
             cmd::wizard::ollama_health,
             cmd::wizard::ollama_list_models,
             cmd::wizard::ollama_chat,
+            cmd::wizard_sessions::load_wizard_sessions,
+            cmd::wizard_sessions::save_wizard_sessions,
             cmd::timeline::list_chronology,
             cmd::timeline::upsert_chronology,
             cmd::timeline::delete_chronology,

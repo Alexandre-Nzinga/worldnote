@@ -55,8 +55,7 @@ const variantConfig: Record<ButtonVariant, VariantConfig> = {
       "border-0 bg-wn-azure-500 font-semibold text-wn-mono-50 shadow-none hover:bg-wn-azure-600 data-[hover=true]:bg-wn-azure-600",
   },
   white: {
-    heroVariant: "solid",
-    heroColor: "default",
+    heroVariant: "flat",
     className:
       "border-0 !bg-wn-primary !text-wn-primary-foreground font-semibold shadow-none hover:!bg-wn-primary-hover data-[hover=true]:!bg-wn-primary-hover disabled:opacity-100 data-[disabled=true]:opacity-100 data-[disabled=true]:!bg-wn-primary/75 data-[disabled=true]:!text-wn-primary-foreground",
   },
@@ -96,6 +95,11 @@ const variantConfig: Record<ButtonVariant, VariantConfig> = {
 const sizeClass: Record<ButtonSize, string> = {
   sm: "!h-auto min-h-9 rounded-full px-6 py-2 text-sm leading-normal",
   base: "!h-auto min-h-10 rounded-full px-8 py-2.5 text-base leading-normal",
+};
+
+const iconOnlySizeClass: Record<ButtonSize, string> = {
+  sm: "!h-9 !w-9 !min-h-9 !min-w-9 shrink-0 rounded-full !p-0 text-sm",
+  base: "!h-10 !w-10 !min-h-10 !min-w-10 shrink-0 rounded-full !p-0 text-base",
 };
 
 const heroUiSize: Record<ButtonSize, "sm" | "md"> = {
@@ -165,7 +169,7 @@ export function Button({
         fullWidth={fullWidth}
         isDisabled={isDisabled}
         variant={config.heroVariant}
-        color={config.heroColor}
+        color={"heroColor" in config ? config.heroColor : undefined}
         size={heroUiSize[size]}
         radius="full"
         startContent={resolvedStartContent}
@@ -174,7 +178,7 @@ export function Button({
           base: "gap-2",
         }}
         className={clsx(
-          !isLink && sizeClass[size],
+          !isLink && (isIconOnly ? iconOnlySizeClass[size] : sizeClass[size]),
           config.className,
           className,
         )}

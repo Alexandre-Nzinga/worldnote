@@ -6,10 +6,10 @@ import {
   stepTransitionVariants,
   usePrefersReducedMotion,
   WorldNoteLogo,
-  fieldLabelClassName,
+  wnLabelClassName,
   fieldStackClassName,
-  getBodyTextStyle,
   getHeadingProps,
+  wnDescriptionClassName,
 } from "@worldnote/ui";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -35,6 +35,11 @@ import {
   normalizeTimelineEraSuffix,
 } from "../../services/settings/timelineSettings.js";
 import {
+  DEFAULT_AVATAR_COLOR,
+  normalizeAvatarColor,
+  type AvatarColorToken,
+} from "../../services/settings/avatarColorSettings.js";
+import {
   applyModuleSettingsChange,
   isModuleEnabledInSettings,
   normalizeModulesSettings,
@@ -45,7 +50,6 @@ import {
   saveCalendarConfig,
 } from "../../services/timeline/timelineCommands.js";
 import { CardTypeBadgeSettings } from "./CardTypeBadgeSettings.js";
-import { useResolvedTheme } from "../../theme/ThemeProvider.js";
 import { KeyboardShortcutsSettings } from "./KeyboardShortcutsSettings.js";
 import { SocketVisibilitySettings } from "./SocketVisibilitySettings.js";
 import {
@@ -55,8 +59,8 @@ import {
   type SettingsSection,
 } from "./SettingsSidebar.js";
 import { PrimaryColorSetting } from "./PrimaryColorSetting.js";
-import { ThemeSetting } from "./ThemeSetting.js";
-import { UnitSystemSetting } from "./UnitSystemSetting.js";
+import { AvatarColorSetting } from "./AvatarColorSetting.js";
+import { WorldDefaultsSettings } from "./WorldDefaultsSettings.js";
 import { WorldWizardSettings } from "./WorldWizardSettings.js";
 import { ModulesSettingsPanel } from "./ModulesSettings.js";
 import { modalPrimaryButtonClassName } from "../Onboarding/fieldClassNames.js";
@@ -89,8 +93,6 @@ const settingsSectionTransition = {
 export function Settings({ onBack, currentWorldPath }: SettingsProps) {
   const settings = useSettings((state) => state.settings);
   const save = useSettings((state) => state.save);
-  const theme = useResolvedTheme();
-
   const reducedMotion = usePrefersReducedMotion();
   const [activeSection, setActiveSection] = useState<SettingsSection>("profile");
   const [direction, setDirection] = useState<StepDirection>(1);
@@ -98,6 +100,9 @@ export function Settings({ onBack, currentWorldPath }: SettingsProps) {
     SETTINGS_SECTION_ORDER.indexOf("profile"),
   );
   const [username, setUsername] = useState("");
+  const [avatarColor, setAvatarColor] = useState<AvatarColorToken>(
+    DEFAULT_AVATAR_COLOR,
+  );
   const [visibleSockets, setVisibleSockets] = useState(
     normalizeVisibleSocketsSettings(undefined),
   );
@@ -144,39 +149,42 @@ export function Settings({ onBack, currentWorldPath }: SettingsProps) {
     switch (activeSection) {
       case "profile":
         return (
-          <section className={`${settingsPanelClassName} flex flex-col gap-5`}>
-            <div className={fieldStackClassName}>
-              <label htmlFor="settings-username" className={fieldLabelClassName}>
-                Username <span className="text-wn-red-500">*</span>
-              </label>
-              <Input
-                id="settings-username"
-                autoFocus
-                isRequired
-                aria-label="Username"
-                value={username}
-                onValueChange={setUsername}
-                classNames={settingsFieldInputClassNames}
-              />
-            </div>
-
-            <div className={fieldStackClassName}>
-              <span className={fieldLabelClassName}>WorldNote folder</span>
-              <p className={settingsReadOnlyValueClassName}>
-                {settings.worldnoteRoot}
-              </p>
-            </div>
-          </section>
-        );
-      case "measurements":
-        return <UnitSystemSetting disabled={isSaving} />;
-      case "appearance":
-        return (
           <div className="flex flex-col gap-6">
-            <ThemeSetting disabled={isSaving} />
-            <PrimaryColorSetting disabled={isSaving} />
+            <section className={`${settingsPanelClassName} flex flex-col gap-5`}>
+              <div className={fieldStackClassName}>
+                <label htmlFor="settings-username" className={wnLabelClassName}>
+                  Username <span className="text-wn-red-500">*</span>
+                </label>
+                <Input
+                  id="settings-username"
+                  autoFocus
+                  isRequired
+                  aria-label="Username"
+                  value={username}
+                  onValueChange={setUsername}
+                  classNames={settingsFieldInputClassNames}
+                />
+              </div>
+
+              <div className={fieldStackClassName}>
+                <span className={wnLabelClassName}>WorldNote folder</span>
+                <p className={settingsReadOnlyValueClassName}>
+                  {settings.worldnoteRoot}
+                </p>
+              </div>
+            </section>
+            <AvatarColorSetting
+              username={username}
+              value={avatarColor}
+              onChange={setAvatarColor}
+              disabled={isSaving}
+            />
           </div>
         );
+      case "worldDefaults":
+        return <WorldDefaultsSettings disabled={isSaving} />;
+      case "appearance":
+        return <PrimaryColorSetting disabled={isSaving} />;
       case "canvas":
         return (
           <div className="flex flex-col gap-8">
@@ -237,6 +245,7 @@ export function Settings({ onBack, currentWorldPath }: SettingsProps) {
     }
   }, [
     activeSection,
+    avatarColor,
     canvasShortcuts,
     cardTypeBadgeColors,
     kinshipLabelColors,
@@ -256,6 +265,7 @@ export function Settings({ onBack, currentWorldPath }: SettingsProps) {
       return;
     }
     setUsername(settings.username);
+    setAvatarColor(normalizeAvatarColor(settings.avatarColor));
     const normalizedModules = normalizeModulesSettings(settings.modules);
     setVisibleSockets(
       applyFamilyTreeKinshipSocketVisibility(
@@ -336,6 +346,8 @@ export function Settings({ onBack, currentWorldPath }: SettingsProps) {
       await save({
         ...settings,
         username: username.trim(),
+        avatarColor:
+          avatarColor === DEFAULT_AVATAR_COLOR ? undefined : avatarColor,
         visibleSockets,
         cardTypeBadgeColors,
         kinshipLabelColors: hasKinshipBadgeOverride(kinshipLabelColors)
@@ -359,6 +371,7 @@ export function Settings({ onBack, currentWorldPath }: SettingsProps) {
       setIsSaving(false);
     }
   }, [
+    avatarColor,
     canvasShortcuts,
     cardTypeBadgeColors,
     kinshipLabelColors,
@@ -389,7 +402,7 @@ export function Settings({ onBack, currentWorldPath }: SettingsProps) {
         >
           <WorldNoteLogo
             variant="icon"
-            tone={theme === "dark" ? "white" : "black"}
+            tone="white"
             className="h-12 w-12 opacity-60"
             alt="Loading"
           />
@@ -450,7 +463,7 @@ export function Settings({ onBack, currentWorldPath }: SettingsProps) {
                 <h1 {...getHeadingProps("h2", { tone: "inverse" })}>
                   {sectionMeta.label}
                 </h1>
-                <p style={getBodyTextStyle("small")}>
+                <p className={wnDescriptionClassName}>
                   {sectionMeta.description}
                 </p>
               </div>

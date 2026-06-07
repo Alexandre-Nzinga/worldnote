@@ -12,7 +12,7 @@ import {
 } from "./hooks/useSettings.js";
 import { useVaultCommands } from "./hooks/useVaultCommands.js";
 import { useVault } from "./hooks/useVault.js";
-import { createSampleWorld } from "./services/worlds/createSampleWorld.js";
+import { openSampleWorld } from "./services/starterPacks/index.js";
 
 type AppView = "home" | "canvas" | "settings" | "vault";
 type VaultReturnView = "home" | "canvas";
@@ -106,7 +106,7 @@ export default function App() {
       return;
     }
     try {
-      const sample = await createSampleWorld(root);
+      const sample = await openSampleWorld(root);
       await openWorld(sample.path);
       setCurrentVault(sample.path, sample.name);
       setCanvasEverOpened(true);

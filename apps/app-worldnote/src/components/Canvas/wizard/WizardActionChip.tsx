@@ -1,12 +1,12 @@
 import { Button, MaterialSymbol, Tooltip } from "@worldnote/ui";
 import type { ReactNode } from "react";
+import { primaryAccentChipClassName } from "../../../services/settings/primaryAccentStyles.js";
 import { cx } from "./cx.js";
 
 export const wizardActionChipClassName = cx(
-  "inline-flex min-h-9 items-center gap-1.5 rounded-full border border-wn-mono-700 bg-wn-mono-950 px-3 py-1.5",
-  "text-xs font-medium text-wn-mono-200 transition-colors",
-  "hover:border-wn-mono-50 hover:text-wn-mono-50",
-  "disabled:cursor-not-allowed disabled:opacity-50",
+  "inline-flex min-h-9 items-center gap-1.5 rounded-full px-3 py-1.5",
+  "text-xs font-medium disabled:cursor-not-allowed disabled:opacity-50",
+  primaryAccentChipClassName,
 );
 
 type WizardActionChipProps = {

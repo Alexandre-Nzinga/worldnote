@@ -1,5 +1,8 @@
 @import "@worldnote/ui/theme/tailwind.css";
-@import "tailwindcss";
+
+@source "../**/*.{ts,tsx}";
+@source "../../../../packages/pkg-ui/src/**/*.{ts,tsx}";
+@source "../../../../packages/pkg-ui/dist/**/*.js";
 
 body {
   font-family: var(--font-inter), var(--font-sans), system-ui, sans-serif;
@@ -12,39 +15,4 @@ h4,
 h5,
 h6 {
   font-family: var(--font-urbanist), var(--font-sans), system-ui, sans-serif;
-}
-
-@keyframes hero-carousel-left {
-  from {
-    transform: translateX(0);
-  }
-
-  to {
-    transform: translateX(-50%);
-  }
-}
-
-@keyframes hero-carousel-right {
-  from {
-    transform: translateX(-50%);
-  }
-
-  to {
-    transform: translateX(0);
-  }
-}
-
-.hero-carousel-left {
-  animation: hero-carousel-left 42s linear infinite;
-}
-
-.hero-carousel-right {
-  animation: hero-carousel-right 48s linear infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .hero-carousel-left,
-  .hero-carousel-right {
-    animation: none;
-  }
 }

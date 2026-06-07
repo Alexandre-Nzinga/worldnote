@@ -12,11 +12,14 @@ import {
   type AppSettings,
 } from "../../../services/settings/settings.js";
 import {
+  buildCardCreationPrompt,
   buildPatchContextMessage,
   buildSystemPrompt,
   buildWorldContextMessage,
   checkOllamaHealth,
   DEFAULT_OLLAMA_HOST,
+  detectCardGenerationFollowUp,
+  detectCardGenerationIntent,
   fetchWorldCardIndex,
   generateCard,
   generateCardPatch,
@@ -27,6 +30,8 @@ import {
   type WizardChatMessage,
   type WizardContextScope,
 } from "../../../services/wizard/index.js";
+import type { StoredWizardMessage } from "../../../services/wizard/wizardSessionTypes.js";
+import { useWizardSessions } from "./useWizardSessions.js";
 
 export type WizardStatus = "idle" | "connecting" | "generating";
 
@@ -35,6 +40,8 @@ export type WizardMessage = {
   role: "user" | "assistant";
   content: string;
   streaming?: boolean;
+  /** Shown with the typing indicator while a non-streaming operation runs. */
+  loadingLabel?: string;
   /** A generated card awaiting spawn or apply. */
   generatedCard?: WorldCard;
   /** Whether the generated card should be spawned (new) or applied (patch). */
@@ -50,10 +57,18 @@ type UseWorldWizardArgs = {
   isOpen: boolean;
   /** Seeds focus cards and restricts context to them when opening from a selection. */
   seedCardIds?: string[] | null;
+  /** Places generated cards onto the canvas automatically. */
+  onSpawnGeneratedCard?: (card: WorldCard) => void;
 };
 
 function makeId(): string {
   return crypto.randomUUID();
+}
+
+function toStoredMessages(messages: WizardMessage[]): StoredWizardMessage[] {
+  return messages
+    .filter((message) => !message.streaming)
+    .map(({ streaming: _streaming, ...message }) => message);
 }
 
 export function useWorldWizard({
@@ -63,6 +78,7 @@ export function useWorldWizard({
   links,
   isOpen,
   seedCardIds = null,
+  onSpawnGeneratedCard,
 }: UseWorldWizardArgs) {
   const [droppedCardIds, setDroppedCardIds] = useState<string[]>([]);
   const [contextScope, setContextScope] = useState<WizardContextScope>("world");
@@ -76,8 +92,10 @@ export function useWorldWizard({
 
   const settingsRef = useRef<AppSettings | null>(null);
   const abortRef = useRef<AbortController | null>(null);
-  const sessionVaultRef = useRef<string | null>(null);
-  const wasOpenRef = useRef(false);
+  const hydratedSessionIdRef = useRef<string | null>(null);
+  const seedHandledRef = useRef<string | null>(null);
+
+  const sessions = useWizardSessions({ vaultPath, isOpen });
 
   const droppedCards = useMemo(
     () =>
@@ -129,40 +147,60 @@ export function useWorldWizard({
     setStatus("idle");
   }, []);
 
-  // Per-world session: reset chat when the user switches worlds.
-  useEffect(() => {
-    if (!isOpen || !vaultPath) return;
-    if (sessionVaultRef.current !== null && sessionVaultRef.current !== vaultPath) {
-      setMessages([]);
-      setDroppedCardIds([]);
-      setContextScope("world");
-    }
-    sessionVaultRef.current = vaultPath;
-  }, [isOpen, vaultPath]);
-
   useEffect(() => {
     if (!isOpen) {
-      wasOpenRef.current = false;
-      sessionVaultRef.current = null;
-      return;
+      hydratedSessionIdRef.current = null;
+      seedHandledRef.current = null;
     }
-    if (!vaultPath) return;
+  }, [isOpen]);
 
-    const justOpened = !wasOpenRef.current;
-    wasOpenRef.current = true;
-
-    if (seedCardIds && seedCardIds.length > 0) {
-      setDroppedCardIds([...seedCardIds]);
-      setContextScope("focused");
-      setMessages([]);
-      return;
+  useEffect(() => {
+    if (!sessions.loaded || !isOpen) return;
+    if (!sessions.activeSessionId) {
+      sessions.ensureActiveSession();
     }
+  }, [sessions.loaded, sessions.activeSessionId, isOpen, sessions.ensureActiveSession]);
 
-    if (justOpened) {
-      setContextScope("world");
-      setDroppedCardIds([]);
-    }
-  }, [isOpen, vaultPath, seedCardIds]);
+  useEffect(() => {
+    if (!sessions.loaded) return;
+    const session = sessions.activeSession;
+    if (!session) return;
+    if (hydratedSessionIdRef.current === session.id) return;
+    hydratedSessionIdRef.current = session.id;
+    setMessages(session.messages);
+    setDroppedCardIds(session.droppedCardIds);
+    setContextScope(session.contextScope);
+  }, [sessions.loaded, sessions.activeSession]);
+
+  useEffect(() => {
+    if (!sessions.loaded || !sessions.activeSessionId) return;
+    if (hydratedSessionIdRef.current !== sessions.activeSessionId) return;
+    sessions.updateActiveSession({
+      messages: toStoredMessages(messages),
+      droppedCardIds,
+      contextScope,
+    });
+  }, [
+    messages,
+    droppedCardIds,
+    contextScope,
+    sessions.loaded,
+    sessions.activeSessionId,
+    sessions.updateActiveSession,
+  ]);
+
+  useEffect(() => {
+    if (!isOpen || !vaultPath || !sessions.loaded) return;
+    if (!seedCardIds || seedCardIds.length === 0) return;
+    const seedKey = `${vaultPath}:${seedCardIds.join(",")}`;
+    if (seedHandledRef.current === seedKey) return;
+    seedHandledRef.current = seedKey;
+    hydratedSessionIdRef.current = null;
+    sessions.createSession({
+      droppedCardIds: [...seedCardIds],
+      contextScope: "focused",
+    });
+  }, [isOpen, vaultPath, seedCardIds, sessions.loaded, sessions.createSession]);
 
   useEffect(() => {
     if (!isOpen || !vaultPath) return;
@@ -275,10 +313,92 @@ export function useWorldWizard({
     [worldContextMessage, wizardGuidelines],
   );
 
+  const runGenerateCardFromPrompt = useCallback(
+    async (
+      cardType: WorldCard["card_type"],
+      userPrompt: string,
+      displayPrompt: string,
+    ) => {
+      if (!model || status === "generating") return;
+
+      const userMessage: WizardMessage = {
+        id: makeId(),
+        role: "user",
+        content: displayPrompt,
+      };
+      const assistantId = makeId();
+      setMessages((current) => [
+        ...current,
+        userMessage,
+        {
+          id: assistantId,
+          role: "assistant",
+          content: "",
+          streaming: true,
+          loadingLabel: "Generating card",
+        },
+      ]);
+
+      setStatus("generating");
+      try {
+        const card = await generateCard({
+          host,
+          model,
+          cardType,
+          systemPrompt: buildSystemPrompt(wizardGuidelines()),
+          contextMessage: worldContextMessage,
+          userPrompt: buildCardCreationPrompt(userPrompt, droppedCards),
+          position: { x: 0, y: 0 },
+        });
+        updateMessage(assistantId, {
+          streaming: false,
+          content: `Created **${card.name}** on the canvas.`,
+          generatedCard: card,
+          generatedCardAction: "spawn",
+        });
+        onSpawnGeneratedCard?.(card);
+      } catch (error) {
+        updateMessage(assistantId, {
+          streaming: false,
+          error: true,
+          content:
+            error instanceof Error
+              ? error.message
+              : "The wizard could not generate a card.",
+        });
+      } finally {
+        setStatus("idle");
+      }
+    },
+    [
+      model,
+      status,
+      host,
+      droppedCards,
+      worldContextMessage,
+      updateMessage,
+      wizardGuidelines,
+      onSpawnGeneratedCard,
+    ],
+  );
+
   const sendChat = useCallback(
     async (promptText: string) => {
       const trimmed = promptText.trim();
       if (!trimmed || !model || status === "generating") return;
+
+      const priorMessages = messages;
+      const cardIntent =
+        detectCardGenerationIntent(trimmed) ??
+        detectCardGenerationFollowUp(trimmed, priorMessages);
+      if (cardIntent) {
+        await runGenerateCardFromPrompt(
+          cardIntent.cardType,
+          cardIntent.prompt,
+          trimmed,
+        );
+        return;
+      }
 
       const userMessage: WizardMessage = {
         id: makeId(),
@@ -286,7 +406,6 @@ export function useWorldWizard({
         content: trimmed,
       };
       const assistantId = makeId();
-      const priorMessages = messages;
 
       setMessages((current) => [
         ...current,
@@ -323,7 +442,15 @@ export function useWorldWizard({
         setStatus("idle");
       }
     },
-    [model, status, host, messages, buildChatMessages, updateMessage],
+    [
+      model,
+      status,
+      host,
+      messages,
+      buildChatMessages,
+      updateMessage,
+      runGenerateCardFromPrompt,
+    ],
   );
 
   const runPatchCard = useCallback(
@@ -344,8 +471,9 @@ export function useWorldWizard({
         {
           id: assistantId,
           role: "assistant",
-          content: "Updating card…",
+          content: "",
           streaming: true,
+          loadingLabel: "Updating card",
         },
       ]);
 
@@ -418,64 +546,14 @@ export function useWorldWizard({
   const runGenerateCard = useCallback(
     async (preset: WizardActionPreset) => {
       if (!model || status === "generating" || !preset.targetCardType) return;
-
-      const userMessage: WizardMessage = {
-        id: makeId(),
-        role: "user",
-        content: preset.buildPrompt(droppedCards),
-      };
-      const assistantId = makeId();
-      setMessages((current) => [
-        ...current,
-        userMessage,
-        {
-          id: assistantId,
-          role: "assistant",
-          content: "Generating card…",
-          streaming: true,
-        },
-      ]);
-
-      setStatus("generating");
-      const userPrompt = preset.buildPrompt(droppedCards);
-      try {
-        const card = await generateCard({
-          host,
-          model,
-          cardType: preset.targetCardType,
-          systemPrompt: buildSystemPrompt(wizardGuidelines()),
-          contextMessage: worldContextMessage,
-          userPrompt,
-          position: { x: 0, y: 0 },
-        });
-        updateMessage(assistantId, {
-          streaming: false,
-          content: `Generated **${card.name}**.`,
-          generatedCard: card,
-          generatedCardAction: "spawn",
-        });
-      } catch (error) {
-        updateMessage(assistantId, {
-          streaming: false,
-          error: true,
-          content:
-            error instanceof Error
-              ? error.message
-              : "The wizard could not generate a card.",
-        });
-      } finally {
-        setStatus("idle");
-      }
+      const prompt = preset.buildPrompt(droppedCards);
+      await runGenerateCardFromPrompt(
+        preset.targetCardType,
+        prompt,
+        prompt,
+      );
     },
-    [
-      model,
-      status,
-      host,
-      droppedCards,
-      worldContextMessage,
-      updateMessage,
-      wizardGuidelines,
-    ],
+    [model, status, droppedCards, runGenerateCardFromPrompt],
   );
 
   const runAction = useCallback(
@@ -495,6 +573,46 @@ export function useWorldWizard({
     abortRef.current?.abort();
   }, []);
 
+  const startNewSession = useCallback(() => {
+    hydratedSessionIdRef.current = null;
+    return sessions.createSession();
+  }, [sessions.createSession]);
+
+  const switchSession = useCallback(
+    (sessionId: string) => {
+      hydratedSessionIdRef.current = null;
+      sessions.selectSession(sessionId);
+    },
+    [sessions.selectSession],
+  );
+
+  const deleteSession = useCallback(
+    (sessionId: string) => {
+      if (hydratedSessionIdRef.current === sessionId) {
+        hydratedSessionIdRef.current = null;
+      }
+      sessions.deleteSession(sessionId);
+    },
+    [sessions.deleteSession],
+  );
+
+  const archiveSession = useCallback(
+    (sessionId: string) => {
+      if (hydratedSessionIdRef.current === sessionId) {
+        hydratedSessionIdRef.current = null;
+      }
+      sessions.archiveSession(sessionId);
+    },
+    [sessions.archiveSession],
+  );
+
+  const unarchiveSession = useCallback(
+    (sessionId: string) => {
+      sessions.unarchiveSession(sessionId);
+    },
+    [sessions.unarchiveSession],
+  );
+
   return {
     droppedCardIds,
     droppedCards,
@@ -505,6 +623,10 @@ export function useWorldWizard({
     model,
     models,
     healthy,
+    activeSessionId: sessions.activeSessionId,
+    activeSessions: sessions.activeSessions,
+    archivedSessions: sessions.archivedSessions,
+    sessionsLoaded: sessions.loaded,
     setHost,
     selectModel,
     refreshConnection,
@@ -514,5 +636,10 @@ export function useWorldWizard({
     sendChat,
     runAction,
     stop,
+    startNewSession,
+    switchSession,
+    deleteSession,
+    archiveSession,
+    unarchiveSession,
   };
 }

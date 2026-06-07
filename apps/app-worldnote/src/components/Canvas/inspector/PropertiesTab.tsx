@@ -174,8 +174,8 @@ export function PropertiesTab({
       <div key={`${row.key}-${index}`} className="flex flex-col gap-1">
         <div className="flex items-start gap-2">
           <Input
-            aria-label="Property name"
-            placeholder="Key"
+            aria-label="Property title"
+            placeholder="Property title"
             value={row.key}
             variant="flat"
             onValueChange={(next) =>
@@ -207,14 +207,14 @@ export function PropertiesTab({
           </button>
         </div>
         <Input
-          aria-label="Property value"
+          aria-label="Property"
           placeholder={
             detectMeasurementKind(row.key)
               ? measurementInputPlaceholder(
                   detectMeasurementKind(row.key) ?? "weight",
                   unitSystem,
                 )
-              : "Value"
+              : "Property"
           }
           value={propertyEditorValue(row.key, row.value, unitSystem)}
           variant="flat"
@@ -262,6 +262,7 @@ export function PropertiesTab({
         <div className="flex items-center justify-between gap-2">
           <Eyebrow
             as="h3"
+            showDot={false}
             className={inspectorSectionEyebrowClassName}
           >
             Properties

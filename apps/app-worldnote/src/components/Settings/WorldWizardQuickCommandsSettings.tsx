@@ -2,9 +2,11 @@ import { Input } from "@heroui/react";
 import { CARD_TYPE_LABELS } from "@worldnote/shared";
 import {
   Button,
-  fieldLabelClassName,
-  getBodyTextStyle,
   MaterialSymbol,
+  wnDescriptionClassName,
+  wnHintClassName,
+  wnLabelClassName,
+  wnTitleClassName,
 } from "@worldnote/ui";
 import { useCallback, useState } from "react";
 import { MaterialIconPicker } from "./MaterialIconPicker.js";
@@ -62,7 +64,7 @@ function CommandEditor({
     <div className="flex flex-col gap-3 rounded-xl bg-wn-surface-raised px-3 py-3">
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">
-          <label className={fieldLabelClassName} htmlFor={`${command.id}-label`}>
+          <label className={wnLabelClassName} htmlFor={`${command.id}-label`}>
             Label
           </label>
           <Input
@@ -84,7 +86,7 @@ function CommandEditor({
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">
-          <span className={fieldLabelClassName}>Action type</span>
+          <span className={wnLabelClassName}>Action type</span>
           <div className="inline-flex w-fit gap-1 rounded-full bg-wn-surface-sunken p-1">
             {(["chat", "generate-card", "patch-card"] as const).map((kind) => {
               const isActive = command.kind === kind;
@@ -129,7 +131,7 @@ function CommandEditor({
         {command.kind === "generate-card" ? (
           <div className="flex flex-col gap-1.5">
             <label
-              className={fieldLabelClassName}
+              className={wnLabelClassName}
               htmlFor={`${command.id}-target`}
             >
               Card type to generate
@@ -160,7 +162,7 @@ function CommandEditor({
         ) : command.kind === "patch-card" ? (
           <div className="flex flex-col gap-1.5">
             <label
-              className={fieldLabelClassName}
+              className={wnLabelClassName}
               htmlFor={`${command.id}-patch-mode`}
             >
               Patch mode
@@ -184,7 +186,7 @@ function CommandEditor({
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label className={fieldLabelClassName} htmlFor={`${command.id}-prompt`}>
+        <label className={wnLabelClassName} htmlFor={`${command.id}-prompt`}>
           Prompt template
         </label>
         <textarea
@@ -196,14 +198,14 @@ function CommandEditor({
           }
           className={promptTextareaClassName}
         />
-        <p style={getBodyTextStyle("xs")}>
+        <p className={wnHintClassName}>
           Use {"{{names}}"} where card names should be inserted.
         </p>
       </div>
 
       <div className="flex flex-col gap-1.5 sm:max-w-[12rem]">
         <label
-          className={fieldLabelClassName}
+          className={wnLabelClassName}
           htmlFor={`${command.id}-min-cards`}
         >
           Minimum cards required
@@ -229,7 +231,7 @@ function CommandEditor({
       </div>
 
       {command.builtIn ? (
-        <p style={getBodyTextStyle("xs")}>
+        <p className={wnHintClassName}>
           Built-in availability:{" "}
           {describeQuickCommandAvailability(
             BUILTIN_WIZARD_QUICK_COMMANDS.find((item) => item.id === command.id)
@@ -300,12 +302,24 @@ export function WorldWizardQuickCommandsSettings({
 
   return (
     <section className={`${settingsPanelClassName} flex flex-col gap-4`}>
-      <div className="flex flex-col gap-1">
-        <span className={fieldLabelClassName}>Quick commands</span>
-        <p style={getBodyTextStyle("small")}>
-          Chips shown in WorldWizard when dropped cards match each command&apos;s
-          requirements. Toggle off commands you do not need, or add your own.
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0 flex-1 flex flex-col gap-1">
+          <span className={wnTitleClassName}>Quick commands</span>
+          <p className={wnDescriptionClassName}>
+            Chips shown in WorldWizard when dropped cards match each command&apos;s
+            requirements.
+          </p>
+        </div>
+        <Button
+          variant="secondary"
+          size="sm"
+          isDisabled={disabled}
+          onPress={handleAdd}
+          startContent={<MaterialSymbol name="add" className="text-base" />}
+          className="shrink-0"
+        >
+          Add command
+        </Button>
       </div>
 
       <ul className={settingsRowListClassName}>
@@ -314,17 +328,6 @@ export function WorldWizardQuickCommandsSettings({
           return (
             <li key={command.id} className={`${settingsRowClassName} flex flex-col gap-2`}>
               <div className="flex items-center gap-3">
-                <ToggleSwitch
-                  checked={command.enabled}
-                  disabled={disabled}
-                  ariaLabel={
-                    command.enabled
-                      ? `Disable ${command.label}`
-                      : `Enable ${command.label}`
-                  }
-                  onChange={() => handleToggle(command.id)}
-                />
-
                 <MaterialSymbol
                   name={command.icon}
                   className="shrink-0 text-base text-wn-text-muted"
@@ -333,10 +336,6 @@ export function WorldWizardQuickCommandsSettings({
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-wn-text">
                     {command.label}
-                  </p>
-                  <p className="truncate text-xs text-wn-text-muted">
-                    {command.builtIn ? "Built-in · " : "Custom · "}
-                    {describeQuickCommandAvailability(command.availability)}
                   </p>
                 </div>
 
@@ -350,6 +349,17 @@ export function WorldWizardQuickCommandsSettings({
                 >
                   {isEditing ? "Close" : "Edit"}
                 </Button>
+
+                <ToggleSwitch
+                  checked={command.enabled}
+                  disabled={disabled}
+                  ariaLabel={
+                    command.enabled
+                      ? `Disable ${command.label}`
+                      : `Enable ${command.label}`
+                  }
+                  onChange={() => handleToggle(command.id)}
+                />
               </div>
 
               {isEditing ? (
@@ -378,17 +388,6 @@ export function WorldWizardQuickCommandsSettings({
           );
         })}
       </ul>
-
-      <Button
-        variant="secondary"
-        size="sm"
-        isDisabled={disabled}
-        onPress={handleAdd}
-        startContent={<MaterialSymbol name="add" className="text-base" />}
-        className="self-end"
-      >
-        Add command
-      </Button>
     </section>
   );
 }

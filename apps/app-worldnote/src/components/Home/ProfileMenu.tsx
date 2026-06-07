@@ -1,4 +1,9 @@
-import { ActionMenu } from "@worldnote/ui";
+import { UserAvatar, ActionMenu } from "@worldnote/ui";
+import { useSettings } from "../../hooks/useSettings.js";
+import {
+  avatarColorFallbackClassName,
+  normalizeAvatarColor,
+} from "../../services/settings/avatarColorSettings.js";
 
 type ProfileMenuProps = {
   username: string;
@@ -6,7 +11,9 @@ type ProfileMenuProps = {
 };
 
 export function ProfileMenu({ username, onOpenSettings }: ProfileMenuProps) {
-  const initial = username.trim().charAt(0).toUpperCase() || "U";
+  const avatarColor = useSettings((state) =>
+    normalizeAvatarColor(state.settings?.avatarColor),
+  );
 
   return (
     <ActionMenu
@@ -21,10 +28,13 @@ export function ProfileMenu({ username, onOpenSettings }: ProfileMenuProps) {
       trigger={
         <button
           type="button"
-          className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-gradient-to-br from-wn-rose-500 to-wn-amber-500 text-sm font-semibold text-wn-mono-950 outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-wn-mono-500"
+          className="rounded-full outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-wn-mono-500"
           aria-label={`Profile for ${username}`}
         >
-          {initial}
+          <UserAvatar
+            username={username}
+            fallbackClassName={avatarColorFallbackClassName(avatarColor)}
+          />
         </button>
       }
     />

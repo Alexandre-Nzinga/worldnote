@@ -10,8 +10,6 @@ import {
 } from "@worldnote/ui";
 import { motion } from "framer-motion";
 import type { ReactNode } from "react";
-import { useResolvedTheme } from "../../theme/ThemeProvider.js";
-
 export type RichEmptyStateAction = {
   label: string;
   icon?: string;
@@ -33,7 +31,7 @@ const panelClassName =
   "flex flex-col items-center rounded-wn-card border border-dashed border-wn-mono-800 bg-wn-mono-950/20 text-center";
 
 const logoWrapClassName =
-  "mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-wn-surface-raised";
+  "mb-4 inline-flex h-10 shrink-0 items-center justify-center rounded-full bg-wn-surface-raised px-3.5";
 
 export function RichEmptyState({
   title,
@@ -43,7 +41,6 @@ export function RichEmptyState({
   className,
   compact = false,
 }: RichEmptyStateProps) {
-  const theme = useResolvedTheme();
   const paddingClassName = compact ? "px-6 py-8" : "px-8 py-12";
   const titleLevel = compact ? "h6" : "h5";
 
@@ -57,8 +54,8 @@ export function RichEmptyState({
       <motion.div className={logoWrapClassName} variants={contentItemVariants}>
         <WorldNoteLogo
           variant="icon"
-          tone={theme === "dark" ? "white" : "black"}
-          className="h-8 w-8 opacity-90"
+          tone="white"
+          className="h-5 opacity-90"
           alt=""
         />
       </motion.div>

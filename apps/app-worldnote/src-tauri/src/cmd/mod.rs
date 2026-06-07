@@ -9,4 +9,5 @@ pub mod sticky_note;
 pub mod timeline;
 pub mod vault;
 pub mod wizard;
+pub mod wizard_sessions;
 pub mod world_transfer;

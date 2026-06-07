@@ -1,6 +1,6 @@
 import {
   Button,
-  fieldLabelClassName,
+  wnLabelClassName,
   getHeadingProps,
   MaterialSymbol,
 } from "@worldnote/ui";
@@ -50,7 +50,7 @@ function GraphSliderRow({
 }) {
   return (
     <label className="flex flex-col gap-2">
-      <span className={fieldLabelClassName}>{label}</span>
+      <span className={wnLabelClassName}>{label}</span>
       <input
         type="range"
         min={min}

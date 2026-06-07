@@ -4,7 +4,7 @@ import {
   AnimatedModal,
   Button,
   EnumComboBox,
-  fieldLabelClassName,
+  wnLabelClassName,
   getBodyTextStyle,
   getHeadingProps,
 } from "@worldnote/ui";
@@ -153,7 +153,7 @@ export function TimelineChronologyEditorModal({
 
           <div className="flex flex-col gap-3">
             <div className="flex flex-col gap-1">
-              <label htmlFor="chrono-name" className={fieldLabelClassName}>
+              <label htmlFor="chrono-name" className={wnLabelClassName}>
                 Name
               </label>
               <Input
@@ -167,7 +167,7 @@ export function TimelineChronologyEditorModal({
 
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-1">
-                <label htmlFor="chrono-start" className={fieldLabelClassName}>
+                <label htmlFor="chrono-start" className={wnLabelClassName}>
                   Start year
                 </label>
                 <Input
@@ -180,7 +180,7 @@ export function TimelineChronologyEditorModal({
                 />
               </div>
               <div className="flex flex-col gap-1">
-                <label htmlFor="chrono-end" className={fieldLabelClassName}>
+                <label htmlFor="chrono-end" className={wnLabelClassName}>
                   End year
                 </label>
                 <Input
@@ -195,7 +195,7 @@ export function TimelineChronologyEditorModal({
             </div>
 
             <div className="flex flex-col gap-1">
-              <span className={fieldLabelClassName}>Parent</span>
+              <span className={wnLabelClassName}>Parent</span>
               <EnumComboBox
                 label="Parent period"
                 hideLabel

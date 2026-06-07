@@ -5,7 +5,6 @@ import {
   describeInspectorExpandAction,
   describeInspectorFillGapsAction,
 } from "../../../services/settings/wizardQuickCommands.js";
-import { useResolvedTheme } from "../../../theme/ThemeProvider.js";
 import {
   WizardActionChip,
   WizardActionIconChip,
@@ -39,8 +38,7 @@ export function InspectorWizardSection({
   onRunSuggestion,
   onOpenWizard,
 }: InspectorWizardSectionProps) {
-  const theme = useResolvedTheme();
-  const logoTone = theme === "dark" ? "white" : "black";
+  const logoTone = "white";
   const wizardDisabled =
     isBusy || status === "generating" || healthy !== true;
   const isGenerating = status === "generating";

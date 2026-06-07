@@ -24,6 +24,8 @@ export type StarterPack = {
   name: string;
   description: string;
   icon: string;
+  /** Filename inside `public/starter-packs/` for the home card cover. */
+  coverFile?: string;
   cards: StarterCardDef[];
   links: StarterLinkDef[];
 };
@@ -32,4 +34,9 @@ export type StarterPackBuildResult = {
   path: string;
   name: string;
   created: boolean;
+};
+
+export type BuildStarterPackOptions = {
+  /** When true, always creates a fresh world (suffixes the name if taken). */
+  forceNew?: boolean;
 };

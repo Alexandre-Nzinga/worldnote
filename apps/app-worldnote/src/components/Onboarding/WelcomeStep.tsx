@@ -7,7 +7,6 @@ import {
   WorldNoteLogo,
 } from "@worldnote/ui";
 import { motion } from "framer-motion";
-import { useResolvedTheme } from "../../theme/ThemeProvider.js";
 import { OnboardingWelcomeVisual } from "./OnboardingWelcomeVisual.js";
 
 type WelcomeStepProps = {
@@ -15,7 +14,6 @@ type WelcomeStepProps = {
 };
 
 export function WelcomeStep({ onNext }: WelcomeStepProps) {
-  const theme = useResolvedTheme();
   const titleHeadingProps = getHeadingProps("h1", {
     tone: "inverse",
     weight: "semibold",
@@ -35,7 +33,7 @@ export function WelcomeStep({ onNext }: WelcomeStepProps) {
         >
           <WorldNoteLogo
             variant="icon"
-            tone={theme === "dark" ? "white" : "black"}
+            tone="white"
             className="h-7 w-7 opacity-90"
             alt="WorldNote"
           />

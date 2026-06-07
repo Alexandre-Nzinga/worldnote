@@ -90,7 +90,6 @@ export type CardNodeData = {
   cardId?: string;
   title: string;
   subtitle?: string;
-  description?: string;
   imageUrl?: string;
   /** Family card heraldic crest (upper-right on visual view). */
   crestUrl?: string;

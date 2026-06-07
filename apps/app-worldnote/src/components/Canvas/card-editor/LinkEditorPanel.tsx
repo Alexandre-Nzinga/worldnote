@@ -2,7 +2,7 @@ import {
   AnimatedPanel,
   Button,
   CloseIconButton,
-  fieldLabelClassName,
+  wnLabelClassName,
   getHeadingProps,
 } from "@worldnote/ui";
 import type { Link } from "@worldnote/shared";
@@ -97,14 +97,14 @@ export function LinkEditorPanel({
       <div className="scrollbar-wn min-h-0 flex-1 overflow-y-auto px-4 py-4">
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-1">
-            <span className={fieldLabelClassName}>Socket</span>
+            <span className={wnLabelClassName}>Socket</span>
             <p className="rounded-xl border border-wn-mono-700 bg-wn-mono-950 px-3 py-2 text-sm text-wn-mono-50">
               {formatSocketId(activeLink.source_socket)} on {sourceCardName}
             </p>
           </div>
 
           <div className="flex flex-col gap-1">
-            <span className={fieldLabelClassName}>Linked card</span>
+            <span className={wnLabelClassName}>Linked card</span>
             <p className="rounded-xl border border-wn-mono-700 bg-wn-mono-950 px-3 py-2 text-sm text-wn-mono-50">
               {targetCardName}
             </p>

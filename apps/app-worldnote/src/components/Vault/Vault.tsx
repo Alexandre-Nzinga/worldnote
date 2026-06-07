@@ -375,7 +375,7 @@ export function Vault({
                   }
                   description={
                     worldList.length === 0
-                      ? "Create a world or try the sample world to start building your library."
+                      ? "Try the sample world to start building your library."
                       : "Add your first card on the canvas — characters, locations, and lore all show up here."
                   }
                   actions={vaultEmptyActions}

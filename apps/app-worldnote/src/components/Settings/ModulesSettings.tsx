@@ -1,4 +1,4 @@
-import { fieldLabelClassName, MaterialSymbol, getBodyTextStyle } from "@worldnote/ui";
+import { wnDescriptionClassName, wnTitleClassName } from "@worldnote/ui";
 import { BUILTIN_MODULES } from "../../services/modules/moduleRegistry.js";
 import {
   isModuleEnabledInSettings,
@@ -12,11 +12,11 @@ import type {
 import { ToggleSwitch } from "../shell/ToggleSwitch.js";
 import { FamilyTreeUnrelatedSetting } from "./FamilyTreeUnrelatedSetting.js";
 import { KinshipBadgeSettings } from "./KinshipBadgeSettings.js";
-import { TimelineEraSuffixSetting } from "./TimelineEraSuffixSetting.js";
 import {
   settingsPanelClassName,
   settingsPanelStackClassName,
 } from "./settingsStyles.js";
+import { TimelineEraSuffixSetting } from "./TimelineEraSuffixSetting.js";
 
 type ModulesSettingsPanelProps = {
   value: ModulesSettings;
@@ -48,24 +48,13 @@ export function ModulesSettingsPanel({
       {BUILTIN_MODULES.map((module) => {
         const checked = isModuleEnabledInSettings(value, module.id);
         return (
-          <section
-            key={module.id}
-            className={settingsPanelClassName}
-          >
+          <section key={module.id} className={settingsPanelClassName}>
             <div className="flex items-start justify-between gap-4">
-              <div className="flex min-w-0 flex-1 gap-3">
-                <span
-                  className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-wn-surface-raised text-wn-text-muted"
-                  aria-hidden
-                >
-                  <MaterialSymbol name={module.icon} className="text-[20px]" />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <span className={fieldLabelClassName}>{module.name}</span>
-                  <p className="mt-0.5" style={getBodyTextStyle("small")}>
-                    {module.description}
-                  </p>
-                </div>
+              <div className="min-w-0 flex-1">
+                <span className={wnTitleClassName}>{module.name}</span>
+                <p className={`mt-0.5 ${wnDescriptionClassName}`}>
+                  {module.description}
+                </p>
               </div>
               <ToggleSwitch
                 checked={checked}
@@ -76,7 +65,7 @@ export function ModulesSettingsPanel({
                 disabled={disabled}
               />
             </div>
-            {module.id === "familyTree" ? (
+            {checked && module.id === "familyTree" ? (
               <>
                 <FamilyTreeUnrelatedSetting
                   value={familyTreeUnrelatedMode}
@@ -90,7 +79,7 @@ export function ModulesSettingsPanel({
                 />
               </>
             ) : null}
-            {module.id === "timeline" ? (
+            {checked && module.id === "timeline" ? (
               <TimelineEraSuffixSetting
                 value={timelineEraSuffix}
                 onChange={onTimelineEraSuffixChange}

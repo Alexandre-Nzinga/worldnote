@@ -1,9 +1,6 @@
 import { WorldNoteLogo } from "@worldnote/ui";
 import { motion } from "framer-motion";
-import { useResolvedTheme } from "../theme/ThemeProvider.js";
-
 export function LoadingScreen() {
-  const theme = useResolvedTheme();
   return (
     <div className="flex h-screen flex-col items-center justify-center gap-8 bg-wn-bg">
       <motion.div
@@ -16,7 +13,7 @@ export function LoadingScreen() {
       >
         <WorldNoteLogo
           variant="icon"
-          tone={theme === "dark" ? "white" : "black"}
+          tone="white"
           className="h-16 w-16 opacity-80"
           alt="WorldNote"
         />

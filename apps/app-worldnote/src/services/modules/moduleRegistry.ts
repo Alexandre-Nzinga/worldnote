@@ -14,7 +14,7 @@ export const BUILTIN_MODULES: readonly ModuleRegistryEntry[] = [
     id: "familyTree",
     name: "Family Tree",
     description:
-      "Select a character on the canvas to reveal kinship labels on related characters and dim or hide unrelated ones.",
+      "Select a character to show kinship labels and dim unrelated ones.",
     icon: "account_tree",
     defaultEnabled: false,
   },

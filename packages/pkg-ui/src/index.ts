@@ -7,6 +7,7 @@ export * from "./atoms/Pill/Pill.js";
 export * from "./atoms/Tag/Tag.js";
 export * from "./atoms/TagGroup/TagGroup.js";
 export * from "./atoms/Tooltip/Tooltip.js";
+export * from "./atoms/UserAvatar/UserAvatar.js";
 export * from "./motion/index.js";
 export * from "./brand/index.js";
 export * from "./molecules/index.js";

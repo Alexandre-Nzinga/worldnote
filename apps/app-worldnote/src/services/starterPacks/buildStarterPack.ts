@@ -5,7 +5,11 @@ import { createWorldCard } from "../crudWorldCard/createWorldCard.js";
 import { updateWorldCard } from "../crudWorldCard/updateWorldCard.js";
 import { descriptionSummaryFromMarkdown } from "../canvas/stickyNoteMarkdown.js";
 import { listWorlds } from "../worlds/listWorlds.js";
-import type { StarterPack, StarterPackBuildResult } from "./types.js";
+import type {
+  BuildStarterPackOptions,
+  StarterPack,
+  StarterPackBuildResult,
+} from "./types.js";
 
 function enrichCard(
   created: WorldCard,
@@ -30,20 +34,47 @@ function enrichCard(
   return WorldCardSchema.parse(enriched);
 }
 
+function resolvePackWorldName(
+  packName: string,
+  existingNames: Set<string>,
+  forceNew: boolean,
+): string {
+  if (!forceNew && existingNames.has(packName)) {
+    return packName;
+  }
+  if (!existingNames.has(packName)) {
+    return packName;
+  }
+
+  let index = 2;
+  let candidate = `${packName} ${index}`;
+  while (existingNames.has(candidate)) {
+    index += 1;
+    candidate = `${packName} ${index}`;
+  }
+  return candidate;
+}
+
 /** Opens an existing pack world or creates one with starter cards and links. */
 export async function buildStarterPackWorld(
   root: string,
   pack: StarterPack,
+  options?: BuildStarterPackOptions,
 ): Promise<StarterPackBuildResult> {
   const worlds = await listWorlds(root);
+  const existingNames = new Set(worlds.map((world) => world.name));
+  const forceNew = options?.forceNew === true;
   const existing = worlds.find((world) => world.name === pack.name);
-  if (existing) {
+
+  if (existing && !forceNew) {
     return { path: existing.path, name: existing.name, created: false };
   }
 
+  const worldName = resolvePackWorldName(pack.name, existingNames, forceNew);
+
   const worldPath = await invoke<string>("create_world", {
     root,
-    name: pack.name,
+    name: worldName,
     description: pack.description,
   });
 
@@ -81,5 +112,5 @@ export async function buildStarterPackWorld(
     });
   }
 
-  return { path: worldPath, name: pack.name, created: true };
+  return { path: worldPath, name: worldName, created: true };
 }

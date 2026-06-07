@@ -4,14 +4,15 @@ export const FANTASY_KINGDOM_PACK: StarterPack = {
   id: "fantasy-kingdom",
   name: "The Kingdom of Eldreth",
   description:
-    "A feudal fantasy realm with a king, knights, elves, and orcs — linked characters, places, and a siege to explore.",
+    "A feudal fantasy realm with linked characters, places, and events ready to explore.",
   icon: "castle",
+  coverFile: "fantasy-kingdom-cover.png",
   cards: [
     {
       key: "kingdom",
       cardType: "polity",
       name: "The Kingdom of Eldreth",
-      position: { x: 0, y: -420 },
+      position: { x: 20, y: -540 },
       subtitle: "The Crown of the North",
       tags: ["kingdom", "polity", "fantasy"],
       fields: { government_type: "Feudal Monarchy" },
@@ -37,7 +38,7 @@ The kingdom operates on feudal oaths: barons swear fealty to the crown, and the 
       key: "capital",
       cardType: "location",
       name: "Highmoor",
-      position: { x: 0, y: -220 },
+      position: { x: -15, y: -280 },
       subtitle: "Capital of Eldreth",
       tags: ["city", "capital", "location"],
       customProperties: {
@@ -85,7 +86,7 @@ In Year 891, Gurhak the Render laid siege for forty days. King Aldric III held t
       key: "tavern",
       cardType: "building",
       name: "The Gilded Griffin",
-      position: { x: 280, y: -40 },
+      position: { x: 360, y: -50 },
       subtitle: "Where stories are born",
       tags: ["tavern", "building", "social"],
       customProperties: {
@@ -109,7 +110,7 @@ Marta Thornwood, the sharp-eyed proprietor, hears everything. Some say she once 
       key: "forest",
       cardType: "location",
       name: "Silverwood",
-      position: { x: -420, y: 120 },
+      position: { x: -720, y: 140 },
       subtitle: "The Elven Sanctuary",
       tags: ["forest", "location", "elven"],
       customProperties: {
@@ -133,7 +134,7 @@ The heart of Silverwood is warded. Outsiders who wander off the King's Road repo
       key: "king",
       cardType: "character",
       name: "King Aldric III",
-      position: { x: -320, y: 280 },
+      position: { x: -580, y: 400 },
       subtitle: "The Iron Crown",
       tags: ["character", "royalty", "human"],
       fields: {
@@ -166,7 +167,7 @@ Aldric believes the crown exists to protect the realm — not to enrich the roya
       key: "knight",
       cardType: "character",
       name: "Ser Roland of Greywatch",
-      position: { x: -80, y: 280 },
+      position: { x: -240, y: 390 },
       subtitle: "Champion of the Crown",
       tags: ["character", "knight", "human"],
       fields: {
@@ -198,7 +199,7 @@ Son of King Aldric III by a earlier marriage, though Roland refuses any claim to
       key: "elf",
       cardType: "character",
       name: "Luthien Dawnshard",
-      position: { x: 160, y: 280 },
+      position: { x: 100, y: 405 },
       subtitle: "Voice of the Silverwood",
       tags: ["character", "elf", "diplomat"],
       fields: {
@@ -265,7 +266,7 @@ Orc refugees still tell of Gurhak's return. Eldreth's eastern scouts report smok
       key: "siege",
       cardType: "event",
       name: "The Siege of Castle Greywatch",
-      position: { x: 0, y: 480 },
+      position: { x: -130, y: 790 },
       subtitle: "Forty days that saved a kingdom",
       tags: ["event", "battle", "siege"],
       fields: {

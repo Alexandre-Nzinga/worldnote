@@ -1,32 +1,20 @@
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
-import {
-  ActionMenu,
-  Button,
-  MaterialSymbol,
-  WorldNoteLogo,
-  getBodyTextStyle,
-  getHeadingProps,
-  springSnappy,
-} from "@worldnote/ui";
-import { motion } from "framer-motion";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { CreateWorldModal } from "../CreateWorldModal.js";
-import { ProfileMenu } from "./ProfileMenu.js";
 import { useSettings } from "../../hooks/useSettings.js";
 import { useVault } from "../../hooks/useVault.js";
 import { useVaultCommands } from "../../hooks/useVaultCommands.js";
 import {
   getPinnedWorldPaths,
-  MAX_PINNED_WORLDS,
   normalizePinnedWorldPaths,
   partitionWorldsByPinned,
   remapPinnedWorldPath,
   removePinnedWorldPath,
   togglePinnedWorldPath,
 } from "../../services/settings/pinnedWorlds.js";
-import { createSampleWorld } from "../../services/worlds/createSampleWorld.js";
 import {
   buildStarterPackWorld,
+  openSampleWorld,
   type StarterPack,
 } from "../../services/starterPacks/index.js";
 import {
@@ -37,18 +25,17 @@ import {
   importWorld,
   pickWorldArchiveFile,
 } from "../../services/worlds/worldTransfer.js";
-import { RichEmptyState } from "../ui/RichEmptyState.js";
-import { useResolvedTheme } from "../../theme/ThemeProvider.js";
-import { getTimeOfDayGreeting } from "./worldCover.js";
+import { toast } from "../../services/notifications/toast.js";
 import {
   pageBackdropClassName,
   pageShellClassName,
 } from "../shell/pageShellStyles.js";
-import { WorldCard } from "./WorldCard.js";
-import { WorldCardSkeletonGrid } from "./WorldCardSkeleton.js";
+import { HomeHeader } from "./HomeHeader.js";
+import { HomeHero } from "./HomeHero.js";
+import { getTimeOfDayGreeting } from "./worldCover.js";
 import { WorldSettingsModal } from "./WorldSettingsModal.js";
-import { StarterPackPickerModal } from "./StarterPackPickerModal.js";
-import { toast } from "../../services/notifications/toast.js";
+import { WorldsSection } from "./WorldsSection.js";
+
 type HomeProps = {
   onWorldReady: () => void;
   onOpenSettings?: () => void;
@@ -67,7 +54,6 @@ export function Home({ onWorldReady, onOpenSettings, onOpenVault }: HomeProps) {
   const [isLoadingWorlds, setIsLoadingWorlds] = useState(true);
   const [isBusy, setIsBusy] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [isStarterPackOpen, setIsStarterPackOpen] = useState(false);
   const [manageWorld, setManageWorld] = useState<WorldSummary | null>(null);
 
   const pinnedPaths = useMemo(
@@ -188,53 +174,22 @@ export function Home({ onWorldReady, onOpenSettings, onOpenVault }: HomeProps) {
     [pinnedWorlds, unpinnedWorlds],
   );
 
-  const handleBuildStarterPack = useCallback(
-    async (pack: StarterPack) => {
-      if (!settings?.worldnoteRoot) {
-        return;
-      }
-      setIsBusy(true);
-      try {
-        const result = await buildStarterPackWorld(settings.worldnoteRoot, pack);
-        await openWorld(result.path);
-        setCurrentVault(result.path, result.name);
-        setIsStarterPackOpen(false);
-        onWorldReady();
-      } catch (error) {
-        console.error("Failed to build starter pack:", error);
-        toast.error(
-          error instanceof Error
-            ? error.message
-            : "Could not build this starter pack.",
-        );
-      } finally {
-        setIsBusy(false);
-      }
-    },
-    [
-      onWorldReady,
-      openWorld,
-      setCurrentVault,
-      settings?.worldnoteRoot,
-    ],
-  );
-
   const handleTrySampleWorld = useCallback(async () => {
     if (!settings?.worldnoteRoot) {
       return;
     }
     setIsBusy(true);
     try {
-      const sample = await createSampleWorld(settings.worldnoteRoot);
+      const sample = await openSampleWorld(settings.worldnoteRoot);
       await openWorld(sample.path);
       setCurrentVault(sample.path, sample.name);
       onWorldReady();
     } catch (error) {
-      console.error("Failed to create sample world:", error);
+      console.error("Failed to open sample world:", error);
       toast.error(
         error instanceof Error
           ? error.message
-          : "Could not create the sample world.",
+          : "Could not open the sample world.",
       );
     } finally {
       setIsBusy(false);
@@ -245,6 +200,40 @@ export function Home({ onWorldReady, onOpenSettings, onOpenVault }: HomeProps) {
     setCurrentVault,
     settings?.worldnoteRoot,
   ]);
+
+  const handleStartStarterPack = useCallback(
+    async (pack: StarterPack) => {
+      if (!settings?.worldnoteRoot) {
+        return;
+      }
+      setIsBusy(true);
+      try {
+        const result = await buildStarterPackWorld(settings.worldnoteRoot, pack, {
+          forceNew: true,
+        });
+        await refreshWorlds();
+        await openWorld(result.path);
+        setCurrentVault(result.path, result.name);
+        onWorldReady();
+      } catch (error) {
+        console.error("Failed to start starter pack:", error);
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Could not start this starter pack.",
+        );
+      } finally {
+        setIsBusy(false);
+      }
+    },
+    [
+      onWorldReady,
+      openWorld,
+      refreshWorlds,
+      setCurrentVault,
+      settings?.worldnoteRoot,
+    ],
+  );
 
   const handleImportWorld = useCallback(async () => {
     if (!settings?.worldnoteRoot) {
@@ -292,17 +281,7 @@ export function Home({ onWorldReady, onOpenSettings, onOpenVault }: HomeProps) {
       />
 
       <main className="relative z-10 flex min-h-0 flex-1 flex-col overflow-hidden px-[46px] pb-6 pt-10">
-        <p
-          className="mb-2 shrink-0 text-center text-wn-mono-400"
-          style={{
-            ...getBodyTextStyle("body"),
-            fontSize: "20px",
-            fontWeight: "var(--font-weight-wn-medium)",
-          }}
-        >
-          Good {greeting}, {username}
-        </p>
-        <HeroTitle />
+        <HomeHero greeting={greeting} username={username} />
 
         <WorldsSection
           isBusy={isBusy}
@@ -317,9 +296,6 @@ export function Home({ onWorldReady, onOpenSettings, onOpenVault }: HomeProps) {
           onTrySampleWorld={() => {
             void handleTrySampleWorld();
           }}
-          onOpenStarterPacks={() => {
-            setIsStarterPackOpen(true);
-          }}
           onOpenRoot={() => {
             void handleOpenRootFolder();
           }}
@@ -331,6 +307,9 @@ export function Home({ onWorldReady, onOpenSettings, onOpenVault }: HomeProps) {
           onTogglePin={(world) => {
             void handleTogglePin(world);
           }}
+          onStartStarterPack={(pack) => {
+            void handleStartStarterPack(pack);
+          }}
         />
       </main>
 
@@ -341,17 +320,6 @@ export function Home({ onWorldReady, onOpenSettings, onOpenVault }: HomeProps) {
         onWorldReady={() => {
           void refreshWorlds();
           onWorldReady();
-        }}
-      />
-
-      <StarterPackPickerModal
-        isOpen={isStarterPackOpen}
-        isBusy={isBusy}
-        onClose={() => {
-          setIsStarterPackOpen(false);
-        }}
-        onSelectPack={(pack) => {
-          void handleBuildStarterPack(pack);
         }}
       />
 
@@ -369,321 +337,6 @@ export function Home({ onWorldReady, onOpenSettings, onOpenVault }: HomeProps) {
           void refreshWorlds();
         }}
       />
-
     </div>
-  );
-}
-
-function HomeHeader({
-  username,
-  onOpenSettings,
-}: {
-  username: string;
-  onOpenSettings: () => void;
-}) {
-  const theme = useResolvedTheme();
-  return (
-    <header className="relative z-10 flex shrink-0 items-center justify-between px-[46px] pt-7">
-      <div className="flex items-center gap-3">
-        <WorldNoteLogo
-          variant="icon"
-          tone={theme === "dark" ? "white" : "black"}
-          className="h-7 w-7 opacity-90"
-          alt="WorldNote"
-        />
-        <h2 {...getHeadingProps("h3", { tone: "inverse" })}>WorldNote</h2>
-      </div>
-      <ProfileMenu username={username} onOpenSettings={onOpenSettings} />
-    </header>
-  );
-}
-
-function HeroTitle() {
-  return (
-    <h1
-      {...getHeadingProps("h1", {
-        tone: "inverse",
-        weight: "semibold",
-        className: "mx-auto mb-10 shrink-0 text-center whitespace-nowrap",
-      })}
-    >
-      What are you building today?
-    </h1>
-  );
-}
-
-type WorldsSectionProps = {
-  isBusy: boolean;
-  isLoading: boolean;
-  worlds: WorldSummary[];
-  pinnedCount: number;
-  pinnedPaths: string[];
-  onCreate: () => void;
-  onImportWorld: () => void;
-  onTrySampleWorld: () => void;
-  onOpenStarterPacks: () => void;
-  onOpenRoot: () => void;
-  onOpenVault: () => void;
-  onOpenWorld: (world: WorldSummary) => void;
-  onManageWorld: (world: WorldSummary) => void;
-  onTogglePin: (world: WorldSummary) => void;
-};
-
-function WorldsSection({
-  isBusy,
-  isLoading,
-  worlds,
-  pinnedCount,
-  pinnedPaths,
-  onCreate,
-  onImportWorld,
-  onTrySampleWorld,
-  onOpenStarterPacks,
-  onOpenRoot,
-  onOpenVault,
-  onOpenWorld,
-  onManageWorld,
-  onTogglePin,
-}: WorldsSectionProps) {
-  const pinnedSet = useMemo(() => new Set(pinnedPaths), [pinnedPaths]);
-  const canPinMore = pinnedCount < MAX_PINNED_WORLDS;
-  return (
-    <section className="mx-auto flex min-h-0 w-full max-w-[1008px] flex-1 flex-col">
-      <div className="mb-6 flex shrink-0 items-center justify-between">
-        <h2 {...getHeadingProps("h4", { tone: "inverse" })}>Your Worlds</h2>
-        <div className="flex items-center gap-3">
-          <Button
-            variant="secondary"
-            size="sm"
-            isDisabled={isBusy}
-            onPress={onOpenVault}
-            startContent={<MaterialSymbol name="layers" className="text-base" />}
-          >
-            Vault
-          </Button>
-          <Button
-            variant="white"
-            size="sm"
-            isDisabled={isBusy}
-            onPress={onCreate}
-            startContent={<MaterialSymbol name="add" className="text-base" />}
-          >
-            Create world
-          </Button>
-          <ActionMenu
-            ariaLabel="More world actions"
-            placement="bottom-end"
-            onAction={(key) => {
-              if (key === "import") {
-                onImportWorld();
-                return;
-              }
-              if (key === "open-folder") {
-                onOpenRoot();
-                return;
-              }
-              if (key === "starter-packs") {
-                onOpenStarterPacks();
-              }
-            }}
-            items={[
-              {
-                id: "import",
-                label: "Import world",
-                icon: (
-                  <MaterialSymbol name="download" className="text-[20px]" />
-                ),
-              },
-              {
-                id: "open-folder",
-                label: "Open folder",
-                icon: (
-                  <MaterialSymbol name="folder_open" className="text-[20px]" />
-                ),
-              },
-              {
-                id: "starter-packs",
-                label: "Starter packs",
-                icon: (
-                  <MaterialSymbol name="auto_stories" className="text-[20px]" />
-                ),
-              },
-            ]}
-            trigger={
-              <Button
-                variant="secondary"
-                size="sm"
-                isIconOnly
-                isDisabled={isBusy}
-                aria-label="More world actions"
-                className="min-w-9 px-0"
-              >
-                <MaterialSymbol name="more_vert" className="text-lg" />
-              </Button>
-            }
-          />
-        </div>
-      </div>
-
-      <div className="scrollbar-wn flex min-h-0 flex-1 flex-col overflow-y-auto pr-2">
-        {isLoading ? (
-          <WorldCardSkeletonGrid />
-        ) : worlds.length > 0 ? (
-          <WorldsGrid
-            worlds={worlds}
-            pinnedCount={pinnedCount}
-            pinnedSet={pinnedSet}
-            canPinMore={canPinMore}
-            isBusy={isBusy}
-            onOpenWorld={onOpenWorld}
-            onManageWorld={onManageWorld}
-            onTogglePin={onTogglePin}
-          />
-        ) : (
-          <EmptyWorldsState
-            disabled={isBusy}
-            onCreate={onCreate}
-            onTrySampleWorld={onTrySampleWorld}
-            onOpenStarterPacks={onOpenStarterPacks}
-          />
-        )}
-
-        <HomeFooter />
-      </div>
-    </section>
-  );
-}
-
-type WorldsGridProps = {
-  worlds: WorldSummary[];
-  pinnedCount: number;
-  pinnedSet: Set<string>;
-  canPinMore: boolean;
-  isBusy: boolean;
-  onOpenWorld: (world: WorldSummary) => void;
-  onManageWorld: (world: WorldSummary) => void;
-  onTogglePin: (world: WorldSummary) => void;
-};
-
-const sectionLabelStyle = {
-  fontSize: "14px",
-  fontWeight: "var(--font-weight-wn-medium)",
-} as const;
-
-function WorldsGrid({
-  worlds,
-  pinnedCount,
-  pinnedSet,
-  canPinMore,
-  isBusy,
-  onOpenWorld,
-  onManageWorld,
-  onTogglePin,
-}: WorldsGridProps) {
-  const pinned = worlds.slice(0, pinnedCount);
-  const unpinned = worlds.slice(pinnedCount);
-
-  const renderCard = (world: WorldSummary, index: number) => (
-    <motion.div
-      key={world.path}
-      initial={{ opacity: 0, y: 16 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.25 }}
-      transition={{
-        ...springSnappy,
-        delay: Math.min(index, 5) * 0.04,
-      }}
-    >
-      <WorldCard
-        world={world}
-        disabled={isBusy}
-        isPinned={pinnedSet.has(world.path)}
-        canPin={canPinMore || pinnedSet.has(world.path)}
-        onTogglePin={onTogglePin}
-        onOpen={onOpenWorld}
-        onManage={onManageWorld}
-      />
-    </motion.div>
-  );
-
-  return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {pinnedCount > 0 ? (
-        <>
-          <p className="col-span-full text-wn-mono-400" style={sectionLabelStyle}>
-            Pinned
-          </p>
-          {pinned.map((world, index) => renderCard(world, index))}
-        </>
-      ) : null}
-      {unpinned.length > 0 && pinnedCount > 0 ? (
-        <p
-          className="col-span-full mt-2 text-wn-mono-400"
-          style={sectionLabelStyle}
-        >
-          All worlds
-        </p>
-      ) : null}
-      {unpinned.map((world, index) => renderCard(world, pinnedCount + index))}
-    </div>
-  );
-}
-
-type EmptyWorldsStateProps = {
-  onCreate: () => void;
-  onTrySampleWorld: () => void;
-  onOpenStarterPacks: () => void;
-  disabled?: boolean;
-};
-
-function EmptyWorldsState({
-  onCreate,
-  onTrySampleWorld,
-  onOpenStarterPacks,
-  disabled,
-}: EmptyWorldsStateProps) {
-  return (
-    <RichEmptyState
-      title="No worlds yet"
-      description="Create a world from scratch or explore a ready-made sample with characters, places, and links."
-      actions={[
-        {
-          label: "Create world",
-          icon: "add",
-          variant: "white",
-          onPress: onCreate,
-          isDisabled: disabled,
-        },
-        {
-          label: "Starter packs",
-          icon: "castle",
-          variant: "secondary",
-          onPress: onOpenStarterPacks,
-          isDisabled: disabled,
-        },
-        {
-          label: "Try sample world",
-          icon: "auto_stories",
-          variant: "secondary",
-          onPress: onTrySampleWorld,
-          isDisabled: disabled,
-        },
-      ]}
-      className="min-h-[270px] justify-center"
-    />
-  );
-}
-
-function HomeFooter() {
-  return (
-    <footer className="mt-12 flex shrink-0 items-center justify-center pb-4 text-wn-mono-500">
-      <div
-        className="flex items-center gap-2"
-        style={{ fontSize: "13px", fontWeight: "var(--font-weight-wn-medium)" }}
-      >
-        <span>WorldNote</span>
-        <span className="font-mono">v{__APP_VERSION__}</span>
-      </div>
-    </footer>
   );
 }

@@ -1,4 +1,4 @@
-import { fieldLabelClassName, MaterialSymbol, getBodyTextStyle } from "@worldnote/ui";
+import { MaterialSymbol, wnDescriptionClassName, wnSubtitleClassName } from "@worldnote/ui";
 import {
   familyTreeUnrelatedModeLabel,
   normalizeFamilyTreeUnrelatedMode,
@@ -37,8 +37,8 @@ export function FamilyTreeUnrelatedSetting({
   return (
     <section className="mt-4">
       <div className="mb-4 flex flex-col gap-1">
-        <span className={fieldLabelClassName}>Unrelated characters</span>
-        <p style={getBodyTextStyle("small")}>
+        <span className={wnSubtitleClassName}>Unrelated characters</span>
+        <p className={wnDescriptionClassName}>
           Choose what happens to characters with no kinship path to the selected
           anchor.
         </p>

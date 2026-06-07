@@ -2,9 +2,9 @@ import { Input } from "@heroui/react";
 import {
   AnimatedModal,
   Button,
-  fieldLabelClassName,
-  getBodyTextStyle,
   getHeadingProps,
+  wnDescriptionClassName,
+  wnLabelClassName,
 } from "@worldnote/ui";
 import { useCallback, useEffect, useState } from "react";
 import { useSettings } from "../../hooks/useSettings.js";
@@ -129,7 +129,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             >
               Settings
             </h2>
-            <p style={getBodyTextStyle("small")}>
+            <p className={wnDescriptionClassName}>
               Update your profile and view where your worlds are stored.
             </p>
           </header>
@@ -138,7 +138,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             <div className="flex flex-col gap-1">
               <label
                 htmlFor="settings-username"
-                className={fieldLabelClassName}
+                className={wnLabelClassName}
               >
                 Username <span className="text-wn-red-500">*</span>
               </label>
@@ -154,7 +154,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             </div>
 
             <div className="flex flex-col gap-1">
-              <span className={fieldLabelClassName}>WorldNote folder</span>
+              <span className={wnLabelClassName}>WorldNote folder</span>
               <p className="rounded-xl border border-wn-mono-700 bg-wn-mono-950 px-3 py-2 text-sm text-wn-mono-50">
                 {settings.worldnoteRoot}
               </p>

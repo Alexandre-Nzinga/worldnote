@@ -11,7 +11,6 @@ import {
   ensureWorldnoteRoot,
   type AppSettings,
 } from "../../services/settings/settings.js";
-import { useResolvedTheme } from "../../theme/ThemeProvider.js";
 import { StorageStep } from "./StorageStep.js";
 import { UsernameStep } from "./UsernameStep.js";
 import { WelcomeStep } from "./WelcomeStep.js";
@@ -26,7 +25,6 @@ type OnboardingProps = {
 
 export function Onboarding({ onComplete }: OnboardingProps) {
   const save = useSettings((state) => state.save);
-  const theme = useResolvedTheme();
   const [step, setStep] = useState<OnboardingStep>("welcome");
   const [direction, setDirection] = useState<StepDirection>(1);
   const stepIndexRef = useRef(STEP_ORDER.indexOf("welcome"));
@@ -111,7 +109,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         >
           <WorldNoteLogo
             variant="icon"
-            tone={theme === "dark" ? "white" : "black"}
+            tone="white"
             className="h-7 w-7 opacity-90"
             alt="WorldNote"
           />

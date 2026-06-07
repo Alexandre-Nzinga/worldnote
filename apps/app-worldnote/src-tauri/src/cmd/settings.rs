@@ -125,6 +125,9 @@ pub struct AppSettings {
     /// Accent color token for primary CTAs (e.g. "azure-500"). Defaults to "mono-50".
     #[serde(default)]
     pub primary_color: Option<String>,
+    /// Profile avatar gradient preset (e.g. "mono"). Defaults to "mono".
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub avatar_color: Option<String>,
     /// Canvas copy / paste / duplicate shortcuts.
     #[serde(default)]
     pub canvas_shortcuts: Option<CanvasKeyboardShortcuts>,

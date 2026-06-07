@@ -139,7 +139,11 @@ function DockIcon({ item, mousePosition, orientation, itemRef }: DockIconProps) 
 
         <motion.span
           aria-hidden
-          className="pointer-events-none absolute inset-0 rounded-2xl bg-linear-to-br from-wn-mono-50/20 to-transparent"
+          className={`pointer-events-none absolute inset-0 rounded-2xl bg-linear-to-br to-transparent ${
+            item.colorClassName.includes("bg-wn-primary")
+              ? "from-wn-primary-foreground/10"
+              : "from-wn-mono-50/20"
+          }`}
           animate={{
             opacity: isHovered && !item.disabled ? 0.35 : 0.12,
           }}

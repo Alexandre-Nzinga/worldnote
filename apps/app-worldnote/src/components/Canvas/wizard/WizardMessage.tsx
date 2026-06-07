@@ -11,25 +11,45 @@ import { MarkdownView } from "../inspector/MarkdownView.js";
 import { cx } from "./cx.js";
 import type { WizardMessage as WizardMessageData } from "./useWorldWizard.js";
 
-function WizardTypingIndicator() {
+const STATIC_LOADING_LABELS: Record<string, string> = {
+  "Generating card…": "Generating card",
+  "Updating card…": "Updating card",
+};
+
+function resolveLoadingLabel(message: WizardMessageData): string | undefined {
+  if (message.loadingLabel) {
+    return message.loadingLabel;
+  }
+  if (message.streaming) {
+    return STATIC_LOADING_LABELS[message.content];
+  }
+  return undefined;
+}
+
+function WizardTypingIndicator({ label }: { label?: string }) {
   return (
     <output
-      className="flex items-center gap-1 py-0.5"
-      aria-label="Generating response"
+      className="flex items-center gap-1.5 py-0.5"
+      aria-label={label ?? "Generating response"}
     >
-      {[0, 1, 2].map((index) => (
-        <motion.span
-          key={index}
-          className="inline-block h-1.5 w-1.5 rounded-full bg-wn-mono-400"
-          animate={{ opacity: [0.3, 1, 0.3], y: [0, -2, 0] }}
-          transition={{
-            duration: 0.9,
-            repeat: Number.POSITIVE_INFINITY,
-            ease: "easeInOut",
-            delay: index * 0.15,
-          }}
-        />
-      ))}
+      {label ? (
+        <span className="text-sm text-wn-mono-200">{label}</span>
+      ) : null}
+      <span className="flex items-center gap-1" aria-hidden={label ? true : undefined}>
+        {[0, 1, 2].map((index) => (
+          <motion.span
+            key={index}
+            className="inline-block h-1.5 w-1.5 rounded-full bg-wn-mono-400"
+            animate={{ opacity: [0.3, 1, 0.3], y: [0, -2, 0] }}
+            transition={{
+              duration: 0.9,
+              repeat: Number.POSITIVE_INFINITY,
+              ease: "easeInOut",
+              delay: index * 0.15,
+            }}
+          />
+        ))}
+      </span>
     </output>
   );
 }
@@ -161,6 +181,7 @@ export function WizardMessage({
   onApply,
 }: WizardMessageProps) {
   const isUser = message.role === "user";
+  const loadingLabel = resolveLoadingLabel(message);
   const canCopy = !message.streaming && message.content.trim().length > 0;
 
   return (
@@ -186,8 +207,8 @@ export function WizardMessage({
           <p className="whitespace-pre-wrap">{message.content}</p>
         ) : (
           <>
-            {message.streaming && !message.content.trim() ? (
-              <WizardTypingIndicator />
+            {message.streaming && (loadingLabel || !message.content.trim()) ? (
+              <WizardTypingIndicator label={loadingLabel} />
             ) : message.streaming ? (
               <output
                 className="block whitespace-pre-wrap leading-relaxed text-wn-mono-200"
