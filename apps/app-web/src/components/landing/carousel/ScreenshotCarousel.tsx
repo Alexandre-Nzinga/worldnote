@@ -3,6 +3,7 @@
 import { Button, MaterialSymbol, usePrefersReducedMotion } from "@worldnote/ui";
 import clsx from "clsx";
 import { motion, type PanInfo } from "framer-motion";
+import Image from "next/image";
 import { useCallback, useState } from "react";
 import { landingCopy } from "@/components/landing/shared/copy";
 import {
@@ -65,10 +66,18 @@ export function ScreenshotCarousel() {
                 className="shrink-0 px-6 md:px-10 lg:px-16"
                 style={{ width: `${100 / slideCount}%` }}
               >
-                <ScreenshotPlaceholder
-                  caption={slide.caption}
-                  icon={slide.icon}
-                />
+                {"src" in slide && slide.src ? (
+                  <ScreenshotFigure
+                    caption={slide.caption}
+                    src={slide.src}
+                    alt={slide.alt}
+                  />
+                ) : (
+                  <ScreenshotPlaceholder
+                    caption={slide.caption}
+                    icon={slide.icon}
+                  />
+                )}
               </div>
             ))}
           </motion.div>
@@ -134,6 +143,36 @@ function CarouselArrow({
         className="text-base"
       />
     </Button>
+  );
+}
+
+/** Real screenshot slide with caption. */
+function ScreenshotFigure({
+  caption,
+  src,
+  alt,
+}: {
+  caption: string;
+  src: string;
+  alt: string;
+}) {
+  return (
+    <figure className="overflow-hidden rounded-wn-card border border-wn-border bg-wn-surface">
+      <div className="relative aspect-video w-full overflow-hidden bg-black">
+        <Image
+          src={src}
+          alt={alt}
+          fill
+          sizes="(max-width: 768px) 100vw, 80vw"
+          className="object-cover object-top"
+          draggable={false}
+          priority
+        />
+      </div>
+      <figcaption className="border-t border-wn-border px-6 py-4 text-wn-small text-wn-text-muted">
+        {caption}
+      </figcaption>
+    </figure>
   );
 }
 

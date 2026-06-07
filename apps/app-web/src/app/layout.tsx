@@ -16,11 +16,11 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "WorldNote — Your worlds. Connected.",
+  title: "WorldNote",
   description:
     "The offline, non-linear worldbuilding app for authors and game designers. Drag, drop, and link characters, timelines, and lore on a living canvas.",
   openGraph: {
-    title: "WorldNote — Your worlds. Connected.",
+    title: "WorldNote",
     description:
       "The offline, non-linear worldbuilding app for authors and game designers.",
     type: "website",

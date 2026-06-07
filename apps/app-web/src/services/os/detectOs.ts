@@ -3,7 +3,7 @@ export type DetectedOs = "windows" | "macos" | "linux" | "unknown";
 
 /** Human-readable CTA labels keyed by detected OS. */
 export const OS_LABELS: Record<DetectedOs, string> = {
-  windows: "Download for Windows",
+  windows: "Download for Desktop",
   macos: "Download for macOS",
   linux: "Download for Linux",
   unknown: "Download WorldNote",

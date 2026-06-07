@@ -1,0 +1,64 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "name": "WorldNote",
+  "theme": "mint",
+  "colors": {
+    "primary": "#2563EB",
+    "light": "#3B82F6",
+    "dark": "#1D4ED8"
+  },
+  "background": {
+    "color": {
+      "dark": "#0A0A0A",
+      "light": "#FFFFFF"
+    }
+  },
+  "navigation": {
+    "groups": [
+      {
+        "group": "Getting Started",
+        "pages": [
+          "index",
+          "getting-started/installation",
+          "getting-started/interface-overview"
+        ]
+      },
+      {
+        "group": "Card Management",
+        "pages": [
+          "cards/creating-cards",
+          "cards/property-contracts",
+          "cards/markdown-formatting"
+        ]
+      },
+      {
+        "group": "Advanced Systems",
+        "pages": [
+          "advanced/react-flow-connections",
+          "advanced/graph-view",
+          "advanced/timelines"
+        ]
+      },
+      {
+        "group": "Local-First & Security",
+        "pages": [
+          "local-first/offline-storage",
+          "local-first/sqlite-indexing"
+        ]
+      }
+    ]
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "WorldNote Home",
+        "href": "https://worldnote.app"
+      }
+    ]
+  },
+  "logo": {
+    "light": "/logo/wordmark-light.svg",
+    "dark": "/logo/wordmark.svg",
+    "href": "https://worldnote.app"
+  }
+}

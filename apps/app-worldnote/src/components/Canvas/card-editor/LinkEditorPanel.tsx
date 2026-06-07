@@ -48,7 +48,7 @@ export function LinkEditorPanel({
     }
     if (
       !window.confirm(
-        `Remove link from "${formatSocketId(activeLink.source_socket)}" on ${sourceCardName}?`,
+        `Remove link from "${formatSocketId(activeLink.source_socket)}" of ${sourceCardName}?`,
       )
     ) {
       return;
@@ -103,7 +103,7 @@ export function LinkEditorPanel({
           <div className="flex flex-col gap-1">
             <span className={wnLabelClassName}>Socket</span>
             <p className="rounded-xl border border-wn-mono-700 bg-wn-mono-950 px-3 py-2 text-sm text-wn-mono-50">
-              {formatSocketId(activeLink.source_socket)} on {sourceCardName}
+              {formatSocketId(activeLink.source_socket)} of {sourceCardName}
             </p>
           </div>
 
@@ -122,7 +122,7 @@ export function LinkEditorPanel({
         </div>
       </div>
 
-      <footer className="flex flex-col gap-2 border-t border-wn-mono-800 px-4 py-3">
+      <footer className="flex justify-end border-t border-wn-mono-800 px-4 py-3">
         <Button
           variant="danger"
           size="base"

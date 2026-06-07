@@ -7,7 +7,8 @@ import {
 } from "@worldnote/canvas";
 import type { WorldCard } from "@worldnote/shared";
 import { CARD_TYPE_LABELS } from "@worldnote/shared";
-import { EnumComboBox, MaterialSymbol } from "@worldnote/ui";
+import { EnumComboBox, MaterialSymbol, usePrefersReducedMotion } from "@worldnote/ui";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   useCallback,
   useEffect,
@@ -23,6 +24,11 @@ import { cardImageSrc } from "../../../services/canvas/cardNodeData.js";
 import { primaryAccentFillClassName } from "../../../services/settings/primaryAccentStyles.js";
 import { cx } from "./cx.js";
 import { dragHasCard, readDraggedCardId } from "./dnd.js";
+import { useCyclingPlaceholder } from "./useCyclingPlaceholder.js";
+import {
+  WIZARD_PROMPT_CYCLE_FADE_MS,
+  WIZARD_PROMPT_CYCLE_INTERVAL_MS,
+} from "./wizardPromptPlaceholders.js";
 
 type WizardChatInputProps = {
   cards: WorldCard[];
@@ -30,6 +36,8 @@ type WizardChatInputProps = {
   vaultPath: string;
   value: string;
   placeholder: string;
+  cyclingPlaceholders?: readonly string[];
+  cyclingIntervalMs?: number;
   disabled?: boolean;
   busy: boolean;
   canSend: boolean;
@@ -130,6 +138,8 @@ export function WizardChatInput({
   vaultPath,
   value,
   placeholder,
+  cyclingPlaceholders,
+  cyclingIntervalMs = WIZARD_PROMPT_CYCLE_INTERVAL_MS,
   disabled = false,
   busy,
   canSend,
@@ -144,6 +154,15 @@ export function WizardChatInput({
   onSubmit,
   onStop,
 }: WizardChatInputProps) {
+  const reducedMotion = usePrefersReducedMotion();
+  const activeCyclingPlaceholder = useCyclingPlaceholder(
+    cyclingPlaceholders ?? [],
+    cyclingIntervalMs,
+  );
+  const showCyclingPlaceholder =
+    Boolean(cyclingPlaceholders?.length) && value.length === 0 && !disabled;
+  const textareaPlaceholder = showCyclingPlaceholder ? "" : placeholder;
+
   const [isOver, setIsOver] = useState(false);
   const [previewCardId, setPreviewCardId] = useState<string | null>(null);
   const dropRef = useRef<HTMLDivElement>(null);
@@ -338,17 +357,43 @@ export function WizardChatInput({
         </div>
       ) : null}
 
-      <textarea
-        ref={textareaRef}
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        onKeyDown={onKeyDown}
-        rows={1}
-        placeholder={placeholder}
-        disabled={disabled}
-        aria-label="WorldWizard message"
-        className={textareaClassName}
-      />
+      <div className="relative">
+        {showCyclingPlaceholder ? (
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 top-0 py-1.5 text-sm leading-normal text-wn-mono-500"
+          >
+            <AnimatePresence mode="wait">
+              <motion.span
+                key={activeCyclingPlaceholder}
+                initial={reducedMotion ? { opacity: 1 } : { opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={reducedMotion ? { opacity: 1 } : { opacity: 0 }}
+                transition={{
+                  duration: reducedMotion
+                    ? 0
+                    : WIZARD_PROMPT_CYCLE_FADE_MS / 1000,
+                  ease: "easeInOut",
+                }}
+              >
+                {activeCyclingPlaceholder}
+              </motion.span>
+            </AnimatePresence>
+          </div>
+        ) : null}
+
+        <textarea
+          ref={textareaRef}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          onKeyDown={onKeyDown}
+          rows={1}
+          placeholder={textareaPlaceholder}
+          disabled={disabled}
+          aria-label="WorldWizard message"
+          className={textareaClassName}
+        />
+      </div>
 
       <div className="mt-3 flex items-center justify-between gap-3">
         <button

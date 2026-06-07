@@ -3,7 +3,7 @@
 import { Button, WorldNoteLogo } from "@worldnote/ui";
 import { landingCopy } from "@/components/landing/shared/copy";
 import { useGithubRelease } from "@/hooks/useGithubRelease";
-import { RELEASES_PAGE_URL } from "@/services/github/releases";
+import { DOCS_PATH, RELEASES_PAGE_URL } from "@/services/github/releases";
 
 /** Sticky top navigation with logo and download shortcut. */
 export function SiteNav() {
@@ -29,12 +29,10 @@ export function SiteNav() {
             variant="secondary"
             size="sm"
             as="a"
-            href={RELEASES_PAGE_URL}
-            target="_blank"
-            rel="noopener noreferrer"
+            href={DOCS_PATH}
             className="!min-h-9 !px-5 !py-2"
           >
-            {nav.github}
+            {nav.docs}
           </Button>
           <Button
             variant="white"

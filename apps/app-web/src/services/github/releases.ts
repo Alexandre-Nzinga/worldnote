@@ -12,6 +12,10 @@ export const LATEST_RELEASE_API_URL = `https://api.github.com/repos/${GITHUB_REP
 
 export const GITHUB_REPO_URL = `https://github.com/${GITHUB_REPO}`;
 
+/** Internal docs wiki path on the marketing site (proxied to Mintlify). */
+export const DOCS_PATH = "/docs";
+
+/** Legacy GitHub wiki URL — prefer DOCS_PATH for in-site help. */
 export const DOCS_WIKI_URL = `https://github.com/${GITHUB_REPO}/wiki`;
 
 const GithubAssetSchema = z.object({

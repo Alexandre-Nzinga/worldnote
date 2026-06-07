@@ -28,6 +28,7 @@ import { WizardChatInput } from "./WizardChatInput.js";
 import { WizardMessage } from "./WizardMessage.js";
 import { WizardSessionList } from "./WizardSessionList.js";
 import { useWorldWizard } from "./useWorldWizard.js";
+import { wizardPromptPlaceholders } from "./wizardPromptPlaceholders.js";
 
 const panelClassName =
   "pointer-events-auto absolute right-4 top-4 z-30 flex max-h-[calc(100vh-7rem)] w-[min(100%,24rem)] flex-col overflow-hidden rounded-2xl border border-wn-mono-800 bg-wn-mono-900 shadow-2xl";
@@ -285,10 +286,9 @@ export function WorldWizardPanel({
               onRefreshModels={() => void wizard.refreshConnection(wizard.host)}
               onSubmit={submit}
               onStop={wizard.stop}
-              placeholder={
-                wizard.model
-                  ? "How can I help you today?"
-                  : "Connect a local model to begin"
+              placeholder="Connect a local model to begin"
+              cyclingPlaceholders={
+                wizard.model ? wizardPromptPlaceholders : undefined
               }
             />
           )}

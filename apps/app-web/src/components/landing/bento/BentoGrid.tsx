@@ -32,7 +32,14 @@ export function BentoGrid() {
             key={card.id}
             className={clsx(bentoSpanClass[card.span], "h-full")}
           >
-            <BentoCard title={card.title} description={card.description} />
+            <BentoCard
+              title={card.title}
+              description={card.description}
+              slides={"slides" in card ? card.slides : undefined}
+              imageAspect={
+                "imageAspect" in card ? card.imageAspect : undefined
+              }
+            />
           </RevealItem>
         ))}
       </div>
