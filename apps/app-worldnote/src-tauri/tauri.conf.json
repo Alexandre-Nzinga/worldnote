@@ -20,10 +20,18 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; img-src 'self' worldnote: data: blob: asset: https://asset.localhost; connect-src ipc: http://ipc.localhost http://localhost:1420 ws://localhost:1420",
+      "csp": "default-src 'self'; img-src 'self' worldnote: data: blob: asset: http://asset.localhost https://asset.localhost; connect-src ipc: http://ipc.localhost http://localhost:1420 ws://localhost:1420",
       "assetProtocol": {
         "enable": true,
-        "scope": ["**"]
+        "scope": {
+          "requireLiteralLeadingDot": false,
+          "allow": [
+            "$DOCUMENT/**/*",
+            "$HOME/**/*",
+            "$DOWNLOAD/**/*",
+            "$DESKTOP/**/*"
+          ]
+        }
       }
     }
   },

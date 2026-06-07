@@ -1,3 +1,4 @@
+pub mod asset_scope;
 pub mod canvas_image;
 pub mod image_optimize;
 pub mod card;

@@ -242,7 +242,11 @@ pub fn export_world(world_path: String, destination_path: String) -> Result<Stri
 }
 
 #[tauri::command]
-pub fn import_world(worldnote_root: String, archive_path: String) -> Result<WorldSummary, String> {
+pub fn import_world(
+    app: tauri::AppHandle,
+    worldnote_root: String,
+    archive_path: String,
+) -> Result<WorldSummary, String> {
     let root = PathBuf::from(worldnote_root.trim());
     if !root.is_dir() {
         return Err("WorldNote folder does not exist".to_string());
@@ -272,6 +276,8 @@ pub fn import_world(worldnote_root: String, archive_path: String) -> Result<Worl
     }
 
     finalize_imported_world(&destination)?;
+    super::asset_scope::allow_worldnote_root(&app, &root.to_string_lossy());
+    super::asset_scope::allow_directory_in_asset_scope(&app, &destination);
     summarize_world(&destination)
 }
 

@@ -192,11 +192,12 @@ pub fn save_settings(app: tauri::AppHandle, settings: AppSettings) -> Result<(),
 
     fs::write(&temp_path, json).map_err(|error| error.to_string())?;
     fs::rename(&temp_path, &path).map_err(|error| error.to_string())?;
+    super::asset_scope::allow_worldnote_root(&app, &settings.worldnote_root);
     Ok(())
 }
 
 #[tauri::command]
-pub fn ensure_worldnote_root(parent: String) -> Result<String, String> {
+pub fn ensure_worldnote_root(app: tauri::AppHandle, parent: String) -> Result<String, String> {
     let parent_path = PathBuf::from(parent.trim());
     if parent_path.as_os_str().is_empty() {
         return Err("Parent directory is required".to_string());
@@ -204,5 +205,10 @@ pub fn ensure_worldnote_root(parent: String) -> Result<String, String> {
 
     let worldnote_root = parent_path.join(WORLDNOTE_FOLDER_NAME);
     fs::create_dir_all(&worldnote_root).map_err(|error| error.to_string())?;
+    super::asset_scope::allow_directory_in_asset_scope(&app, &parent_path);
+    super::asset_scope::allow_worldnote_root(
+        &app,
+        &worldnote_root.to_string_lossy(),
+    );
     Ok(worldnote_root.to_string_lossy().into_owned())
 }

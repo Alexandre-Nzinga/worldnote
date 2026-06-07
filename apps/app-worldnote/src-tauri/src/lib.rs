@@ -28,8 +28,13 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(prevent_default_plugin())
         .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_persisted_scope::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
+        .setup(|app| {
+            cmd::asset_scope::restore_saved_worldnote_asset_scope(app.handle());
+            Ok(())
+        })
         .register_uri_scheme_protocol("worldnote", |_ctx, request| {
             let _path = request.uri().path();
             http::Response::builder()
