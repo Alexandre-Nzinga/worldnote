@@ -95,9 +95,7 @@ export const Typography: Story = {
         </p>
         <div className="flex flex-wrap gap-4 rounded-2xl border border-wn-mono-200 px-4 py-4">
           <Eyebrow>About us</Eyebrow>
-          <Eyebrow showDot={false}>
-            FAQ
-          </Eyebrow>
+          <Eyebrow showDot={false}>FAQ</Eyebrow>
           <Eyebrow tone="mono">Services</Eyebrow>
         </div>
       </section>
@@ -156,14 +154,12 @@ export const Typography: Story = {
                 </div>
                 <div className="min-w-0">
                   {tag === "display" && (
-                    <p
+                    <h1
                       className={className}
                       style={getHeadingStyle("display")}
-                      role="heading"
-                      aria-level={1}
                     >
                       {sample}
-                    </p>
+                    </h1>
                   )}
                   {tag === "h1" && (
                     <h1 className={className} style={getHeadingStyle(tag)}>

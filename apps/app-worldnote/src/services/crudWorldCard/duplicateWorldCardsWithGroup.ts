@@ -101,7 +101,8 @@ export async function duplicateWorldCardsWithGroup(
       duplicated = await updateWorldCard(vault, {
         ...duplicated,
         parent_id: newParentId,
-        position: memberOnly && parentCard ? parentCard.position : duplicated.position,
+        position:
+          memberOnly && parentCard ? parentCard.position : duplicated.position,
       });
     }
 

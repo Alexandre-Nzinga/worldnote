@@ -71,8 +71,8 @@ export function WelcomeStep({ onNext }: WelcomeStepProps) {
             className="mb-8 max-w-md text-base text-wn-mono-400"
             variants={contentItemVariants}
           >
-            Map characters, places, and lore on an infinite canvas, then
-            connect the dots across your world.
+            Map characters, places, and lore on an infinite canvas, then connect
+            the dots across your world.
           </motion.p>
 
           <motion.div variants={actionItemVariants}>

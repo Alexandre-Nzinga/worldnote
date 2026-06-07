@@ -20,7 +20,9 @@ function parseChronologyEntry(raw: unknown): ChronologyEntry | null {
   return legacy.success ? legacy.data : null;
 }
 
-export async function listChronology(vault: string): Promise<ChronologyEntry[]> {
+export async function listChronology(
+  vault: string,
+): Promise<ChronologyEntry[]> {
   const raw = await invoke<unknown[]>("list_chronology", { vault });
   return raw.flatMap((entry) => {
     const parsed = parseChronologyEntry(entry);
@@ -37,11 +39,16 @@ export async function upsertChronology(
   return validated;
 }
 
-export async function deleteChronology(vault: string, id: string): Promise<void> {
+export async function deleteChronology(
+  vault: string,
+  id: string,
+): Promise<void> {
   await invoke<void>("delete_chronology", { vault, id });
 }
 
-export async function loadCalendarConfig(vault: string): Promise<CalendarConfig> {
+export async function loadCalendarConfig(
+  vault: string,
+): Promise<CalendarConfig> {
   const raw = await invoke<unknown>("load_calendar_config", { vault });
   const parsed = CalendarConfigSchema.safeParse(raw);
   return parsed.success ? parsed.data : { suffix: "" };

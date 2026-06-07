@@ -34,7 +34,9 @@ describe("formatMeasurementValue", () => {
 
   it("formats distance in km and miles", () => {
     expect(formatMeasurementValue(1500, "distance", "metric")).toBe("1.5 km");
-    expect(formatMeasurementValue(1609.344, "distance", "imperial")).toBe("1 mi");
+    expect(formatMeasurementValue(1609.344, "distance", "imperial")).toBe(
+      "1 mi",
+    );
   });
 
   it("formats speed in km/h and mph", () => {
@@ -47,19 +49,19 @@ describe("parseMeasurementInput", () => {
   it("round-trips weight through imperial display units", () => {
     const canonical = parseMeasurementInput("2.2", "weight", "imperial");
     expect(canonical).toBeCloseTo(1, 2);
-    expect(
-      toCanonicalValue(2.2, "weight", "imperial"),
-    ).toBeCloseTo(1, 2);
+    expect(toCanonicalValue(2.2, "weight", "imperial")).toBeCloseTo(1, 2);
   });
 });
 
 describe("formatMeasurementPropertyValue", () => {
   it("formats custom property rows with units", () => {
+    expect(formatMeasurementPropertyValue("temperature", "21", "metric")).toBe(
+      "21 °C",
+    );
     expect(
-      formatMeasurementPropertyValue("temperature", "21", "metric"),
-    ).toBe("21 °C");
-    expect(
-      Number(canonicalMeasurementPropertyValue("temperature", "70", "imperial")),
+      Number(
+        canonicalMeasurementPropertyValue("temperature", "70", "imperial"),
+      ),
     ).toBeCloseTo(21.1, 0);
   });
 });

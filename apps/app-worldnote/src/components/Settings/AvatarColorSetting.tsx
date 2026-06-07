@@ -1,4 +1,8 @@
-import { UserAvatar, wnDescriptionClassName, wnTitleClassName } from "@worldnote/ui";
+import {
+  UserAvatar,
+  wnDescriptionClassName,
+  wnTitleClassName,
+} from "@worldnote/ui";
 import {
   AVATAR_COLOR_OPTIONS,
   AVATAR_COLOR_RUNTIME_CLASSES,

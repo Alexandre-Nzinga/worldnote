@@ -59,7 +59,10 @@ export function WorldsGrid({
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {pinnedCount > 0 ? (
         <>
-          <p className="col-span-full text-wn-mono-400" style={sectionLabelStyle}>
+          <p
+            className="col-span-full text-wn-mono-400"
+            style={sectionLabelStyle}
+          >
             Pinned
           </p>
           {pinned.map((world, index) => renderCard(world, index))}

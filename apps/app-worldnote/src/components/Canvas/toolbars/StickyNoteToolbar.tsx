@@ -1,7 +1,4 @@
-import {
-  STICKY_NOTE_COLORS,
-  type StickyNoteColor,
-} from "@worldnote/shared";
+import { STICKY_NOTE_COLORS, type StickyNoteColor } from "@worldnote/shared";
 import {
   STICKY_NOTE_BG_CLASS,
   type StickyNoteColorToken,
@@ -34,9 +31,7 @@ export function StickyNoteToolbar({
   }, [heading]);
 
   const handleDelete = () => {
-    if (
-      !window.confirm("Delete this sticky note? This cannot be undone.")
-    ) {
+    if (!window.confirm("Delete this sticky note? This cannot be undone.")) {
       return;
     }
     onDelete?.();

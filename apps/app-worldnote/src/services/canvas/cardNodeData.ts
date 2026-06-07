@@ -215,7 +215,9 @@ export function worldCardToNodeData(
 
   const viewModeRaw = card.custom_properties?.view_mode;
   const viewMode =
-    viewModeRaw === "visual" || viewModeRaw === "node" ? viewModeRaw : undefined;
+    viewModeRaw === "visual" || viewModeRaw === "node"
+      ? viewModeRaw
+      : undefined;
 
   const groupMembers: GroupMemberPreview[] | undefined =
     card.card_type === "group"

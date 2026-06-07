@@ -10,10 +10,7 @@ export type CloseIconButtonProps = Omit<
 };
 
 /** Icon-only tertiary close control for panel and modal headers. */
-export function CloseIconButton({
-  className,
-  ...props
-}: CloseIconButtonProps) {
+export function CloseIconButton({ className, ...props }: CloseIconButtonProps) {
   return (
     <Button
       variant="tertiary"

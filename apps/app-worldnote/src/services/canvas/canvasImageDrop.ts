@@ -38,7 +38,9 @@ export function localPathFromFile(file: File): string | null {
 
 /** True when a drag event likely carries OS files (Explorer, browser, etc.). */
 export function dragHasExternalFiles(dataTransfer: DataTransfer): boolean {
-  const types = Array.from(dataTransfer.types).map((type) => type.toLowerCase());
+  const types = Array.from(dataTransfer.types).map((type) =>
+    type.toLowerCase(),
+  );
   if (types.includes("files")) {
     return true;
   }

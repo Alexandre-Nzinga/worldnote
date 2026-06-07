@@ -82,7 +82,10 @@ export function auntUncleLabel(gender: CharacterGender, up: number): string {
   return `${prefix}Parent's sibling`;
 }
 
-export function nieceNephewLabel(gender: CharacterGender, down: number): string {
+export function nieceNephewLabel(
+  gender: CharacterGender,
+  down: number,
+): string {
   const prefix = greatPrefix(down - 2);
   if (gender === "female") {
     return `${prefix}Niece`;

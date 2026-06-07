@@ -67,7 +67,9 @@ function ChronologyTreeRow({
           "group relative list-none",
           depth > 0 ? "border-l border-wn-border/70" : "",
         ].join(" ")}
-        style={{ marginLeft: depth > 0 ? `${8 + (depth - 1) * 12}px` : undefined }}
+        style={{
+          marginLeft: depth > 0 ? `${8 + (depth - 1) * 12}px` : undefined,
+        }}
       >
         <div
           className={[
@@ -162,10 +164,7 @@ export function TimelineChronologySidebar({
   onDelete,
 }: TimelineChronologySidebarProps) {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
-  const tree = useMemo(
-    () => buildChronologyTree(chronology),
-    [chronology],
-  );
+  const tree = useMemo(() => buildChronologyTree(chronology), [chronology]);
 
   const handleDelete = (id: string) => {
     if (confirmDeleteId === id) {
@@ -185,7 +184,9 @@ export function TimelineChronologySidebar({
         <div className={surfacePanelStackClassName}>
           <section className={`${surfacePanelClassName} flex flex-col gap-3`}>
             <div className="flex flex-col gap-1.5">
-              <h3 {...getHeadingProps("h6", { tone: "inverse" })}>Time periods</h3>
+              <h3 {...getHeadingProps("h6", { tone: "inverse" })}>
+                Time periods
+              </h3>
               <p style={getBodyTextStyle("xs")} className="text-wn-text-muted">
                 Select a period to focus it on the timeline. Nest periods using
                 the Parent field when editing.

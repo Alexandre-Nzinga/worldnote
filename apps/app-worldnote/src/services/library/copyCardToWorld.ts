@@ -11,4 +11,3 @@ export async function copyCardToWorld(args: {
 }): Promise<LibraryCard> {
   return invoke<LibraryCard>("copy_card_to_world", args);
 }
-

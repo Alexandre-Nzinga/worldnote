@@ -32,10 +32,11 @@ function WizardTypingIndicator({ label }: { label?: string }) {
       className="flex items-center gap-1.5 py-0.5"
       aria-label={label ?? "Generating response"}
     >
-      {label ? (
-        <span className="text-sm text-wn-mono-200">{label}</span>
-      ) : null}
-      <span className="flex items-center gap-1" aria-hidden={label ? true : undefined}>
+      {label ? <span className="text-sm text-wn-mono-200">{label}</span> : null}
+      <span
+        className="flex items-center gap-1"
+        aria-hidden={label ? true : undefined}
+      >
         {[0, 1, 2].map((index) => (
           <motion.span
             key={index}
@@ -154,9 +155,7 @@ function GeneratedCardPreview({
         </div>
         <button
           type="button"
-          onClick={() =>
-            isApply ? onApply?.(card) : onSpawn(card)
-          }
+          onClick={() => (isApply ? onApply?.(card) : onSpawn(card))}
           className={`flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${primaryAccentInteractiveClassName}`}
         >
           <MaterialSymbol

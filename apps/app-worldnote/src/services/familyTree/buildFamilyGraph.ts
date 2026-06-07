@@ -38,10 +38,9 @@ type RoleCandidates = {
   mother: ParentCandidate[];
 };
 
-function isCharacterCard(card: WorldCard): card is Extract<
-  WorldCard,
-  { card_type: "character" }
-> {
+function isCharacterCard(
+  card: WorldCard,
+): card is Extract<WorldCard, { card_type: "character" }> {
   return card.card_type === "character";
 }
 
@@ -104,9 +103,10 @@ function addCandidate(
  * 2. Within the same tier, the last matching link in the links array wins
  *    (treat array order as most-recently-added when links are appended).
  */
-function pickCanonicalParent(
-  candidates: ParentCandidate[],
-): { canonical?: string; alternates: string[] } {
+function pickCanonicalParent(candidates: ParentCandidate[]): {
+  canonical?: string;
+  alternates: string[];
+} {
   if (candidates.length === 0) {
     return { alternates: [] };
   }

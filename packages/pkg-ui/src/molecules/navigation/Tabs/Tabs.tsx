@@ -22,7 +22,8 @@ export type TabsProps = {
   className?: string;
 };
 
-const underlineTabListClassName = "gap-0 rounded-none border-b border-wn-mono-800 bg-transparent p-0";
+const underlineTabListClassName =
+  "gap-0 rounded-none border-b border-wn-mono-800 bg-transparent p-0";
 
 const underlineTabClassName =
   "h-auto flex-1 rounded-none border-b-2 border-transparent bg-transparent px-3 py-2.5 text-sm font-semibold text-wn-mono-500 shadow-none data-[selected=true]:border-wn-mono-50 data-[selected=true]:text-wn-mono-50";
@@ -56,7 +57,9 @@ export function Tabs({
       radius={isSegmented ? "full" : "none"}
       classNames={{
         base: clsx("w-full", isSegmented && "w-auto", className),
-        tabList: isSegmented ? segmentedTabListClassName : underlineTabListClassName,
+        tabList: isSegmented
+          ? segmentedTabListClassName
+          : underlineTabListClassName,
         tab: isSegmented ? segmentedTabClassName : underlineTabClassName,
         cursor: isSegmented ? segmentedCursorClassName : undefined,
         panel: hasPanels ? "pt-4" : "hidden",

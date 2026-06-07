@@ -92,7 +92,9 @@ function GraphCollapsibleSection({
         />
         <span {...getHeadingProps("h6", { tone: "inverse" })}>{title}</span>
       </button>
-      {isOpen ? <div className="mt-4 flex flex-col gap-4">{children}</div> : null}
+      {isOpen ? (
+        <div className="mt-4 flex flex-col gap-4">{children}</div>
+      ) : null}
     </section>
   );
 }
@@ -154,7 +156,9 @@ export function GraphViewSidebar({
             <ToggleSwitchRow
               label="Orphans"
               checked={filterSettings.showOrphans}
-              onChange={(showOrphans) => onFilterSettingsChange({ showOrphans })}
+              onChange={(showOrphans) =>
+                onFilterSettingsChange({ showOrphans })
+              }
             />
           </section>
 
@@ -233,7 +237,9 @@ export function GraphViewSidebar({
               max={500}
               step={5}
               value={forceSettings.linkDistance}
-              onChange={(linkDistance) => onForceSettingsChange({ linkDistance })}
+              onChange={(linkDistance) =>
+                onForceSettingsChange({ linkDistance })
+              }
             />
           </GraphCollapsibleSection>
         </div>

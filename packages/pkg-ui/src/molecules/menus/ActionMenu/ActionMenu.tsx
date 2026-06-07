@@ -123,9 +123,7 @@ export function ActionMenu({
               key={item.id}
               startContent={item.icon}
               color={item.variant === "danger" ? "danger" : undefined}
-              className={
-                item.variant === "danger" ? "text-danger" : undefined
-              }
+              className={item.variant === "danger" ? "text-danger" : undefined}
             >
               {item.label}
             </DropdownItem>

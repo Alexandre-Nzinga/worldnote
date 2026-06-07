@@ -1,6 +1,4 @@
-import {
-  fieldInputClassNames,
-} from "@worldnote/ui";
+import { fieldInputClassNames } from "@worldnote/ui";
 /** Full-page app screens (Settings, Vault, etc.). */
 
 export const pageShellClassName =

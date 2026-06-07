@@ -32,10 +32,7 @@ export function FamilyCrestBlock({
           : "flex flex-col gap-3 border-b border-wn-mono-800 px-5 py-5"
       }
     >
-      <Eyebrow
-        as="h3"
-        className={inspectorSectionEyebrowClassName}
-      >
+      <Eyebrow as="h3" className={inspectorSectionEyebrowClassName}>
         Family crest
       </Eyebrow>
       <p className="m-0 text-xs leading-snug text-wn-mono-500">

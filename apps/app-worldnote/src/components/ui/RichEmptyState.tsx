@@ -80,7 +80,10 @@ export function RichEmptyState({
       </motion.p>
 
       {children ? (
-        <motion.div className="mb-6 w-full max-w-md" variants={contentItemVariants}>
+        <motion.div
+          className="mb-6 w-full max-w-md"
+          variants={contentItemVariants}
+        >
           {children}
         </motion.div>
       ) : null}

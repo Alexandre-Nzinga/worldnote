@@ -16,10 +16,7 @@ function cardAt(x: number, y: number): WorldCard {
 
 describe("centerPositionForGroup", () => {
   it("returns the center of the selection bounds", () => {
-    const center = centerPositionForGroup([
-      cardAt(0, 0),
-      cardAt(100, 200),
-    ]);
+    const center = centerPositionForGroup([cardAt(0, 0), cardAt(100, 200)]);
     expect(center).toEqual({ x: 50, y: 100 });
   });
 });

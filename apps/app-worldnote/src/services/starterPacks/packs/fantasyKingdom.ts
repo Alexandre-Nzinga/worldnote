@@ -176,7 +176,8 @@ Aldric believes the crown exists to protect the realm — not to enrich the roya
         start_year: 845,
         appearance:
           "Tall, sun-weathered, close-cropped brown hair, the Greywatch surcoat over plate",
-        personality: "Honorable, blunt, fiercely loyal to the king and the realm",
+        personality:
+          "Honorable, blunt, fiercely loyal to the king and the realm",
       },
       customProperties: {
         Rank: "Knight-Captain of the Royal Guard",
@@ -302,7 +303,12 @@ The kingdom celebrated a miracle — but the cost was steep. Aldric greyed overn
     { source: "king", sourceSocket: "birthplace", target: "castle" },
     { source: "knight", sourceSocket: "affiliations", target: "kingdom" },
     { source: "knight", sourceSocket: "birthplace", target: "capital" },
-    { source: "knight", sourceSocket: "father", target: "king", mirrorKinship: true },
+    {
+      source: "knight",
+      sourceSocket: "father",
+      target: "king",
+      mirrorKinship: true,
+    },
     { source: "elf", sourceSocket: "birthplace", target: "forest" },
     { source: "orc", sourceSocket: "deathplace", target: "castle" },
     { source: "siege", sourceSocket: "event_location", target: "castle" },

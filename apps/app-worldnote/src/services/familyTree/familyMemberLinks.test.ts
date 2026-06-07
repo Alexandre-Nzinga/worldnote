@@ -34,9 +34,9 @@ describe("computeFamilyMemberLinkDelta", () => {
     );
 
     expect(delta.memberIdsToAdd).toEqual([addId]);
-    expect(delta.memberLinksToRemove.map((entry) => entry.target_card)).toEqual([
-      removeId,
-    ]);
+    expect(delta.memberLinksToRemove.map((entry) => entry.target_card)).toEqual(
+      [removeId],
+    );
     expect(
       delta.affiliationLinksToRemove.map((entry) => entry.source_card),
     ).toEqual([removeId]);

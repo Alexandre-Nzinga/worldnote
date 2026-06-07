@@ -17,38 +17,32 @@ export const AVATAR_COLOR_OPTIONS: readonly AvatarColorOption[] = [
   {
     value: "sunset",
     label: "Sunset",
-    gradient:
-      "!bg-gradient-to-br !from-wn-rose-500 !to-wn-amber-500",
+    gradient: "!bg-gradient-to-br !from-wn-rose-500 !to-wn-amber-500",
   },
   {
     value: "ocean",
     label: "Ocean",
-    gradient:
-      "!bg-gradient-to-br !from-wn-azure-400 !to-wn-indigo-500",
+    gradient: "!bg-gradient-to-br !from-wn-azure-400 !to-wn-indigo-500",
   },
   {
     value: "forest",
     label: "Forest",
-    gradient:
-      "!bg-gradient-to-br !from-wn-lime-400 !to-wn-azure-500",
+    gradient: "!bg-gradient-to-br !from-wn-lime-400 !to-wn-azure-500",
   },
   {
     value: "berry",
     label: "Berry",
-    gradient:
-      "!bg-gradient-to-br !from-wn-rose-400 !to-wn-indigo-500",
+    gradient: "!bg-gradient-to-br !from-wn-rose-400 !to-wn-indigo-500",
   },
   {
     value: "gold",
     label: "Gold",
-    gradient:
-      "!bg-gradient-to-br !from-wn-amber-400 !to-wn-rose-400",
+    gradient: "!bg-gradient-to-br !from-wn-amber-400 !to-wn-rose-400",
   },
   {
     value: "mono",
     label: "Mono",
-    gradient:
-      "!bg-gradient-to-br !from-wn-mono-400 !to-wn-mono-600",
+    gradient: "!bg-gradient-to-br !from-wn-mono-400 !to-wn-mono-600",
   },
 ] as const;
 

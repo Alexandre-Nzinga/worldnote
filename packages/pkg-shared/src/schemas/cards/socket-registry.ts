@@ -9,8 +9,32 @@ export type SocketDescriptor = {
 
 export const SOCKET_REGISTRY = {
   character: {
-    birthplace: { accepts: ["location", "building", "structure","planet", "moon", "satellite", "asteroid", "star"], cardinality: "single" },
-    deathplace: { accepts: ["location", "building", "structure", "planet", "moon", "satellite", "asteroid", "star"], cardinality: "single" },
+    birthplace: {
+      accepts: [
+        "location",
+        "building",
+        "structure",
+        "planet",
+        "moon",
+        "satellite",
+        "asteroid",
+        "star",
+      ],
+      cardinality: "single",
+    },
+    deathplace: {
+      accepts: [
+        "location",
+        "building",
+        "structure",
+        "planet",
+        "moon",
+        "satellite",
+        "asteroid",
+        "star",
+      ],
+      cardinality: "single",
+    },
     mother: { accepts: ["character"], cardinality: "single" },
     father: { accepts: ["character"], cardinality: "single" },
     spouse: { accepts: ["character"], cardinality: "many" },
@@ -46,25 +70,40 @@ export const SOCKET_REGISTRY = {
     creator: { accepts: ["character"], cardinality: "single" },
   },
   vehicle: {
-    manufacturer: { accepts: ["character", "organization", "polity"], cardinality: "single" },
+    manufacturer: {
+      accepts: ["character", "organization", "polity"],
+      cardinality: "single",
+    },
     operator: { accepts: ["organization", "polity"], cardinality: "single" },
   },
   fauna: {
     species: { accepts: ["species"], cardinality: "single" },
-    habitat: { accepts: ["location", "planet", "moon", "satellite", "asteroid", "star"], cardinality: "single" },
+    habitat: {
+      accepts: ["location", "planet", "moon", "satellite", "asteroid", "star"],
+      cardinality: "single",
+    },
   },
   flora: {
-    habitat: { accepts: ["location", "planet", "moon", "satellite", "asteroid", "star"], cardinality: "single" },
+    habitat: {
+      accepts: ["location", "planet", "moon", "satellite", "asteroid", "star"],
+      cardinality: "single",
+    },
   },
   building: {
     parent_structure: { accepts: ["structure"], cardinality: "single" },
-    location: { accepts: ["location", "planet", "moon", "satellite", "asteroid", "star"], cardinality: "single" },
+    location: {
+      accepts: ["location", "planet", "moon", "satellite", "asteroid", "star"],
+      cardinality: "single",
+    },
   },
   structure: {
     parent_location_id: { accepts: ["location"], cardinality: "single" },
   },
   species: {
-    homeworld: { accepts: ["location", "planet", "moon", "satellite", "asteroid", "star"], cardinality: "single" },
+    homeworld: {
+      accepts: ["location", "planet", "moon", "satellite", "asteroid", "star"],
+      cardinality: "single",
+    },
   },
   planet: {
     orbits_star: { accepts: ["star"], cardinality: "single" },
@@ -87,7 +126,10 @@ export const SOCKET_REGISTRY = {
   },
   star: {
     galaxy: { accepts: ["location"], cardinality: "single" },
-    star_of: { accepts: ["planet", "moon", "satellite", "asteroid"], cardinality: "single" },
+    star_of: {
+      accepts: ["planet", "moon", "satellite", "asteroid"],
+      cardinality: "single",
+    },
     satellites: { accepts: ["satellite"], cardinality: "many" },
   },
   organization: {
@@ -124,14 +166,44 @@ export const SOCKET_REGISTRY = {
   },
   disaster: {
     origin_location: {
-      accepts: ["location", "building", "structure", "planet", "moon", "satellite", "asteroid", "star"],
+      accepts: [
+        "location",
+        "building",
+        "structure",
+        "planet",
+        "moon",
+        "satellite",
+        "asteroid",
+        "star",
+      ],
       cardinality: "single",
     },
-    affected_locations: { accepts: ["location", "building", "structure", "planet", "moon", "satellite", "asteroid", "star"], cardinality: "many" },
+    affected_locations: {
+      accepts: [
+        "location",
+        "building",
+        "structure",
+        "planet",
+        "moon",
+        "satellite",
+        "asteroid",
+        "star",
+      ],
+      cardinality: "many",
+    },
   },
   event: {
     event_location: {
-      accepts: ["location", "building", "structure", "planet", "moon", "satellite", "asteroid", "star"],
+      accepts: [
+        "location",
+        "building",
+        "structure",
+        "planet",
+        "moon",
+        "satellite",
+        "asteroid",
+        "star",
+      ],
       cardinality: "single",
     },
     participants: {

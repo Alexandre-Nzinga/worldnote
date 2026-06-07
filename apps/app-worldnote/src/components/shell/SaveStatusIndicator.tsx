@@ -1,4 +1,8 @@
-import { MaterialSymbol, getBodyTextStyle, usePrefersReducedMotion } from "@worldnote/ui";
+import {
+  MaterialSymbol,
+  getBodyTextStyle,
+  usePrefersReducedMotion,
+} from "@worldnote/ui";
 import { AnimatePresence, motion } from "framer-motion";
 import { useSaveStatus } from "../../hooks/useSaveStatus.js";
 
@@ -79,7 +83,10 @@ export function SaveStatusIndicator() {
             initial={reducedMotion ? false : indicatorMotion.initial}
             animate={indicatorMotion.animate}
             exit={reducedMotion ? undefined : indicatorMotion.exit}
-            transition={{ duration: reducedMotion ? 0 : 0.18, ease: [0.22, 1, 0.36, 1] }}
+            transition={{
+              duration: reducedMotion ? 0 : 0.18,
+              ease: [0.22, 1, 0.36, 1],
+            }}
           >
             <StatusIcon status={status} />
             <span

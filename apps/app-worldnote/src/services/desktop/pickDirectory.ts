@@ -1,9 +1,7 @@
 import { open } from "@tauri-apps/plugin-dialog";
 import { DESKTOP_ONLY_MESSAGE, isTauriRuntime } from "./tauriRuntime.js";
 
-export async function pickDirectory(
-  title: string,
-): Promise<string | null> {
+export async function pickDirectory(title: string): Promise<string | null> {
   if (!isTauriRuntime()) {
     throw new Error(DESKTOP_ONLY_MESSAGE);
   }

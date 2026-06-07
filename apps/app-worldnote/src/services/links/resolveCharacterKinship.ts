@@ -155,7 +155,11 @@ export function reciprocalKinshipLink(
   sourceCard: CharacterCard,
   sourceSocket: string,
   targetCard: CharacterCard,
-): { sourceCard: CharacterCard; sourceSocket: string; targetCard: CharacterCard } | null {
+): {
+  sourceCard: CharacterCard;
+  sourceSocket: string;
+  targetCard: CharacterCard;
+} | null {
   if (sourceSocket === "father" || sourceSocket === "mother") {
     return {
       sourceCard: targetCard,

@@ -11,7 +11,10 @@ type VaultCardChipProps = {
 };
 
 export function VaultCardChip({ card, draggable = true }: VaultCardChipProps) {
-  const imageDisplay = normalizeCardImageDisplay(card.imageFit, card.imagePosition);
+  const imageDisplay = normalizeCardImageDisplay(
+    card.imageFit,
+    card.imagePosition,
+  );
   const imageUrl = cardImageSrc(card.worldPath, card.imagePath);
 
   const handleDragStart = (event: DragEvent<HTMLDivElement>) => {

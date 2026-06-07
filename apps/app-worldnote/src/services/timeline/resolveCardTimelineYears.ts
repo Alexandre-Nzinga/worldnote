@@ -38,8 +38,7 @@ export function resolveEventTimelineYears(
   }
 
   const event = card as LegacyEventCard;
-  const startYear =
-    event.start_year ?? extractYearFromString(event.event_date);
+  const startYear = event.start_year ?? extractYearFromString(event.event_date);
   if (startYear === undefined) {
     return null;
   }

@@ -8,7 +8,10 @@ import {
   SectionHeader,
   SectionShell,
 } from "@/components/landing/shared/Reveal";
-import { BentoCard, bentoSpanClass } from "@/components/landing/bento/BentoCard";
+import {
+  BentoCard,
+  bentoSpanClass,
+} from "@/components/landing/bento/BentoCard";
 
 /** Feature gallery — uneven bento grid showcasing core app systems. */
 export function BentoGrid() {
@@ -17,7 +20,10 @@ export function BentoGrid() {
   return (
     <SectionShell id="features">
       <Reveal>
-        <SectionHeader title={bento.sectionTitle} subtitle={bento.sectionSubtitle} />
+        <SectionHeader
+          title={bento.sectionTitle}
+          subtitle={bento.sectionSubtitle}
+        />
       </Reveal>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4 md:auto-rows-[minmax(220px,1fr)]">

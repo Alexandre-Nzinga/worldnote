@@ -1,5 +1,9 @@
 import type { TimelineOptions } from "vis-timeline";
-import { dateToYear, formatYear, yearToDate } from "../../../services/timeline/calendarFormat.js";
+import {
+  dateToYear,
+  formatYear,
+  yearToDate,
+} from "../../../services/timeline/calendarFormat.js";
 
 /** Matches vis-timeline's internal year duration for zoom and axis stepping. */
 const VIS_TIMELINE_MS_PER_YEAR = 1000 * 60 * 60 * 24 * 30 * 12;
@@ -25,7 +29,9 @@ type CreateTimelineOptionsInput = {
   onMove: TimelineOptions["onMove"];
 };
 
-export function createTimelineAxisFormat(suffix: string): TimelineOptions["format"] {
+export function createTimelineAxisFormat(
+  suffix: string,
+): TimelineOptions["format"] {
   return {
     minorLabels: (date: unknown, scale: string) =>
       timelineAxisLabel(date, scale, suffix),

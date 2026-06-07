@@ -14,7 +14,11 @@ type Position = {
   y: number;
 };
 
-const baseFields = (cardType: NewCardType, position: Position, name?: string) => ({
+const baseFields = (
+  cardType: NewCardType,
+  position: Position,
+  name?: string,
+) => ({
   id: crypto.randomUUID(),
   name: name?.trim() || NEW_CARD_DEFAULT_NAMES[cardType],
   card_type: cardType,

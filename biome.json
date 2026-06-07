@@ -50,6 +50,37 @@
           }
         }
       }
+    },
+    {
+      "include": [
+        "packages/pkg-shared/src/components/tiptap-*/**",
+        "packages/pkg-shared/src/hooks/**",
+        "packages/pkg-shared/src/lib/tiptap-utils.ts"
+      ],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "noSvgWithoutTitle": "off",
+            "useSemanticElements": "off"
+          },
+          "complexity": {
+            "noForEach": "off"
+          },
+          "correctness": {
+            "useImportExtensions": "off",
+            "useExhaustiveDependencies": "off"
+          },
+          "style": {
+            "noUselessElse": "off",
+            "noUnusedTemplateLiteral": "off"
+          },
+          "suspicious": {
+            "noArrayIndexKey": "off",
+            "noControlCharactersInRegex": "off",
+            "noExplicitAny": "off"
+          }
+        }
+      }
     }
   ]
 }

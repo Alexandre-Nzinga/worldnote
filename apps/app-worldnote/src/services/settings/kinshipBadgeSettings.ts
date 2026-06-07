@@ -66,7 +66,9 @@ function compactKinshipBadgeOverride(
   return compact.badgeClassName || compact.badgeTextColor ? compact : undefined;
 }
 
-export function hasKinshipBadgeOverride(override: KinshipBadgeOverride): boolean {
+export function hasKinshipBadgeOverride(
+  override: KinshipBadgeOverride,
+): boolean {
   return !!(override.badgeClassName || override.badgeTextColor);
 }
 
@@ -75,10 +77,7 @@ export function setKinshipBadgeBackground(
   badgeClassName: string,
 ): KinshipBadgeOverride {
   const entry = { ...override };
-  if (
-    !badgeClassName ||
-    badgeClassName === KINSHIP_BADGE_DEFAULT_BACKGROUND
-  ) {
+  if (!badgeClassName || badgeClassName === KINSHIP_BADGE_DEFAULT_BACKGROUND) {
     entry.badgeClassName = undefined;
   } else {
     entry.badgeClassName = badgeClassName;

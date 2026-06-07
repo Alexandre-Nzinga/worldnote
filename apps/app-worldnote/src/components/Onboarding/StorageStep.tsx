@@ -43,7 +43,9 @@ export function StorageStep({
     setBrowseError(null);
     setIsBrowsing(true);
     try {
-      const selection = await pickDirectory("Choose where to store your worlds");
+      const selection = await pickDirectory(
+        "Choose where to store your worlds",
+      );
       if (selection) {
         onParentDirChange(selection);
       }

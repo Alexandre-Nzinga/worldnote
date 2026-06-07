@@ -39,8 +39,7 @@ export function InspectorWizardSection({
   onOpenWizard,
 }: InspectorWizardSectionProps) {
   const logoTone = "white";
-  const wizardDisabled =
-    isBusy || status === "generating" || healthy !== true;
+  const wizardDisabled = isBusy || status === "generating" || healthy !== true;
   const isGenerating = status === "generating";
   const isFillingGaps = isGenerating && activeAction === "fill-gaps";
   const isExpanding = isGenerating && activeAction === "expand";
@@ -58,43 +57,43 @@ export function InspectorWizardSection({
 
       <div className="flex items-center gap-2">
         <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-        <WizardActionChip
-          icon="auto_fix_high"
-          label={isFillingGaps ? "Filling…" : "Fill gaps"}
-          tooltip={describeInspectorFillGapsAction(selectedCard.name)}
-          disabled={wizardDisabled}
-          busy={isFillingGaps}
-          onClick={onFillGaps}
-        />
-        <WizardActionChip
-          icon="auto_awesome"
-          label={isExpanding ? "Expanding…" : "Expand card"}
-          tooltip={describeInspectorExpandAction(selectedCard.name)}
-          disabled={wizardDisabled}
-          busy={isExpanding}
-          onClick={onExpand}
-        />
-        {suggestions.map((suggestion) => {
-          const isThisSuggestionGenerating =
-            isGenerating &&
-            activeAction === "suggestion" &&
-            activeSuggestionId === suggestion.id;
+          <WizardActionChip
+            icon="auto_fix_high"
+            label={isFillingGaps ? "Filling…" : "Fill gaps"}
+            tooltip={describeInspectorFillGapsAction(selectedCard.name)}
+            disabled={wizardDisabled}
+            busy={isFillingGaps}
+            onClick={onFillGaps}
+          />
+          <WizardActionChip
+            icon="auto_awesome"
+            label={isExpanding ? "Expanding…" : "Expand card"}
+            tooltip={describeInspectorExpandAction(selectedCard.name)}
+            disabled={wizardDisabled}
+            busy={isExpanding}
+            onClick={onExpand}
+          />
+          {suggestions.map((suggestion) => {
+            const isThisSuggestionGenerating =
+              isGenerating &&
+              activeAction === "suggestion" &&
+              activeSuggestionId === suggestion.id;
 
-          return (
-            <WizardActionChip
-              key={suggestion.id}
-              icon="edit_note"
-              label={
-                isThisSuggestionGenerating ? "Generating…" : suggestion.label
-              }
-              disabled={wizardDisabled}
-              busy={isThisSuggestionGenerating}
-              tooltip={suggestion.message}
-              aria-label={suggestion.message}
-              onClick={() => onRunSuggestion(suggestion)}
-            />
-          );
-        })}
+            return (
+              <WizardActionChip
+                key={suggestion.id}
+                icon="edit_note"
+                label={
+                  isThisSuggestionGenerating ? "Generating…" : suggestion.label
+                }
+                disabled={wizardDisabled}
+                busy={isThisSuggestionGenerating}
+                tooltip={suggestion.message}
+                aria-label={suggestion.message}
+                onClick={() => onRunSuggestion(suggestion)}
+              />
+            );
+          })}
         </div>
         {onOpenWizard ? (
           <WizardActionIconChip

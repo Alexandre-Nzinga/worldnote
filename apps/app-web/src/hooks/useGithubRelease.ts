@@ -8,11 +8,7 @@ import {
   RELEASES_PAGE_URL,
   type OsAssetMap,
 } from "@/services/github/releases";
-import {
-  detectOs,
-  OS_LABELS,
-  type DetectedOs,
-} from "@/services/os/detectOs";
+import { detectOs, OS_LABELS, type DetectedOs } from "@/services/os/detectOs";
 
 const EMPTY_ASSETS: OsAssetMap = {
   windows: null,

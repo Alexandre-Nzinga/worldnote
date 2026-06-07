@@ -48,8 +48,7 @@ export const landingCopy = {
   },
   carousel: {
     sectionTitle: "See it in action",
-    sectionSubtitle:
-      "A visual workspace built for sprawling fictional worlds.",
+    sectionSubtitle: "A visual workspace built for sprawling fictional worlds.",
     slides: [
       {
         id: "canvas",
@@ -70,7 +69,8 @@ export const landingCopy = {
   },
   download: {
     sectionTitle: "Download Center",
-    sectionSubtitle: "Pick your platform. WorldNote runs fully offline on desktop.",
+    sectionSubtitle:
+      "Pick your platform. WorldNote runs fully offline on desktop.",
   },
   footer: {
     tagline: "Building better worlds",

@@ -10,9 +10,7 @@ import {
   listStickyNoteMarkdownSafe,
   parseStickyNoteMarkdown,
 } from "../../../services/canvas/stickyNoteMarkdown.js";
-import {
-  stickyNotePlacementToFlowNode,
-} from "../../../services/canvas/stickyNoteNode.js";
+import { stickyNotePlacementToFlowNode } from "../../../services/canvas/stickyNoteNode.js";
 import { linkToEdge } from "../../../services/links/linkToEdge.js";
 import { listLinks } from "../../../services/links/listLinks.js";
 import type { Link, WorldCard } from "@worldnote/shared";
@@ -29,7 +27,9 @@ type UseCanvasVaultLoaderOptions = {
   listCards: (vaultPath: string) => Promise<WorldCard[]>;
   upsertCard: (vaultPath: string, card: WorldCard) => Promise<void>;
   loadCanvasManifest: (vaultPath: string) => Promise<CanvasManifest>;
-  visibleSocketsSettingsRef: React.RefObject<VisibleSocketsByCardType | undefined>;
+  visibleSocketsSettingsRef: React.RefObject<
+    VisibleSocketsByCardType | undefined
+  >;
   cardTypeBadgeColorsRef: React.RefObject<CardTypeBadgeOverrides | undefined>;
   kinshipLabelColorsRef: React.RefObject<KinshipBadgeOverride | undefined>;
   setNodes: React.Dispatch<React.SetStateAction<CanvasFlowNode[]>>;
@@ -167,30 +167,30 @@ export function useCanvasVaultLoader({
             ] as const;
           }),
         );
-        const noteNodes: CanvasFlowNode[] = (manifest.stickyNotes ?? []).flatMap(
-          (note) => {
-            try {
-              const markdown = markdownById.get(note.id);
-              const placement = StickyNotePlacementSchema.parse({
-                ...note,
-                heading: note.heading ?? markdown?.heading,
-              });
-              return [
-                stickyNotePlacementToFlowNode(
-                  placement,
-                  markdown?.content ?? "",
-                  {},
-                ),
-              ];
-            } catch (error) {
-              console.error(
-                `Skipping sticky note ${note.id} on canvas load:`,
-                error,
-              );
-              return [];
-            }
-          },
-        );
+        const noteNodes: CanvasFlowNode[] = (
+          manifest.stickyNotes ?? []
+        ).flatMap((note) => {
+          try {
+            const markdown = markdownById.get(note.id);
+            const placement = StickyNotePlacementSchema.parse({
+              ...note,
+              heading: note.heading ?? markdown?.heading,
+            });
+            return [
+              stickyNotePlacementToFlowNode(
+                placement,
+                markdown?.content ?? "",
+                {},
+              ),
+            ];
+          } catch (error) {
+            console.error(
+              `Skipping sticky note ${note.id} on canvas load:`,
+              error,
+            );
+            return [];
+          }
+        });
         setNodes([...cardNodes, ...imageNodes, ...noteNodes]);
         setEdges(links.map(linkToEdge));
       } catch (error) {

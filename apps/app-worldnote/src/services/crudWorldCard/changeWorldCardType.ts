@@ -1,8 +1,5 @@
 import type { WorldCard } from "@worldnote/shared";
-import {
-  createCardTemplate,
-  type NewCardType,
-} from "./cardTemplates.js";
+import { createCardTemplate, type NewCardType } from "./cardTemplates.js";
 
 /**
  * Re-types a card: starts from the new type's defaults, then re-applies shared

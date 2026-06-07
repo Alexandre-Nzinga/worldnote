@@ -116,7 +116,9 @@ export function CardTypeFields({
             <ReadOnlyField
               label="Gender"
               value={
-                fields.gender ? labelForOption(genderOptions, fields.gender) : ""
+                fields.gender
+                  ? labelForOption(genderOptions, fields.gender)
+                  : ""
               }
             />
           </>
@@ -125,7 +127,10 @@ export function CardTypeFields({
       return (
         <>
           <div className="flex flex-col gap-1">
-            <label htmlFor="card-start-year" className={inspectorFieldLabelClassName}>
+            <label
+              htmlFor="card-start-year"
+              className={inspectorFieldLabelClassName}
+            >
               Birth year
             </label>
             <Input
@@ -139,7 +144,10 @@ export function CardTypeFields({
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label htmlFor="card-end-year" className={inspectorFieldLabelClassName}>
+            <label
+              htmlFor="card-end-year"
+              className={inspectorFieldLabelClassName}
+            >
               Death year
             </label>
             <Input
@@ -170,7 +178,10 @@ export function CardTypeFields({
       }
       return (
         <div className="flex flex-col gap-1">
-          <label htmlFor="card-coordinates" className={inspectorFieldLabelClassName}>
+          <label
+            htmlFor="card-coordinates"
+            className={inspectorFieldLabelClassName}
+          >
             Coordinates
           </label>
           <Input
@@ -216,7 +227,10 @@ export function CardTypeFields({
       return (
         <>
           <div className="flex flex-col gap-1">
-            <label htmlFor="card-weight" className={inspectorFieldLabelClassName}>
+            <label
+              htmlFor="card-weight"
+              className={inspectorFieldLabelClassName}
+            >
               {measurementFieldLabel("weight", unitSystem)}
             </label>
             <Input
@@ -260,7 +274,10 @@ export function CardTypeFields({
           <>
             <ReadOnlyField
               label="Sub type"
-              value={labelForOption(vehicleSubTypeOptions, fields.vehicleSubType)}
+              value={labelForOption(
+                vehicleSubTypeOptions,
+                fields.vehicleSubType,
+              )}
             />
             <ReadOnlyField
               label={measurementFieldLabel("speed", unitSystem, "Max speed")}
@@ -285,13 +302,20 @@ export function CardTypeFields({
             onChange={(vehicleSubType) => patch({ vehicleSubType })}
           />
           <div className="flex flex-col gap-1">
-            <label htmlFor="card-max-speed" className={inspectorFieldLabelClassName}>
+            <label
+              htmlFor="card-max-speed"
+              className={inspectorFieldLabelClassName}
+            >
               {measurementFieldLabel("speed", unitSystem, "Max speed")}
             </label>
             <Input
               id="card-max-speed"
               placeholder={measurementInputPlaceholder("speed", unitSystem)}
-              value={measurementEditorValue(fields.maxSpeed, "speed", unitSystem)}
+              value={measurementEditorValue(
+                fields.maxSpeed,
+                "speed",
+                unitSystem,
+              )}
               isDisabled={disabled}
               onValueChange={(displaySpeed) =>
                 patch({
@@ -407,7 +431,10 @@ export function CardTypeFields({
       }
       return (
         <div className="flex flex-col gap-1">
-          <label htmlFor="card-planet-type" className={inspectorFieldLabelClassName}>
+          <label
+            htmlFor="card-planet-type"
+            className={inspectorFieldLabelClassName}
+          >
             Planet type
           </label>
           <Input
@@ -422,11 +449,16 @@ export function CardTypeFields({
       );
     case "organization":
       if (readOnly) {
-        return <ReadOnlyField label="Founding date" value={fields.foundingDate} />;
+        return (
+          <ReadOnlyField label="Founding date" value={fields.foundingDate} />
+        );
       }
       return (
         <div className="flex flex-col gap-1">
-          <label htmlFor="card-founding-date" className={inspectorFieldLabelClassName}>
+          <label
+            htmlFor="card-founding-date"
+            className={inspectorFieldLabelClassName}
+          >
             Founding date
           </label>
           <Input
@@ -441,12 +473,18 @@ export function CardTypeFields({
     case "polity":
       if (readOnly) {
         return (
-          <ReadOnlyField label="Government type" value={fields.governmentType} />
+          <ReadOnlyField
+            label="Government type"
+            value={fields.governmentType}
+          />
         );
       }
       return (
         <div className="flex flex-col gap-1">
-          <label htmlFor="card-government-type" className={inspectorFieldLabelClassName}>
+          <label
+            htmlFor="card-government-type"
+            className={inspectorFieldLabelClassName}
+          >
             Government type
           </label>
           <Input
@@ -470,7 +508,10 @@ export function CardTypeFields({
       return (
         <>
           <div className="flex flex-col gap-1">
-            <label htmlFor="card-event-start-year" className={inspectorFieldLabelClassName}>
+            <label
+              htmlFor="card-event-start-year"
+              className={inspectorFieldLabelClassName}
+            >
               Start year
             </label>
             <Input
@@ -484,7 +525,10 @@ export function CardTypeFields({
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label htmlFor="card-event-end-year" className={inspectorFieldLabelClassName}>
+            <label
+              htmlFor="card-event-end-year"
+              className={inspectorFieldLabelClassName}
+            >
               End year
             </label>
             <Input
@@ -523,7 +567,10 @@ export function CardTypeFields({
       }
       return (
         <div className="flex flex-col gap-1">
-          <label htmlFor="card-group-type" className={inspectorFieldLabelClassName}>
+          <label
+            htmlFor="card-group-type"
+            className={inspectorFieldLabelClassName}
+          >
             Group type
           </label>
           <Input
@@ -538,11 +585,16 @@ export function CardTypeFields({
       );
     case "star":
       if (readOnly) {
-        return <ReadOnlyField label="Spectral class" value={fields.spectralClass} />;
+        return (
+          <ReadOnlyField label="Spectral class" value={fields.spectralClass} />
+        );
       }
       return (
         <div className="flex flex-col gap-1">
-          <label htmlFor="card-spectral-class" className={inspectorFieldLabelClassName}>
+          <label
+            htmlFor="card-spectral-class"
+            className={inspectorFieldLabelClassName}
+          >
             Spectral class
           </label>
           <Input
@@ -557,11 +609,16 @@ export function CardTypeFields({
       );
     case "moon":
       if (readOnly) {
-        return <ReadOnlyField label="Orbital period" value={fields.orbitalPeriod} />;
+        return (
+          <ReadOnlyField label="Orbital period" value={fields.orbitalPeriod} />
+        );
       }
       return (
         <div className="flex flex-col gap-1">
-          <label htmlFor="card-orbital-period" className={inspectorFieldLabelClassName}>
+          <label
+            htmlFor="card-orbital-period"
+            className={inspectorFieldLabelClassName}
+          >
             Orbital period
           </label>
           <Input
@@ -579,7 +636,10 @@ export function CardTypeFields({
       }
       return (
         <div className="flex flex-col gap-1">
-          <label htmlFor="card-composition" className={inspectorFieldLabelClassName}>
+          <label
+            htmlFor="card-composition"
+            className={inspectorFieldLabelClassName}
+          >
             Composition
           </label>
           <Input
@@ -597,7 +657,10 @@ export function CardTypeFields({
       }
       return (
         <div className="flex flex-col gap-1">
-          <label htmlFor="card-orbit-type" className={inspectorFieldLabelClassName}>
+          <label
+            htmlFor="card-orbit-type"
+            className={inspectorFieldLabelClassName}
+          >
             Orbit type
           </label>
           <Input

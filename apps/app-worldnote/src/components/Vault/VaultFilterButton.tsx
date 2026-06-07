@@ -115,7 +115,9 @@ export function VaultFilterButton({
       <div className="absolute right-0 top-full z-20 mt-2 w-[min(100vw-3rem,24rem)]">
         <AnimatedPopover isOpen={isOpen}>
           <div className={`${surfacePanelClassName} shadow-lg`}>
-            <h3 {...getHeadingProps("h6", { tone: "inverse" })}>Filter by type</h3>
+            <h3 {...getHeadingProps("h6", { tone: "inverse" })}>
+              Filter by type
+            </h3>
             <div className="mt-3 flex flex-wrap gap-2.5 px-0.5 py-1">
               {cardTypes.map((type) => {
                 const config = resolveCardBadgeStyle(type, cardTypeBadgeColors);

@@ -42,7 +42,10 @@ function parseStoredMessage(raw: unknown): StoredWizardMessage | null {
     }
   }
 
-  if (raw.generatedCardAction === "spawn" || raw.generatedCardAction === "apply") {
+  if (
+    raw.generatedCardAction === "spawn" ||
+    raw.generatedCardAction === "apply"
+  ) {
     message.generatedCardAction = raw.generatedCardAction;
   }
 
@@ -88,7 +91,9 @@ export function emptyWizardSessionsStore(): WizardSessionsStore {
   };
 }
 
-export function normalizeWizardSessionsStore(raw: unknown): WizardSessionsStore {
+export function normalizeWizardSessionsStore(
+  raw: unknown,
+): WizardSessionsStore {
   if (!isRecord(raw) || raw.version !== 1 || !Array.isArray(raw.sessions)) {
     return emptyWizardSessionsStore();
   }
@@ -141,11 +146,15 @@ export function createWizardSession(
   };
 }
 
-export function sortSessionsByRecent(sessions: WizardSession[]): WizardSession[] {
+export function sortSessionsByRecent(
+  sessions: WizardSession[],
+): WizardSession[] {
   return [...sessions].sort((left, right) => right.updatedAt - left.updatedAt);
 }
 
-export function activeWizardSessions(store: WizardSessionsStore): WizardSession[] {
+export function activeWizardSessions(
+  store: WizardSessionsStore,
+): WizardSession[] {
   return sortSessionsByRecent(
     store.sessions.filter((session) => session.status === "active"),
   );

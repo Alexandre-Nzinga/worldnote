@@ -12,7 +12,9 @@ export function useAnchoredPopoverPosition(
   isOpen: boolean,
   estimatedHeight = 260,
 ) {
-  const [position, setPosition] = useState<AnchoredPopoverPosition | null>(null);
+  const [position, setPosition] = useState<AnchoredPopoverPosition | null>(
+    null,
+  );
 
   const updatePosition = useCallback(() => {
     const anchor = anchorRef.current;

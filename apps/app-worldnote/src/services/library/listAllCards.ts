@@ -23,4 +23,3 @@ export type LibraryCard = {
 export async function listAllCards(root: string): Promise<LibraryCard[]> {
   return invoke<LibraryCard[]>("list_all_cards", { root });
 }
-

@@ -14,7 +14,14 @@ import {
   MotionPressable,
   WorldNoteLogo,
 } from "@worldnote/ui";
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import type { NewCardType } from "../../../services/crudWorldCard/cardTemplates.js";
 import {
   dockInactiveClassName,
@@ -97,7 +104,10 @@ const createColumnPanelClassName =
 const createOptionClassName =
   "flex w-full items-center gap-2.5 rounded-xl px-2 py-2 text-left transition-colors hover:bg-wn-surface-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wn-mono-600";
 
-function matchesCreateQuery(type: CreateOption, normalizedQuery: string): boolean {
+function matchesCreateQuery(
+  type: CreateOption,
+  normalizedQuery: string,
+): boolean {
   if (!normalizedQuery) {
     return true;
   }
@@ -344,8 +354,12 @@ export function CanvasToolbar({
           {familyTreeBanner ? (
             <div className="flex justify-center">{familyTreeBanner}</div>
           ) : null}
-          {noteToolbar ? <div className="flex justify-center">{noteToolbar}</div> : null}
-          {imageToolbar ? <div className="flex justify-center">{imageToolbar}</div> : null}
+          {noteToolbar ? (
+            <div className="flex justify-center">{noteToolbar}</div>
+          ) : null}
+          {imageToolbar ? (
+            <div className="flex justify-center">{imageToolbar}</div>
+          ) : null}
           {selectionToolbar ? (
             <div className="flex justify-center">{selectionToolbar}</div>
           ) : null}
@@ -405,10 +419,7 @@ export function CanvasToolbar({
                 ))}
               </div>
             ) : (
-              <p
-                className="py-4 text-center"
-                style={getBodyTextStyle("small")}
-              >
+              <p className="py-4 text-center" style={getBodyTextStyle("small")}>
                 No matching cards
               </p>
             )}

@@ -116,7 +116,9 @@ if (version === currentVersion()) {
 console.log(`Releasing ${tag}...`);
 setVersion(version);
 
-run("git add apps/app-worldnote/package.json apps/app-worldnote/src-tauri/Cargo.toml apps/app-worldnote/src-tauri/tauri.conf.json Cargo.lock");
+run(
+  "git add apps/app-worldnote/package.json apps/app-worldnote/src-tauri/Cargo.toml apps/app-worldnote/src-tauri/tauri.conf.json Cargo.lock",
+);
 run(`git commit -m "Release ${tag}"`);
 run(`git tag -a ${tag} -m "WorldNote ${tag}"`);
 

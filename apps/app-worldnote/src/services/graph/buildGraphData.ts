@@ -23,10 +23,7 @@ export type GraphData = {
 };
 
 /** Maps all world cards and socket links into force-graph nodes and edges. */
-export function buildGraphData(
-  cards: WorldCard[],
-  links: Link[],
-): GraphData {
+export function buildGraphData(cards: WorldCard[], links: Link[]): GraphData {
   const cardIds = new Set(cards.map((card) => card.id));
 
   const nodes: GraphNode[] = cards.map((card) => ({

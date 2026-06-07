@@ -19,9 +19,7 @@ import {
   useRef,
   useState,
 } from "react";
-import {
-  beginCardExternalPointerDrag,
-} from "./cardExternalDrag.js";
+import { beginCardExternalPointerDrag } from "./cardExternalDrag.js";
 import {
   getNodeViewHandlePositions,
   handleStyleAtTop,

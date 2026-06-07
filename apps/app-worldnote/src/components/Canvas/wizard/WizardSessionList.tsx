@@ -55,7 +55,11 @@ function SessionRow({
   const menuItems = useMemo(() => {
     if (tab === "archived") {
       return [
-        { id: "restore", label: "Restore", icon: <MaterialSymbol name="unarchive" className="text-base" /> },
+        {
+          id: "restore",
+          label: "Restore",
+          icon: <MaterialSymbol name="unarchive" className="text-base" />,
+        },
         {
           id: "delete",
           label: "Delete",
@@ -65,7 +69,11 @@ function SessionRow({
       ];
     }
     return [
-      { id: "archive", label: "Archive", icon: <MaterialSymbol name="archive" className="text-base" /> },
+      {
+        id: "archive",
+        label: "Archive",
+        icon: <MaterialSymbol name="archive" className="text-base" />,
+      },
       {
         id: "delete",
         label: "Delete",
@@ -156,7 +164,9 @@ export function WizardSessionList({
           size="sm"
           variant="secondary"
           onPress={onStartNewSession}
-          startContent={<MaterialSymbol name="edit_square" className="text-base" />}
+          startContent={
+            <MaterialSymbol name="edit_square" className="text-base" />
+          }
         >
           New
         </Button>
@@ -184,7 +194,11 @@ export function WizardSessionList({
           >
             {entry}
             <span className="ml-1 text-wn-mono-500">
-              ({entry === "active" ? activeSessions.length : archivedSessions.length})
+              (
+              {entry === "active"
+                ? activeSessions.length
+                : archivedSessions.length}
+              )
             </span>
           </button>
         ))}

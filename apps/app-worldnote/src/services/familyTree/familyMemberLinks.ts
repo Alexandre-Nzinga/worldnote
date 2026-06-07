@@ -12,10 +12,7 @@ export function familyMemberIdsFromLinks(
 ): Set<string> {
   const memberIds = new Set<string>();
   for (const link of links) {
-    if (
-      link.source_card === familyCardId &&
-      link.source_socket === "members"
-    ) {
+    if (link.source_card === familyCardId && link.source_socket === "members") {
       memberIds.add(link.target_card);
     }
   }

@@ -121,7 +121,15 @@ export function useWorldWizard({
             contextScope,
           })
         : "",
-    [vaultPath, worldName, cardsById, links, indexRows, droppedCardIds, contextScope],
+    [
+      vaultPath,
+      worldName,
+      cardsById,
+      links,
+      indexRows,
+      droppedCardIds,
+      contextScope,
+    ],
   );
 
   const refreshConnection = useCallback(async (nextHost: string) => {
@@ -159,7 +167,12 @@ export function useWorldWizard({
     if (!sessions.activeSessionId) {
       sessions.ensureActiveSession();
     }
-  }, [sessions.loaded, sessions.activeSessionId, isOpen, sessions.ensureActiveSession]);
+  }, [
+    sessions.loaded,
+    sessions.activeSessionId,
+    isOpen,
+    sessions.ensureActiveSession,
+  ]);
 
   useEffect(() => {
     if (!sessions.loaded) return;
@@ -209,7 +222,8 @@ export function useWorldWizard({
       const settings = await getSettings();
       if (cancelled) return;
       settingsRef.current = settings;
-      const configuredHost = settings?.wizard?.host?.trim() || DEFAULT_OLLAMA_HOST;
+      const configuredHost =
+        settings?.wizard?.host?.trim() || DEFAULT_OLLAMA_HOST;
       setHost(configuredHost);
       await refreshConnection(configuredHost);
     })();
@@ -547,11 +561,7 @@ export function useWorldWizard({
     async (preset: WizardActionPreset) => {
       if (!model || status === "generating" || !preset.targetCardType) return;
       const prompt = preset.buildPrompt(droppedCards);
-      await runGenerateCardFromPrompt(
-        preset.targetCardType,
-        prompt,
-        prompt,
-      );
+      await runGenerateCardFromPrompt(preset.targetCardType, prompt, prompt);
     },
     [model, status, droppedCards, runGenerateCardFromPrompt],
   );

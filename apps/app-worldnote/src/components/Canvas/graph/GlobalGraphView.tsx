@@ -103,9 +103,8 @@ export function GlobalGraphView({
     DEFAULT_GRAPH_FORCE_SETTINGS,
   );
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchCardIds, setSearchCardIds] = useState<ReadonlySet<string> | null>(
-    null,
-  );
+  const [searchCardIds, setSearchCardIds] =
+    useState<ReadonlySet<string> | null>(null);
   const vaultPath = useVault((state) => state.currentVaultPath);
   const cardTypeBadgeColors = useSettings(
     (state) => state.settings?.cardTypeBadgeColors,
@@ -267,21 +266,28 @@ export function GlobalGraphView({
         const tagFontSize = TAG_FONT_SIZE_PX / globalScale;
         ctx.font = `${LABEL_FONT_WEIGHT} ${tagFontSize}px "Urbanist Variable", "Urbanist", sans-serif`;
         ctx.fillStyle = graphTagLabelColor();
-        ctx.fillText(node.tags.join(", "), x, y + TAG_LINE_HEIGHT_PX / globalScale);
+        ctx.fillText(
+          node.tags.join(", "),
+          x,
+          y + TAG_LINE_HEIGHT_PX / globalScale,
+        );
       }
     },
     [displaySettings.textFadeThreshold, filterSettings.showTags],
   );
 
-  const nodeColor = useCallback((node: NodeObject) => {
-    if (!isGraphNode(node)) {
-      return cardTypeColor(undefined);
-    }
-    if (node.kind === "attachment") {
-      return graphAttachmentColor();
-    }
-    return cardTypeColor(node.cardType, cardTypeBadgeColors);
-  }, [cardTypeBadgeColors]);
+  const nodeColor = useCallback(
+    (node: NodeObject) => {
+      if (!isGraphNode(node)) {
+        return cardTypeColor(undefined);
+      }
+      if (node.kind === "attachment") {
+        return graphAttachmentColor();
+      }
+      return cardTypeColor(node.cardType, cardTypeBadgeColors);
+    },
+    [cardTypeBadgeColors],
+  );
 
   return (
     <AnimatedModal
@@ -296,7 +302,8 @@ export function GlobalGraphView({
         <div>
           <h2 {...getHeadingProps("h3", { tone: "inverse" })}>Graph view</h2>
           <p className="mt-0.5" style={getBodyTextStyle("small")}>
-            {graphData.nodes.length} cards · {graphData.links.length} connections
+            {graphData.nodes.length} cards · {graphData.links.length}{" "}
+            connections
           </p>
         </div>
         <CloseIconButton aria-label="Close graph view" onPress={onClose} />

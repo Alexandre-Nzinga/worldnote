@@ -1,5 +1,9 @@
 import { Input } from "@heroui/react";
-import { fieldStackClassName, wnDescriptionClassName, wnSubtitleClassName } from "@worldnote/ui";
+import {
+  fieldStackClassName,
+  wnDescriptionClassName,
+  wnSubtitleClassName,
+} from "@worldnote/ui";
 import { settingsFieldInputClassNames } from "./settingsStyles.js";
 
 type TimelineEraSuffixSettingProps = {

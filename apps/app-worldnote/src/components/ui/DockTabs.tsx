@@ -30,7 +30,12 @@ type DockIconProps = {
   itemRef?: RefObject<HTMLDivElement | null>;
 };
 
-function DockIcon({ item, mousePosition, orientation, itemRef }: DockIconProps) {
+function DockIcon({
+  item,
+  mousePosition,
+  orientation,
+  itemRef,
+}: DockIconProps) {
   const ref = useRef<HTMLDivElement>(null);
   const reducedMotion = usePrefersReducedMotion();
   const [isHovered, setIsHovered] = useState(false);
@@ -84,7 +89,11 @@ function DockIcon({ item, mousePosition, orientation, itemRef }: DockIconProps) 
   return (
     <motion.div
       ref={setRefs}
-      style={reducedMotion ? { width: baseSize, height: baseSize } : { width, height }}
+      style={
+        reducedMotion
+          ? { width: baseSize, height: baseSize }
+          : { width, height }
+      }
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onMouseDown={() => !item.disabled && setIsClicked(true)}
@@ -128,7 +137,9 @@ function DockIcon({ item, mousePosition, orientation, itemRef }: DockIconProps) 
           }}
         >
           {item.iconNode ? (
-            <span className="flex items-center justify-center">{item.iconNode}</span>
+            <span className="flex items-center justify-center">
+              {item.iconNode}
+            </span>
           ) : (
             <MaterialSymbol
               name={item.icon ?? "help"}

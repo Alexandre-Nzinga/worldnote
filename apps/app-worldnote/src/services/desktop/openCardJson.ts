@@ -7,7 +7,9 @@ import { DESKTOP_ONLY_MESSAGE, isTauriRuntime } from "./tauriRuntime.js";
  * Prompts the user, then opens a pretty-printed JSON snapshot of the card in the
  * system's default application (VS Code, Notepad++, etc.).
  */
-export async function openCardJsonInExternalApp(card: WorldCard): Promise<void> {
+export async function openCardJsonInExternalApp(
+  card: WorldCard,
+): Promise<void> {
   if (!isTauriRuntime()) {
     await message(DESKTOP_ONLY_MESSAGE, {
       title: "View card JSON",
@@ -18,7 +20,12 @@ export async function openCardJsonInExternalApp(card: WorldCard): Promise<void> 
 
   const confirmed = await confirm(
     "Open this card as formatted JSON in your default editor?\n\nThe file is a snapshot of what you see in the inspector (including unsaved edits). Save the card first if you need the on-disk file in your vault.",
-    { title: "View raw JSON", kind: "info", okLabel: "Open", cancelLabel: "Cancel" },
+    {
+      title: "View raw JSON",
+      kind: "info",
+      okLabel: "Open",
+      cancelLabel: "Cancel",
+    },
   );
   if (!confirmed) {
     return;

@@ -29,10 +29,8 @@ export function imagePlacementToFlowNode(
   const data: ImageNodeData = {
     imageSrc,
     imagePath: placement.imagePath,
-    imagePosition: normalizeCardImageDisplay(
-      undefined,
-      placement.imagePosition,
-    ).position,
+    imagePosition: normalizeCardImageDisplay(undefined, placement.imagePosition)
+      .position,
     enterAnimation: options?.enterAnimation,
   };
 

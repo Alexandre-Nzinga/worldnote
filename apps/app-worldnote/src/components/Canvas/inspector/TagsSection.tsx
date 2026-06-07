@@ -112,11 +112,10 @@ export function TagsSection({
   const isDrafting = draft.length > 0;
 
   return (
-    <section className={`${inspectorSectionClassName} relative w-full shrink-0`}>
-      <Eyebrow
-        as="h2"
-        className={inspectorSectionEyebrowClassName}
-      >
+    <section
+      className={`${inspectorSectionClassName} relative w-full shrink-0`}
+    >
+      <Eyebrow as="h2" className={inspectorSectionEyebrowClassName}>
         Tags
       </Eyebrow>
       {readOnly ? (

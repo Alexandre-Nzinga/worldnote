@@ -1,11 +1,4 @@
-export type HeadingLevel =
-  | "display"
-  | "h1"
-  | "h2"
-  | "h3"
-  | "h4"
-  | "h5"
-  | "h6";
+export type HeadingLevel = "display" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
 export type BodyTextLevel = "body" | "small" | "xs";
 
 export type HeadingToken = {
@@ -163,7 +156,9 @@ export function getHeadingProps(
   }
 
   return {
-    className: className ? `${headingClass[level]} ${className}` : headingClass[level],
+    className: className
+      ? `${headingClass[level]} ${className}`
+      : headingClass[level],
     style,
   };
 }
@@ -192,18 +187,20 @@ export const bodyTextTokens: Record<BodyTextLevel, BodyTextToken> = {
   },
 };
 
-const bodyFontWeightTokenMap: Record<BodyTextToken["fontWeight"], `--${string}`> =
-  {
-    thin: "--font-weight-wn-thin",
-    extralight: "--font-weight-wn-extralight",
-    light: "--font-weight-wn-light",
-    regular: "--font-weight-wn-regular",
-    medium: "--font-weight-wn-medium",
-    semibold: "--font-weight-wn-semibold",
-    bold: "--font-weight-wn-bold",
-    extrabold: "--font-weight-wn-extrabold",
-    black: "--font-weight-wn-black",
-  };
+const bodyFontWeightTokenMap: Record<
+  BodyTextToken["fontWeight"],
+  `--${string}`
+> = {
+  thin: "--font-weight-wn-thin",
+  extralight: "--font-weight-wn-extralight",
+  light: "--font-weight-wn-light",
+  regular: "--font-weight-wn-regular",
+  medium: "--font-weight-wn-medium",
+  semibold: "--font-weight-wn-semibold",
+  bold: "--font-weight-wn-bold",
+  extrabold: "--font-weight-wn-extrabold",
+  black: "--font-weight-wn-black",
+};
 
 export function getBodyTextStyle(level: BodyTextLevel) {
   const token = bodyTextTokens[level];

@@ -41,9 +41,9 @@ describe("formatYear", () => {
 
 describe("formatTimelineDateLabel", () => {
   it("labels character birth points", () => {
-    expect(formatTimelineDateLabel(234, undefined, "AG", { bornLabel: true })).toBe(
-      "Born 234 AG",
-    );
+    expect(
+      formatTimelineDateLabel(234, undefined, "AG", { bornLabel: true }),
+    ).toBe("Born 234 AG");
   });
 
   it("labels year ranges", () => {

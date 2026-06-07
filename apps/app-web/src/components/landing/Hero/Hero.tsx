@@ -26,10 +26,7 @@ export function Hero() {
 
   return (
     <section className="relative overflow-hidden px-6 pb-24 pt-20 md:px-10 md:pt-28 lg:px-16 lg:pt-32">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10"
-      >
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute left-1/2 top-0 h-[480px] w-[720px] -translate-x-1/2 rounded-full bg-wn-surface-raised/40 blur-3xl" />
         <div className="absolute bottom-0 left-1/4 h-64 w-64 rounded-full bg-wn-mono-800/20 blur-3xl" />
       </div>

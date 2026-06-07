@@ -35,7 +35,10 @@ type UseWizardSessionsArgs = {
   isOpen: boolean;
 };
 
-export function useWizardSessions({ vaultPath, isOpen }: UseWizardSessionsArgs) {
+export function useWizardSessions({
+  vaultPath,
+  isOpen,
+}: UseWizardSessionsArgs) {
   const [store, setStore] = useState<WizardSessionsStore>(
     emptyWizardSessionsStore(),
   );
@@ -104,7 +107,9 @@ export function useWizardSessions({ vaultPath, isOpen }: UseWizardSessionsArgs) 
   }, [store]);
 
   const ensureActiveSession = useCallback(
-    (options?: Partial<Pick<WizardSession, "droppedCardIds" | "contextScope">>) => {
+    (
+      options?: Partial<Pick<WizardSession, "droppedCardIds" | "contextScope">>,
+    ) => {
       if (!loaded) return null;
 
       if (store.activeSessionId) {
@@ -134,7 +139,9 @@ export function useWizardSessions({ vaultPath, isOpen }: UseWizardSessionsArgs) 
   );
 
   const createSession = useCallback(
-    (options?: Partial<Pick<WizardSession, "droppedCardIds" | "contextScope">>) => {
+    (
+      options?: Partial<Pick<WizardSession, "droppedCardIds" | "contextScope">>,
+    ) => {
       const session = createWizardSession(options);
       commitStore((current) =>
         upsertWizardSession(

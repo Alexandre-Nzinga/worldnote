@@ -6,10 +6,7 @@ import { LoadingScreen } from "./components/LoadingScreen.js";
 import { Onboarding } from "./components/Onboarding/index.js";
 import { Settings } from "./components/Settings/Settings.js";
 import { Vault } from "./components/Vault/index.js";
-import {
-  isOnboardingComplete,
-  useSettings,
-} from "./hooks/useSettings.js";
+import { isOnboardingComplete, useSettings } from "./hooks/useSettings.js";
 import { useVaultCommands } from "./hooks/useVaultCommands.js";
 import { useVault } from "./hooks/useVault.js";
 import { openSampleWorld } from "./services/starterPacks/index.js";

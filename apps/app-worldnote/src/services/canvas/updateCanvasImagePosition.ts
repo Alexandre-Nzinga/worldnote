@@ -1,7 +1,10 @@
 import type { CanvasImagePlacement } from "@worldnote/canvas";
 import { updateCanvasManifestImage } from "./canvasManifest.js";
 
-export function createCanvasImagePositionUpdater(vault: string, debounceMs = 300) {
+export function createCanvasImagePositionUpdater(
+  vault: string,
+  debounceMs = 300,
+) {
   const timers = new Map<string, ReturnType<typeof setTimeout>>();
 
   return (placement: CanvasImagePlacement) => {

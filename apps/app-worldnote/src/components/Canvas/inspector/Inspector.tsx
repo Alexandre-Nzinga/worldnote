@@ -155,9 +155,7 @@ type InspectorProps = {
 /** Canvas-internal keys stored in custom_properties but not shown in the inspector. */
 const HIDDEN_CUSTOM_PROPERTY_KEYS = new Set(["view_mode"]);
 
-function propertiesToRows(
-  properties: Record<string, unknown>,
-): PropertyRow[] {
+function propertiesToRows(properties: Record<string, unknown>): PropertyRow[] {
   return Object.entries(properties)
     .filter(([key]) => !HIDDEN_CUSTOM_PROPERTY_KEYS.has(key))
     .map(([key, value]) => ({
@@ -293,9 +291,8 @@ export function Inspector({
     onClose();
   }, [onClose]);
   const [loreEditor, setLoreEditor] = useState<Editor | null>(null);
-  const [loreScrollElement, setLoreScrollElement] = useState<HTMLElement | null>(
-    null,
-  );
+  const [loreScrollElement, setLoreScrollElement] =
+    useState<HTMLElement | null>(null);
   const [activeTab, setActiveTab] = useState<InspectorTabId>("info");
   const [tabDirection, setTabDirection] = useState<StepDirection>(1);
   const tabIndexRef = useRef(0);
@@ -377,7 +374,11 @@ export function Inspector({
     ? listSocketsForCardType(activeCard.card_type)
     : [];
   const socketLinkLabels = activeCard
-    ? getSocketLinkLabels(activeCard.id, links, (cardId) => cardsById[cardId]?.name)
+    ? getSocketLinkLabels(
+        activeCard.id,
+        links,
+        (cardId) => cardsById[cardId]?.name,
+      )
     : {};
 
   const imagePreview = cardImageSrc(vaultPath, imagePath);
@@ -438,12 +439,7 @@ export function Inspector({
         inspectorWizard.handleError(err);
       }
     })();
-  }, [
-    activeCard,
-    applyGeneratedCard,
-    inspectorWizard,
-    persistGeneratedCard,
-  ]);
+  }, [activeCard, applyGeneratedCard, inspectorWizard, persistGeneratedCard]);
 
   const handleWizardFillGaps = useCallback(() => {
     if (!activeCard) return;
@@ -456,12 +452,7 @@ export function Inspector({
         inspectorWizard.handleError(err);
       }
     })();
-  }, [
-    activeCard,
-    applyGeneratedCard,
-    inspectorWizard,
-    persistGeneratedCard,
-  ]);
+  }, [activeCard, applyGeneratedCard, inspectorWizard, persistGeneratedCard]);
 
   const handleWizardSuggestion = useCallback(
     (suggestion: WizardSuggestion) => {
@@ -482,8 +473,7 @@ export function Inspector({
     if (!activeCard) {
       throw new Error("No card to save");
     }
-    const savedLoreMarkdown =
-      loreEditorRef.current?.getMarkdown() ?? lore;
+    const savedLoreMarkdown = loreEditorRef.current?.getMarkdown() ?? lore;
     const base = {
       id: activeCard.id,
       name: name.trim(),
@@ -568,7 +558,11 @@ export function Inspector({
       if (!sourcePath) {
         return;
       }
-      const relativePath = await saveCardImage(vaultPath, activeCard.id, sourcePath);
+      const relativePath = await saveCardImage(
+        vaultPath,
+        activeCard.id,
+        sourcePath,
+      );
       const nextPosition = resetCardImagePosition();
       setImagePath(relativePath);
       setImagePosition(nextPosition);
@@ -602,10 +596,9 @@ export function Inspector({
         sourcePath,
       );
       setCrestPath(relativePath);
-      await onSave(
-        withCardPatch(buildCard(), { crest_path: relativePath }),
-        { notify: false },
-      );
+      await onSave(withCardPatch(buildCard(), { crest_path: relativePath }), {
+        notify: false,
+      });
     } catch (crestError) {
       setError(
         crestError instanceof Error ? crestError.message : String(crestError),
@@ -631,7 +624,9 @@ export function Inspector({
       onClose();
     } catch (deleteError) {
       setError(
-        deleteError instanceof Error ? deleteError.message : String(deleteError),
+        deleteError instanceof Error
+          ? deleteError.message
+          : String(deleteError),
       );
     } finally {
       setIsDeleting(false);
@@ -640,45 +635,44 @@ export function Inspector({
 
   const isBusy = isSaving || isDeleting;
 
-  const wizardSection =
-    activeCard ? (
-      <InspectorWizardSection
-        status={inspectorWizard.status}
-        healthy={inspectorWizard.healthy}
-        activeAction={inspectorWizard.activeAction}
-        activeSuggestionId={inspectorWizard.activeSuggestionId}
-        suggestions={inspectorWizard.suggestions}
-        isBusy={isBusy || inspectorWizard.status === "generating"}
-        selectedCard={activeCard}
-        onExpand={handleWizardExpand}
-        onFillGaps={handleWizardFillGaps}
-        onRunSuggestion={handleWizardSuggestion}
-        onOpenWizard={
-          onOpenWizard
-            ? () => onOpenWizard(activeCard.id)
-            : undefined
-        }
-      />
-    ) : null;
+  const wizardSection = activeCard ? (
+    <InspectorWizardSection
+      status={inspectorWizard.status}
+      healthy={inspectorWizard.healthy}
+      activeAction={inspectorWizard.activeAction}
+      activeSuggestionId={inspectorWizard.activeSuggestionId}
+      suggestions={inspectorWizard.suggestions}
+      isBusy={isBusy || inspectorWizard.status === "generating"}
+      selectedCard={activeCard}
+      onExpand={handleWizardExpand}
+      onFillGaps={handleWizardFillGaps}
+      onRunSuggestion={handleWizardSuggestion}
+      onOpenWizard={
+        onOpenWizard ? () => onOpenWizard(activeCard.id) : undefined
+      }
+    />
+  ) : null;
 
   usePanelHotkeys({
     enabled: isOpen && !isBusy,
     onEscape: () => {
       handleInspectorClose();
     },
-    onSave: readOnly ? undefined : () => {
-      void handleSave();
-    },
+    onSave: readOnly
+      ? undefined
+      : () => {
+          void handleSave();
+        },
     canSave: !readOnly && Boolean(name.trim()),
-    onDelete: readOnly ? undefined : () => {
-      void handleDelete();
-    },
+    onDelete: readOnly
+      ? undefined
+      : () => {
+          void handleDelete();
+        },
     canDelete: !readOnly,
   });
 
-  const typeVisual = activeCard
-    ? visualConfigFor(activeCard.card_type)
-    : null;
+  const typeVisual = activeCard ? visualConfigFor(activeCard.card_type) : null;
   const typeLabel = typeVisual?.label ?? "";
 
   if (!activeCard) {
@@ -786,45 +780,45 @@ export function Inspector({
         </div>
         <div className={inspectorModalPropertiesClassName}>
           <PropertiesColumn
-          readOnly={readOnly}
-          card={activeCard}
-          cardsById={cardsById}
-          vaultPath={vaultPath}
-          links={links}
-          imagePreview={imagePreview ?? null}
-          imagePath={imagePath}
-          imagePosition={imagePosition}
-          isBusy={isBusy}
-          tags={tags}
-          onTagsChange={setTags}
-          typeFields={typeFields}
-          onTypeFieldsChange={setTypeFields}
-          socketEntries={socketEntries}
-          socketLinkLabels={socketLinkLabels}
-          formatSocketId={formatSocketId}
-          formatSocketLinkValue={formatSocketLinkValue}
-          propertyRows={propertyRows}
-          onPropertyRowsChange={setPropertyRows}
-          onPickImage={() => {
-            void handlePickImage();
-          }}
-          onRemoveImage={() => setImagePath("")}
-          onPositionChange={setImagePosition}
-          crestPreview={crestPreview}
-          crestPath={crestPath}
-          onPickCrest={() => {
-            void handlePickCrest();
-          }}
-          onRemoveCrest={() => setCrestPath("")}
-          groupMembers={groupMembers}
-          onNavigateToCard={onNavigateToCard}
-          isDeleting={isDeleting}
-          onDelete={() => {
-            void handleDelete();
-          }}
-          onCreateSocketLink={onCreateSocketLink}
-          onRemoveSocketLink={onRemoveSocketLink}
-          onCreateAndLinkCard={onCreateAndLinkCard}
+            readOnly={readOnly}
+            card={activeCard}
+            cardsById={cardsById}
+            vaultPath={vaultPath}
+            links={links}
+            imagePreview={imagePreview ?? null}
+            imagePath={imagePath}
+            imagePosition={imagePosition}
+            isBusy={isBusy}
+            tags={tags}
+            onTagsChange={setTags}
+            typeFields={typeFields}
+            onTypeFieldsChange={setTypeFields}
+            socketEntries={socketEntries}
+            socketLinkLabels={socketLinkLabels}
+            formatSocketId={formatSocketId}
+            formatSocketLinkValue={formatSocketLinkValue}
+            propertyRows={propertyRows}
+            onPropertyRowsChange={setPropertyRows}
+            onPickImage={() => {
+              void handlePickImage();
+            }}
+            onRemoveImage={() => setImagePath("")}
+            onPositionChange={setImagePosition}
+            crestPreview={crestPreview}
+            crestPath={crestPath}
+            onPickCrest={() => {
+              void handlePickCrest();
+            }}
+            onRemoveCrest={() => setCrestPath("")}
+            groupMembers={groupMembers}
+            onNavigateToCard={onNavigateToCard}
+            isDeleting={isDeleting}
+            onDelete={() => {
+              void handleDelete();
+            }}
+            onCreateSocketLink={onCreateSocketLink}
+            onRemoveSocketLink={onRemoveSocketLink}
+            onCreateAndLinkCard={onCreateAndLinkCard}
           />
         </div>
       </div>
@@ -841,13 +835,19 @@ export function Inspector({
       {inspectorHeader}
 
       <div className="shrink-0 border-b border-wn-mono-800 py-2">
-        <InspectorTabs activeTab={activeTab} onTabChange={handleInspectorTabChange} />
+        <InspectorTabs
+          activeTab={activeTab}
+          onTabChange={handleInspectorTabChange}
+        />
       </div>
 
       <div className={inspectorImageStripClassName}>
         {imagePreview ? (
           readOnly ? (
-            <InspectorImageReadOnly src={imagePreview} position={imagePosition} />
+            <InspectorImageReadOnly
+              src={imagePreview}
+              position={imagePosition}
+            />
           ) : (
             <CardImageEditorPreview
               embedded
@@ -981,9 +981,7 @@ export function Inspector({
               initial="enter"
               animate="center"
               exit="exit"
-              transition={
-                reducedMotion ? { duration: 0.15 } : stepTransition
-              }
+              transition={reducedMotion ? { duration: 0.15 } : stepTransition}
             >
               {activeTab === "info" ? (
                 <InfoTab

@@ -48,7 +48,11 @@ export function StepLayout({
 
         <motion.h1
           className={titleHeadingProps.className}
-          style={{ ...titleHeadingProps.style, fontSize: "48px", lineHeight: 1.1 }}
+          style={{
+            ...titleHeadingProps.style,
+            fontSize: "48px",
+            lineHeight: 1.1,
+          }}
           variants={contentItemVariants}
         >
           {title}

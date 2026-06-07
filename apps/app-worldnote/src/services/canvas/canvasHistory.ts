@@ -76,12 +76,8 @@ type CanvasHistoryStore = {
   past: CanvasHistorySnapshot[];
   future: CanvasHistorySnapshot[];
   push: (snapshot: CanvasHistorySnapshot) => void;
-  undo: (
-    current: CanvasHistorySnapshot,
-  ) => CanvasHistorySnapshot | null;
-  redo: (
-    current: CanvasHistorySnapshot,
-  ) => CanvasHistorySnapshot | null;
+  undo: (current: CanvasHistorySnapshot) => CanvasHistorySnapshot | null;
+  redo: (current: CanvasHistorySnapshot) => CanvasHistorySnapshot | null;
   reset: () => void;
 };
 

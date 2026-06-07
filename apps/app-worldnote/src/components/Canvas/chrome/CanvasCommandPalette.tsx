@@ -213,9 +213,7 @@ export function CanvasCommandPalette({
       </div>
 
       <p className="px-1 text-[11px] text-wn-mono-500">
-        <kbd className="rounded bg-wn-mono-800 px-1.5 py-0.5 font-mono">
-          ↑↓
-        </kbd>{" "}
+        <kbd className="rounded bg-wn-mono-800 px-1.5 py-0.5 font-mono">↑↓</kbd>{" "}
         navigate ·{" "}
         <kbd className="rounded bg-wn-mono-800 px-1.5 py-0.5 font-mono">
           Enter

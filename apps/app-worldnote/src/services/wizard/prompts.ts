@@ -37,7 +37,8 @@ function quickCommandToPreset(
     kind: command.kind,
     targetCardType: command.targetCardType,
     patchMode: command.patchMode,
-    buildPrompt: (cards) => buildPromptFromTemplate(command.promptTemplate, cards),
+    buildPrompt: (cards) =>
+      buildPromptFromTemplate(command.promptTemplate, cards),
     isAvailable: (types) =>
       isQuickCommandAvailable(command.availability, types),
   };

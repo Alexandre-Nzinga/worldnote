@@ -1,11 +1,19 @@
-import type { CalendarConfig, ChronologyEntry, WorldCard } from "@worldnote/shared";
+import type {
+  CalendarConfig,
+  ChronologyEntry,
+  WorldCard,
+} from "@worldnote/shared";
 import {
   AnimatedModal,
   CloseIconButton,
   getBodyTextStyle,
   getHeadingProps,
 } from "@worldnote/ui";
-import type { DataItem, TimelineEventPropertiesResult, TimelineOptionsItemCallbackFunction } from "vis-timeline";
+import type {
+  DataItem,
+  TimelineEventPropertiesResult,
+  TimelineOptionsItemCallbackFunction,
+} from "vis-timeline";
 import "vis-timeline/styles/vis-timeline-graph2d.min.css";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -15,7 +23,11 @@ import {
   type TimelineItemPreview,
   type TimelineVisItem,
 } from "../../../services/timeline/buildTimelineItems.js";
-import { coerceTimelineDate, dateToYear, yearToDate } from "../../../services/timeline/calendarFormat.js";
+import {
+  coerceTimelineDate,
+  dateToYear,
+  yearToDate,
+} from "../../../services/timeline/calendarFormat.js";
 import {
   createTimelineAxisFormat,
   createTimelineOptions,
@@ -109,9 +121,9 @@ export function TimelineWorkspace({
   const timelineRootRef = useRef<HTMLDivElement>(null);
   const itemMetaRef = useRef<Map<string, ItemMeta>>(new Map());
   const [hoverState, setHoverState] = useState<TimelineHoverState | null>(null);
-  const [selectedChronologyId, setSelectedChronologyId] = useState<string | null>(
-    null,
-  );
+  const [selectedChronologyId, setSelectedChronologyId] = useState<
+    string | null
+  >(null);
   const [editorEntry, setEditorEntry] = useState<ChronologyEntry | null>(null);
   const cardsByIdRef = useRef(cardsById);
   const chronologyRef = useRef(chronology);
@@ -220,29 +232,38 @@ export function TimelineWorkspace({
   );
 
   useEffect(() => {
-    debouncedPersistRef.current = debounce((itemId: string, start: Date, end?: Date) => {
-      void persistItemMove(itemId, start, end);
-    }, 350);
+    debouncedPersistRef.current = debounce(
+      (itemId: string, start: Date, end?: Date) => {
+        void persistItemMove(itemId, start, end);
+      },
+      350,
+    );
   }, [persistItemMove]);
 
-  const handleMoving = useCallback<TimelineOptionsItemCallbackFunction>((item, callback) => {
-    const startYear = dateToYear(item.start);
-    item.start = yearToDate(startYear);
-    if (item.end !== undefined && item.end !== null) {
-      item.end = yearToDate(dateToYear(item.end));
-    }
-    callback(item);
-  }, []);
+  const handleMoving = useCallback<TimelineOptionsItemCallbackFunction>(
+    (item, callback) => {
+      const startYear = dateToYear(item.start);
+      item.start = yearToDate(startYear);
+      if (item.end !== undefined && item.end !== null) {
+        item.end = yearToDate(dateToYear(item.end));
+      }
+      callback(item);
+    },
+    [],
+  );
 
-  const handleMove = useCallback<TimelineOptionsItemCallbackFunction>((item, callback) => {
-    callback(item);
-    const start = coerceTimelineDate(item.start);
-    const end =
-      item.end !== undefined && item.end !== null
-        ? coerceTimelineDate(item.end)
-        : undefined;
-    debouncedPersistRef.current(String(item.id), start, end);
-  }, []);
+  const handleMove = useCallback<TimelineOptionsItemCallbackFunction>(
+    (item, callback) => {
+      callback(item);
+      const start = coerceTimelineDate(item.start);
+      const end =
+        item.end !== undefined && item.end !== null
+          ? coerceTimelineDate(item.end)
+          : undefined;
+      debouncedPersistRef.current(String(item.id), start, end);
+    },
+    [],
+  );
 
   const windowRangeRef = useRef(windowRange);
   windowRangeRef.current = windowRange;
@@ -388,7 +409,9 @@ export function TimelineWorkspace({
     timeline.focus(chronologyItemId(selectedChronologyId), { animation: true });
   }, [isReady, selectedChronologyId, timelineRef]);
 
-  const hoveredItem = hoverState ? itemMetaById.get(hoverState.itemId) : undefined;
+  const hoveredItem = hoverState
+    ? itemMetaById.get(hoverState.itemId)
+    : undefined;
 
   const hoverCardStyle = useMemo(() => {
     if (!hoverState || !timelineRootRef.current) {
@@ -459,7 +482,10 @@ export function TimelineWorkspace({
             ref={timelineRootRef}
             className="wn-timeline-root relative min-h-0 flex-1 overflow-hidden rounded-2xl border border-wn-border bg-wn-surface"
           >
-            <div ref={mountRef} className="wn-timeline-mount absolute inset-0" />
+            <div
+              ref={mountRef}
+              className="wn-timeline-mount absolute inset-0"
+            />
 
             {hoveredItem && hoverCardStyle ? (
               <TimelineItemHoverCard
@@ -471,7 +497,10 @@ export function TimelineWorkspace({
 
             {initError ? (
               <div className="absolute inset-0 z-10 flex items-center justify-center bg-wn-surface/90 p-6">
-                <p style={getBodyTextStyle("small")} className="text-wn-text-muted">
+                <p
+                  style={getBodyTextStyle("small")}
+                  className="text-wn-text-muted"
+                >
                   {initError}
                 </p>
               </div>

@@ -1,7 +1,9 @@
 const SIGNED_INTEGER_PATTERN = /-?\d+/;
 
 /** Extract the first signed integer from a free-form date string (e.g. "Year 10191 AG"). */
-export function extractYearFromString(value: string | undefined): number | undefined {
+export function extractYearFromString(
+  value: string | undefined,
+): number | undefined {
   if (!value?.trim()) {
     return undefined;
   }

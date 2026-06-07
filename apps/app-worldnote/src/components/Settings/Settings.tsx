@@ -19,7 +19,10 @@ import {
   type CanvasKeyboardShortcuts,
 } from "../../services/settings/keyboardShortcuts.js";
 import { normalizeCardTypeBadgeOverrides } from "../../services/settings/cardTypeBadgeSettings.js";
-import { normalizeKinshipBadgeOverride, hasKinshipBadgeOverride } from "../../services/settings/kinshipBadgeSettings.js";
+import {
+  normalizeKinshipBadgeOverride,
+  hasKinshipBadgeOverride,
+} from "../../services/settings/kinshipBadgeSettings.js";
 import {
   DEFAULT_FAMILY_TREE_UNRELATED_MODE,
   normalizeFamilyTreeUnrelatedMode,
@@ -94,15 +97,13 @@ export function Settings({ onBack, currentWorldPath }: SettingsProps) {
   const settings = useSettings((state) => state.settings);
   const save = useSettings((state) => state.save);
   const reducedMotion = usePrefersReducedMotion();
-  const [activeSection, setActiveSection] = useState<SettingsSection>("profile");
+  const [activeSection, setActiveSection] =
+    useState<SettingsSection>("profile");
   const [direction, setDirection] = useState<StepDirection>(1);
-  const sectionIndexRef = useRef(
-    SETTINGS_SECTION_ORDER.indexOf("profile"),
-  );
+  const sectionIndexRef = useRef(SETTINGS_SECTION_ORDER.indexOf("profile"));
   const [username, setUsername] = useState("");
-  const [avatarColor, setAvatarColor] = useState<AvatarColorToken>(
-    DEFAULT_AVATAR_COLOR,
-  );
+  const [avatarColor, setAvatarColor] =
+    useState<AvatarColorToken>(DEFAULT_AVATAR_COLOR);
   const [visibleSockets, setVisibleSockets] = useState(
     normalizeVisibleSocketsSettings(undefined),
   );
@@ -150,7 +151,9 @@ export function Settings({ onBack, currentWorldPath }: SettingsProps) {
       case "profile":
         return (
           <div className="flex flex-col gap-6">
-            <section className={`${settingsPanelClassName} flex flex-col gap-5`}>
+            <section
+              className={`${settingsPanelClassName} flex flex-col gap-5`}
+            >
               <div className={fieldStackClassName}>
                 <label htmlFor="settings-username" className={wnLabelClassName}>
                   Username <span className="text-wn-red-500">*</span>
@@ -453,50 +456,48 @@ export function Settings({ onBack, currentWorldPath }: SettingsProps) {
                 animate="center"
                 exit="exit"
                 transition={
-                  reducedMotion
-                    ? { duration: 0.15 }
-                    : settingsSectionTransition
+                  reducedMotion ? { duration: 0.15 } : settingsSectionTransition
                 }
                 className="mx-auto flex w-full max-w-2xl flex-col gap-6 pb-8"
               >
-              <div className="flex flex-col gap-1">
-                <h1 {...getHeadingProps("h2", { tone: "inverse" })}>
-                  {sectionMeta.label}
-                </h1>
-                <p className={wnDescriptionClassName}>
-                  {sectionMeta.description}
-                </p>
-              </div>
+                <div className="flex flex-col gap-1">
+                  <h1 {...getHeadingProps("h2", { tone: "inverse" })}>
+                    {sectionMeta.label}
+                  </h1>
+                  <p className={wnDescriptionClassName}>
+                    {sectionMeta.description}
+                  </p>
+                </div>
 
-              {renderSectionContent()}
+                {renderSectionContent()}
 
-              {error ? (
-                <p className="text-sm text-wn-red-400" role="alert">
-                  {error}
-                </p>
-              ) : null}
+                {error ? (
+                  <p className="text-sm text-wn-red-400" role="alert">
+                    {error}
+                  </p>
+                ) : null}
 
-              <footer className="flex items-center justify-end gap-3 pt-2">
-                <Button
-                  variant="secondary"
-                  size="base"
-                  isDisabled={isSaving}
-                  onPress={onBack}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="white"
-                  size="base"
-                  className={modalPrimaryButtonClassName}
-                  isDisabled={!canSave}
-                  onPress={() => {
-                    void handleSave();
-                  }}
-                >
-                  Save
-                </Button>
-              </footer>
+                <footer className="flex items-center justify-end gap-3 pt-2">
+                  <Button
+                    variant="secondary"
+                    size="base"
+                    isDisabled={isSaving}
+                    onPress={onBack}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="white"
+                    size="base"
+                    className={modalPrimaryButtonClassName}
+                    isDisabled={!canSave}
+                    onPress={() => {
+                      void handleSave();
+                    }}
+                  >
+                    Save
+                  </Button>
+                </footer>
               </motion.div>
             </AnimatePresence>
           </div>

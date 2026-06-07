@@ -27,7 +27,9 @@ export function cardTypeColor(
   cardType: string | undefined,
   overrides?: CardTypeBadgeOverrides,
 ): string {
-  const override = cardType ? resolveCardBadgeOverride(cardType, overrides) : undefined;
+  const override = cardType
+    ? resolveCardBadgeOverride(cardType, overrides)
+    : undefined;
   const key = `${cardType ?? "unknown"}:${override?.badgeClassName ?? ""}`;
   const cached = colorCache.get(key);
   if (cached) {

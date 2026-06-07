@@ -22,7 +22,9 @@ describe("detectCardGenerationIntent", () => {
   });
 
   it("detects explicit location cards", () => {
-    const intent = detectCardGenerationIntent("generate a location card for a mountain fortress");
+    const intent = detectCardGenerationIntent(
+      "generate a location card for a mountain fortress",
+    );
     expect(intent?.cardType).toBe("location");
   });
 
@@ -47,7 +49,8 @@ describe("detectCardGenerationFollowUp", () => {
       { role: "user", content: "Create a character card that is a wizard" },
       {
         role: "assistant",
-        content: "I'm sorry, but your request doesn't provide enough information.",
+        content:
+          "I'm sorry, but your request doesn't provide enough information.",
       },
     ]);
     expect(intent?.cardType).toBe("character");

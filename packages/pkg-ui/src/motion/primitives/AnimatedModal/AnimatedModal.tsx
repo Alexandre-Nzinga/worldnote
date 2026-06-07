@@ -126,7 +126,11 @@ export function AnimatedModal({
             className={panelClassName ?? defaultPanelClassName}
             variants={
               reducedMotion
-                ? { hidden: { opacity: 0 }, visible: { opacity: 1 }, exit: { opacity: 0 } }
+                ? {
+                    hidden: { opacity: 0 },
+                    visible: { opacity: 1 },
+                    exit: { opacity: 0 },
+                  }
                 : modalPanel
             }
             initial="hidden"

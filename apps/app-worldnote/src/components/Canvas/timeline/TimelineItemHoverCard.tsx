@@ -1,10 +1,10 @@
-import {
-  CardTypePlaceholder,
-  type WorldNoteCardType,
-} from "@worldnote/canvas";
+import { CardTypePlaceholder, type WorldNoteCardType } from "@worldnote/canvas";
 import { getBodyTextStyle } from "@worldnote/ui";
 import type { CSSProperties } from "react";
-import type { TimelineItemKind, TimelineItemPreview } from "../../../services/timeline/buildTimelineItems.js";
+import type {
+  TimelineItemKind,
+  TimelineItemPreview,
+} from "../../../services/timeline/buildTimelineItems.js";
 
 const CARD_CHROME_BORDER_WIDTH_PX = 5;
 
@@ -46,7 +46,10 @@ function PeriodHoverCard({
         </p>
       </div>
       <div className="border-t border-wn-border px-3 py-1.5 text-center">
-        <p className="font-medium text-wn-text-muted" style={getBodyTextStyle("xs")}>
+        <p
+          className="font-medium text-wn-text-muted"
+          style={getBodyTextStyle("xs")}
+        >
           {preview.dateLabel}
         </p>
       </div>
@@ -111,7 +114,10 @@ export function TimelineItemHoverCard({
       </div>
 
       <div className="border-t border-wn-mono-800 bg-wn-mono-950 px-2.5 py-1.5 text-center">
-        <p className="font-medium text-wn-mono-100" style={getBodyTextStyle("xs")}>
+        <p
+          className="font-medium text-wn-mono-100"
+          style={getBodyTextStyle("xs")}
+        >
           {preview.dateLabel}
         </p>
       </div>

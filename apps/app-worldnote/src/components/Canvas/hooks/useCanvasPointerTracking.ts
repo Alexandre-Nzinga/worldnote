@@ -63,12 +63,7 @@ export function useCanvasPointerTracking({
     return () => {
       pointerApiRef.current = null;
     };
-  }, [
-    clientToFlowPosition,
-    lastPointerRef,
-    pointerApiRef,
-    viewportCenterFlow,
-  ]);
+  }, [clientToFlowPosition, lastPointerRef, pointerApiRef, viewportCenterFlow]);
 
   useEffect(() => {
     const pane = document.querySelector<HTMLElement>(".react-flow__pane");

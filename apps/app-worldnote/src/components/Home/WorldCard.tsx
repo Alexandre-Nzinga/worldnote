@@ -1,4 +1,9 @@
-import { MaterialSymbol, MotionPressable, Pill, WorldNoteLogo } from "@worldnote/ui";
+import {
+  MaterialSymbol,
+  MotionPressable,
+  Pill,
+  WorldNoteLogo,
+} from "@worldnote/ui";
 import type { WorldSummary } from "../../services/worlds/listWorlds.js";
 import {
   formatRelativeTime,
@@ -57,13 +62,20 @@ export function WorldCard({
     .join(" ");
 
   return (
-    <div className={shellClassName} style={{ borderRadius: "var(--radius-wn-card)" }}>
+    <div
+      className={shellClassName}
+      style={{ borderRadius: "var(--radius-wn-card)" }}
+    >
       {showPin ? (
         <button
           type="button"
           disabled={pinDisabled}
           title={
-            isPinned ? "Unpin from home" : canPin ? "Pin to home" : "Pin limit reached (3)"
+            isPinned
+              ? "Unpin from home"
+              : canPin
+                ? "Pin to home"
+                : "Pin limit reached (3)"
           }
           aria-label={
             isPinned ? `Unpin ${world.name}` : `Pin ${world.name} to home`
@@ -104,52 +116,52 @@ export function WorldCard({
         }}
         className="flex w-full flex-col text-left"
       >
-      <div className="p-2.5">
-        <div
-          className="relative h-[160px] overflow-hidden rounded-2xl bg-wn-mono-900"
-          style={coverSrc ? undefined : worldCoverStyle(world.name)}
-        >
-          {coverSrc ? (
-            <img
-              src={coverSrc}
-              alt=""
-              className="absolute inset-0 h-full w-full object-cover"
-            />
-          ) : null}
+        <div className="p-2.5">
           <div
-            aria-hidden
-            className="absolute inset-0 bg-linear-to-b from-white/10 via-transparent to-black/40"
-          />
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-0 rounded-2xl shadow-[0_1px_0_0_rgba(255,255,255,0.12)_inset,0_0_0_1px_rgba(0,0,0,0.3)_inset]"
-          />
-          <WorldNoteLogo
-            variant="icon"
-            tone="white"
-            className="absolute left-3 top-3 h-5 w-5 opacity-60"
-            alt=""
-          />
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between gap-3 px-4 pb-4 pt-1">
-        <div className="flex min-w-0 flex-col gap-1.5">
-          <div className="truncate text-base font-semibold text-wn-mono-50">
-            {world.name}
-          </div>
-          <Pill
-            size="sm"
-            className={`${pillClassName} self-start`}
-            textClassName="text-wn-mono-50"
+            className="relative h-[160px] overflow-hidden rounded-2xl bg-wn-mono-900"
+            style={coverSrc ? undefined : worldCoverStyle(world.name)}
           >
-            {world.cardCount} card{world.cardCount === 1 ? "" : "s"}
-          </Pill>
+            {coverSrc ? (
+              <img
+                src={coverSrc}
+                alt=""
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+            ) : null}
+            <div
+              aria-hidden
+              className="absolute inset-0 bg-linear-to-b from-white/10 via-transparent to-black/40"
+            />
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 rounded-2xl shadow-[0_1px_0_0_rgba(255,255,255,0.12)_inset,0_0_0_1px_rgba(0,0,0,0.3)_inset]"
+            />
+            <WorldNoteLogo
+              variant="icon"
+              tone="white"
+              className="absolute left-3 top-3 h-5 w-5 opacity-60"
+              alt=""
+            />
+          </div>
         </div>
-        <span className="shrink-0 text-xs text-wn-mono-400">
-          {formatRelativeTime(world.lastEdited)}
-        </span>
-      </div>
+
+        <div className="flex items-center justify-between gap-3 px-4 pb-4 pt-1">
+          <div className="flex min-w-0 flex-col gap-1.5">
+            <div className="truncate text-base font-semibold text-wn-mono-50">
+              {world.name}
+            </div>
+            <Pill
+              size="sm"
+              className={`${pillClassName} self-start`}
+              textClassName="text-wn-mono-50"
+            >
+              {world.cardCount} card{world.cardCount === 1 ? "" : "s"}
+            </Pill>
+          </div>
+          <span className="shrink-0 text-xs text-wn-mono-400">
+            {formatRelativeTime(world.lastEdited)}
+          </span>
+        </div>
       </MotionPressable>
     </div>
   );

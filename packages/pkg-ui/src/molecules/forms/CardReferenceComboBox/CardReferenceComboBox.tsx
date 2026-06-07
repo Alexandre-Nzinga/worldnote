@@ -214,9 +214,9 @@ export function CardReferenceComboBox({
   const overflowRestoreRef = useRef<{ el: HTMLElement; value: string } | null>(
     null,
   );
-  const [portalContainer, setPortalContainer] = useState<HTMLElement | undefined>(
-    undefined,
-  );
+  const [portalContainer, setPortalContainer] = useState<
+    HTMLElement | undefined
+  >(undefined);
   const [inputValue, setInputValue] = useState("");
 
   const selectedOption = useMemo(

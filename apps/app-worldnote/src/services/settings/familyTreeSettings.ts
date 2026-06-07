@@ -5,7 +5,8 @@ const FAMILY_TREE_UNRELATED_MODES: Record<FamilyTreeUnrelatedMode, true> = {
   dim: true,
 };
 
-export const DEFAULT_FAMILY_TREE_UNRELATED_MODE: FamilyTreeUnrelatedMode = "dim";
+export const DEFAULT_FAMILY_TREE_UNRELATED_MODE: FamilyTreeUnrelatedMode =
+  "dim";
 
 export function isFamilyTreeUnrelatedMode(
   value: string,

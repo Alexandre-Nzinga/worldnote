@@ -84,9 +84,7 @@ function ImageToolbarControls({
         disabled={isBusy || zoom >= MAX_CARD_IMAGE_ZOOM}
         aria-label="Zoom in"
         title="Zoom in"
-        onClick={() =>
-          onPositionChange(stepCardImageZoom(imagePosition, "in"))
-        }
+        onClick={() => onPositionChange(stepCardImageZoom(imagePosition, "in"))}
       >
         +
       </button>

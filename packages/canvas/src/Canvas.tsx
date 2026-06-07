@@ -1,4 +1,10 @@
-import { Background, BackgroundVariant, ReactFlow, type BackgroundProps, type ReactFlowProps } from "@xyflow/react";
+import {
+  Background,
+  BackgroundVariant,
+  ReactFlow,
+  type BackgroundProps,
+  type ReactFlowProps,
+} from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { CollapsibleMiniMap } from "./CollapsibleMiniMap.js";
 import { ZoomControls } from "./ZoomControls.js";

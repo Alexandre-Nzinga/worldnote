@@ -8,7 +8,9 @@ function countLabel(count: number): string {
   return count === 1 ? "1 selected" : `${count} selected`;
 }
 
-export function BulkSelectionToolbar({ selectedCount }: BulkSelectionToolbarProps) {
+export function BulkSelectionToolbar({
+  selectedCount,
+}: BulkSelectionToolbarProps) {
   if (selectedCount <= 1) {
     return null;
   }

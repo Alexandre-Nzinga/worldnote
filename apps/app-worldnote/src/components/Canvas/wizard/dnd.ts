@@ -71,6 +71,9 @@ export function dragHasCard(dataTransfer: DataTransfer): boolean {
   // WebView2 / Safari often only expose plain text during dragover. Some
   // environments report it as "Text" (capitalized) or variants.
   return types.some(
-    (type) => type === "text" || type === "text/plain" || type.startsWith("text/plain;"),
+    (type) =>
+      type === "text" ||
+      type === "text/plain" ||
+      type.startsWith("text/plain;"),
   );
 }

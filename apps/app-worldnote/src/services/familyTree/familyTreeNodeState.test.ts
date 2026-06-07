@@ -28,9 +28,7 @@ describe("familyTreeNodeStateForCard", () => {
   const location = { ...character("place"), card_type: "location" as const };
 
   it("returns null when family tree is inactive", () => {
-    expect(
-      familyTreeNodeStateForCard(anchor, null, relations([])),
-    ).toBeNull();
+    expect(familyTreeNodeStateForCard(anchor, null, relations([]))).toBeNull();
   });
 
   it("returns null for non-character cards", () => {

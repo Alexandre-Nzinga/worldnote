@@ -4,7 +4,11 @@ import type { DataItem, TimelineOptions } from "vis-timeline";
 import type { RefObject } from "react";
 import { useEffect, useRef, useState } from "react";
 
-type VisTimelineGroup = { id: string; content: string; nestedGroups?: string[] };
+type VisTimelineGroup = {
+  id: string;
+  content: string;
+  nestedGroups?: string[];
+};
 
 type HostSize = {
   width: number;
@@ -120,7 +124,7 @@ export function useVisTimeline({
       cancelled = true;
       window.cancelAnimationFrame(frame);
     };
-  }, [hostSize.height, hostSize.width, isOpen, mountRef]);
+  }, [hostSize, isOpen, mountRef]);
 
   useEffect(() => {
     const timeline = timelineRef.current;
@@ -142,4 +146,4 @@ export function useVisTimeline({
     initError,
     isReady,
   };
-};
+}

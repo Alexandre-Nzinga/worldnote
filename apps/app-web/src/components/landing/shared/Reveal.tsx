@@ -94,7 +94,10 @@ export function SectionShell({
   id?: string;
 }) {
   return (
-    <section id={id} className={clsx("w-full px-6 py-20 md:px-10 lg:px-16", className)}>
+    <section
+      id={id}
+      className={clsx("w-full px-6 py-20 md:px-10 lg:px-16", className)}
+    >
       <div className="mx-auto w-full max-w-6xl">{children}</div>
     </section>
   );

@@ -2,7 +2,9 @@ import type { WorldSummary } from "../worlds/listWorlds.js";
 
 export const MAX_PINNED_WORLDS = 3;
 
-export function getPinnedWorldPaths(settings: { pinnedWorldPaths?: string[] } | null): string[] {
+export function getPinnedWorldPaths(
+  settings: { pinnedWorldPaths?: string[] } | null,
+): string[] {
   return settings?.pinnedWorldPaths ?? [];
 }
 
@@ -11,7 +13,9 @@ export function normalizePinnedWorldPaths(
   paths: string[] | undefined,
   validPaths: Set<string>,
 ): string[] {
-  return (paths ?? []).filter((path) => validPaths.has(path)).slice(0, MAX_PINNED_WORLDS);
+  return (paths ?? [])
+    .filter((path) => validPaths.has(path))
+    .slice(0, MAX_PINNED_WORLDS);
 }
 
 export function togglePinnedWorldPath(

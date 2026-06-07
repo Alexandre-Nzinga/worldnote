@@ -30,7 +30,8 @@ export function computeRelationsToAnchor(
     }
 
     const kinshipLabel =
-      resolveKinshipLabel(graph, anchorId, characterId, cardsById) ?? "Relative";
+      resolveKinshipLabel(graph, anchorId, characterId, cardsById) ??
+      "Relative";
 
     result.set(characterId, { related: true, kinshipLabel });
   }

@@ -56,10 +56,7 @@ export function Home({ onWorldReady, onOpenSettings, onOpenVault }: HomeProps) {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [manageWorld, setManageWorld] = useState<WorldSummary | null>(null);
 
-  const pinnedPaths = useMemo(
-    () => getPinnedWorldPaths(settings),
-    [settings],
-  );
+  const pinnedPaths = useMemo(() => getPinnedWorldPaths(settings), [settings]);
 
   const persistPinnedPaths = useCallback(
     async (nextPinned: string[]) => {
@@ -149,7 +146,9 @@ export function Home({ onWorldReady, onOpenSettings, onOpenVault }: HomeProps) {
       if (!settings || !pinnedPaths.includes(oldPath)) {
         return;
       }
-      await persistPinnedPaths(remapPinnedWorldPath(pinnedPaths, oldPath, newPath));
+      await persistPinnedPaths(
+        remapPinnedWorldPath(pinnedPaths, oldPath, newPath),
+      );
     },
     [persistPinnedPaths, pinnedPaths, settings],
   );
@@ -194,12 +193,7 @@ export function Home({ onWorldReady, onOpenSettings, onOpenVault }: HomeProps) {
     } finally {
       setIsBusy(false);
     }
-  }, [
-    onWorldReady,
-    openWorld,
-    setCurrentVault,
-    settings?.worldnoteRoot,
-  ]);
+  }, [onWorldReady, openWorld, setCurrentVault, settings?.worldnoteRoot]);
 
   const handleStartStarterPack = useCallback(
     async (pack: StarterPack) => {
@@ -208,9 +202,13 @@ export function Home({ onWorldReady, onOpenSettings, onOpenVault }: HomeProps) {
       }
       setIsBusy(true);
       try {
-        const result = await buildStarterPackWorld(settings.worldnoteRoot, pack, {
-          forceNew: true,
-        });
+        const result = await buildStarterPackWorld(
+          settings.worldnoteRoot,
+          pack,
+          {
+            forceNew: true,
+          },
+        );
         await refreshWorlds();
         await openWorld(result.path);
         setCurrentVault(result.path, result.name);

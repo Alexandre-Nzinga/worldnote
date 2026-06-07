@@ -48,9 +48,7 @@ describe("buildGenerationSchema", () => {
     const schema = buildGenerationSchema("location", {
       fields: ["lore", "coordinates"],
     });
-    const keys = Object.keys(
-      schema.properties as Record<string, unknown>,
-    );
+    const keys = Object.keys(schema.properties as Record<string, unknown>);
     expect(keys).toEqual(["lore", "coordinates"]);
   });
 });

@@ -81,7 +81,10 @@ function PropertyField({
   );
 }
 
-function propertyLabel(key: string, unitSystem: ReturnType<typeof normalizeUnitSystem>) {
+function propertyLabel(
+  key: string,
+  unitSystem: ReturnType<typeof normalizeUnitSystem>,
+) {
   const kind = detectMeasurementKind(key);
   if (!kind) {
     return key;

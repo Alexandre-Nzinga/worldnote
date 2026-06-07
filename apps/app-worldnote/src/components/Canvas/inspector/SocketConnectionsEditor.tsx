@@ -73,7 +73,9 @@ function LinkedCardRow({
             />
           </span>
         ) : null}
-        <span className="min-w-0 truncate text-sm text-wn-mono-100">{name}</span>
+        <span className="min-w-0 truncate text-sm text-wn-mono-100">
+          {name}
+        </span>
       </div>
       <button
         type="button"
@@ -178,11 +180,7 @@ function SocketFieldEditor({
         placeholder="Search cards…"
         createOptions={createOptions}
         onSelect={(targetCardId) => onCreateSocketLink(socketId, targetCardId)}
-        onClear={
-          current
-            ? () => onRemoveSocketLink(current.linkId)
-            : undefined
-        }
+        onClear={current ? () => onRemoveSocketLink(current.linkId) : undefined}
       />
     );
   }

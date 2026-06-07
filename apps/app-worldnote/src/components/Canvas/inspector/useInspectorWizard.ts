@@ -61,7 +61,9 @@ export function useInspectorWizard({
     if (status !== "generating" || !selectedCard) return false;
 
     if (activeAction === "suggestion") {
-      const suggestion = suggestions.find((item) => item.id === activeSuggestionId);
+      const suggestion = suggestions.find(
+        (item) => item.id === activeSuggestionId,
+      );
       return (
         suggestion?.targetCardId === selectedCard.id &&
         suggestion.gapLabel === "lore"
@@ -73,13 +75,7 @@ export function useInspectorWizard({
     }
 
     return false;
-  }, [
-    activeAction,
-    activeSuggestionId,
-    selectedCard,
-    status,
-    suggestions,
-  ]);
+  }, [activeAction, activeSuggestionId, selectedCard, status, suggestions]);
 
   useEffect(() => {
     if (!enabled || !vaultPath) return;

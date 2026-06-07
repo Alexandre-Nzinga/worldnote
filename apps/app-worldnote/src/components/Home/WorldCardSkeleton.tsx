@@ -36,7 +36,9 @@ type WorldCardSkeletonGridProps = {
   count?: number;
 };
 
-export function WorldCardSkeletonGrid({ count = 6 }: WorldCardSkeletonGridProps) {
+export function WorldCardSkeletonGrid({
+  count = 6,
+}: WorldCardSkeletonGridProps) {
   return (
     <div
       aria-busy="true"

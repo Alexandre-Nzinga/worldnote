@@ -49,7 +49,8 @@ export function AccordionGroup({
         title: "text-sm font-semibold text-wn-mono-50",
         subtitle: "text-wn-mono-500",
         indicator: "text-wn-mono-400",
-        content: "px-4 pb-4 pt-0 text-sm font-medium leading-relaxed text-wn-mono-400",
+        content:
+          "px-4 pb-4 pt-0 text-sm font-medium leading-relaxed text-wn-mono-400",
       }}
     >
       {items.map((item) => (

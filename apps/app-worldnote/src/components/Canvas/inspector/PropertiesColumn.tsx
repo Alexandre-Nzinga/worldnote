@@ -114,43 +114,43 @@ export function PropertiesColumn({
       ) : null}
 
       <div className="flex flex-col gap-5 py-4">
-      <PropertiesTab
-        readOnly={readOnly}
-        tags={tags}
-        onTagsChange={onTagsChange}
-        card={card}
-        cardsById={cardsById}
-        links={links}
-        cardType={card.card_type}
-        typeFields={typeFields}
-        onTypeFieldsChange={onTypeFieldsChange}
-        socketEntries={socketEntries}
-        socketLinkLabels={socketLinkLabels}
-        formatSocketId={formatSocketId}
-        formatSocketLinkValue={formatSocketLinkValue}
-        propertyRows={propertyRows}
-        onPropertyRowsChange={onPropertyRowsChange}
-        isBusy={isBusy}
-        onCreateSocketLink={onCreateSocketLink}
-        onRemoveSocketLink={onRemoveSocketLink}
-        onCreateAndLinkCard={onCreateAndLinkCard}
-      />
-
-      {groupMembers.length > 0 ? (
-        <GroupMembersSection
-          members={groupMembers}
-          vaultPath={vaultPath}
-          onNavigateToCard={onNavigateToCard}
-        />
-      ) : null}
-
-      {!readOnly && onDelete ? (
-        <InspectorDeleteButton
+        <PropertiesTab
+          readOnly={readOnly}
+          tags={tags}
+          onTagsChange={onTagsChange}
+          card={card}
+          cardsById={cardsById}
+          links={links}
+          cardType={card.card_type}
+          typeFields={typeFields}
+          onTypeFieldsChange={onTypeFieldsChange}
+          socketEntries={socketEntries}
+          socketLinkLabels={socketLinkLabels}
+          formatSocketId={formatSocketId}
+          formatSocketLinkValue={formatSocketLinkValue}
+          propertyRows={propertyRows}
+          onPropertyRowsChange={onPropertyRowsChange}
           isBusy={isBusy}
-          isDeleting={isDeleting}
-          onDelete={onDelete}
+          onCreateSocketLink={onCreateSocketLink}
+          onRemoveSocketLink={onRemoveSocketLink}
+          onCreateAndLinkCard={onCreateAndLinkCard}
         />
-      ) : null}
+
+        {groupMembers.length > 0 ? (
+          <GroupMembersSection
+            members={groupMembers}
+            vaultPath={vaultPath}
+            onNavigateToCard={onNavigateToCard}
+          />
+        ) : null}
+
+        {!readOnly && onDelete ? (
+          <InspectorDeleteButton
+            isBusy={isBusy}
+            isDeleting={isDeleting}
+            onDelete={onDelete}
+          />
+        ) : null}
       </div>
     </aside>
   );

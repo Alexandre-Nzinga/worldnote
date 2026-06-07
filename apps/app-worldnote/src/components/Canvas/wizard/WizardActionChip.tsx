@@ -98,7 +98,11 @@ export function WizardActionChip({
       aria-label={ariaLabel}
       aria-busy={busy}
     >
-      {busy ? <WizardActionChipSpinner /> : <WizardActionChipIcon name={icon} />}
+      {busy ? (
+        <WizardActionChipSpinner />
+      ) : (
+        <WizardActionChipIcon name={icon} />
+      )}
       {label}
     </button>
   );

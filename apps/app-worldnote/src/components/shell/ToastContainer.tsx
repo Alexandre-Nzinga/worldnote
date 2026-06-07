@@ -4,7 +4,10 @@ import {
   usePrefersReducedMotion,
 } from "@worldnote/ui";
 import { AnimatePresence, motion } from "framer-motion";
-import type { ToastItem, ToastKind } from "../../services/notifications/toast.js";
+import type {
+  ToastItem,
+  ToastKind,
+} from "../../services/notifications/toast.js";
 import { useToastStore } from "../../services/notifications/toast.js";
 
 const toastMotion = {
@@ -43,7 +46,10 @@ function ToastEntry({
       initial={reducedMotion ? false : toastMotion.initial}
       animate={toastMotion.animate}
       exit={reducedMotion ? undefined : toastMotion.exit}
-      transition={{ duration: reducedMotion ? 0 : 0.18, ease: [0.22, 1, 0.36, 1] }}
+      transition={{
+        duration: reducedMotion ? 0 : 0.18,
+        ease: [0.22, 1, 0.36, 1],
+      }}
     >
       <MaterialSymbol
         name={toastIconName[toast.kind]}

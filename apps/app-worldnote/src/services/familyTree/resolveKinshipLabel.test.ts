@@ -48,7 +48,9 @@ describe("resolveKinshipLabel", () => {
     );
     const byId = cardsById(mother, child);
 
-    expect(resolveKinshipLabel(graph, child.id, mother.id, byId)).toBe("Mother");
+    expect(resolveKinshipLabel(graph, child.id, mother.id, byId)).toBe(
+      "Mother",
+    );
     expect(resolveKinshipLabel(graph, mother.id, child.id, byId)).toBe("Son");
   });
 
@@ -167,12 +169,12 @@ describe("resolveKinshipLabel", () => {
     );
     const byId = cardsById(father, motherA, motherB, fullSibling, halfSibling);
 
-    expect(resolveKinshipLabel(graph, fullSibling.id, halfSibling.id, byId)).toBe(
-      "Half-brother",
-    );
-    expect(resolveKinshipLabel(graph, halfSibling.id, fullSibling.id, byId)).toBe(
-      "Half-sister",
-    );
+    expect(
+      resolveKinshipLabel(graph, fullSibling.id, halfSibling.id, byId),
+    ).toBe("Half-brother");
+    expect(
+      resolveKinshipLabel(graph, halfSibling.id, fullSibling.id, byId),
+    ).toBe("Half-sister");
   });
 
   it("labels spouse and son-in-law", () => {
@@ -205,7 +207,9 @@ describe("resolveKinshipLabel", () => {
     );
     const byId = cardsById(parent, child);
 
-    expect(resolveKinshipLabel(graph, child.id, parent.id, byId)).toBe("Parent");
+    expect(resolveKinshipLabel(graph, child.id, parent.id, byId)).toBe(
+      "Parent",
+    );
     expect(resolveKinshipLabel(graph, parent.id, child.id, byId)).toBe("Child");
   });
 });

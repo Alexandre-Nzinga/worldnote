@@ -23,7 +23,11 @@ const DEFAULT_DURATION_MS: Record<ToastKind, number> = {
 
 const dismissTimers = new Map<string, ReturnType<typeof setTimeout>>();
 
-function scheduleDismiss(id: string, kind: ToastKind, dismiss: (id: string) => void) {
+function scheduleDismiss(
+  id: string,
+  kind: ToastKind,
+  dismiss: (id: string) => void,
+) {
   const existing = dismissTimers.get(id);
   if (existing) {
     clearTimeout(existing);
@@ -70,8 +74,10 @@ export const useToastStore = create<ToastState>((set, get) => ({
 
 export const toast = {
   info: (message: string) => useToastStore.getState().push("info", message),
-  success: (message: string) => useToastStore.getState().push("success", message),
-  warning: (message: string) => useToastStore.getState().push("warning", message),
+  success: (message: string) =>
+    useToastStore.getState().push("success", message),
+  warning: (message: string) =>
+    useToastStore.getState().push("warning", message),
   error: (message: string) => useToastStore.getState().push("error", message),
   dismiss: (id: string) => useToastStore.getState().dismiss(id),
 };

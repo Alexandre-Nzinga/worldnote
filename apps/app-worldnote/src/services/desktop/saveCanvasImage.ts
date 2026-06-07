@@ -1,9 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { trackPersist } from "../../hooks/useSaveStatus.js";
-import {
-  CARD_IMAGE_EXTENSIONS,
-  pickCardImageFile,
-} from "./saveCardImage.js";
+import { CARD_IMAGE_EXTENSIONS, pickCardImageFile } from "./saveCardImage.js";
 
 export { CARD_IMAGE_EXTENSIONS, pickCardImageFile };
 

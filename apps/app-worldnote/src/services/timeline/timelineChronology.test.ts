@@ -54,9 +54,9 @@ describe("listChronologyParentOptions", () => {
     expect(options.some((option) => option.label.includes("Middle Ages"))).toBe(
       false,
     );
-    expect(options.some((option) => option.label.includes("12th Century"))).toBe(
-      false,
-    );
+    expect(
+      options.some((option) => option.label.includes("12th Century")),
+    ).toBe(false);
   });
 });
 

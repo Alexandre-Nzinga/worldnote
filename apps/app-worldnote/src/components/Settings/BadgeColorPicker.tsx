@@ -1,5 +1,17 @@
-import { AnimatedPopover, wnLabelClassName, fieldStackClassName, MaterialSymbol } from "@worldnote/ui";
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import {
+  AnimatedPopover,
+  wnLabelClassName,
+  fieldStackClassName,
+  MaterialSymbol,
+} from "@worldnote/ui";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { createPortal } from "react-dom";
 import {
   BADGE_BACKGROUND_SELECT_OPTIONS,

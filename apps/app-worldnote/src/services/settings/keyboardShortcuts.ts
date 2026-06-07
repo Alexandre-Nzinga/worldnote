@@ -28,13 +28,7 @@ export const DEFAULT_CANVAS_KEYBOARD_SHORTCUTS: CanvasKeyboardShortcuts = {
   redo: { key: "y", ctrl: true },
 };
 
-const MODIFIER_KEYS = new Set([
-  "Control",
-  "Meta",
-  "Alt",
-  "Shift",
-  "OS",
-]);
+const MODIFIER_KEYS = new Set(["Control", "Meta", "Alt", "Shift", "OS"]);
 
 const SINGLE_KEY_SHORTCUTS = new Set(["Delete", "Backspace"]);
 
@@ -94,12 +88,9 @@ export function matchesKeyboardShortcut(
     return false;
   }
 
-  const pressed =
-    event.key.length === 1 ? event.key.toLowerCase() : event.key;
+  const pressed = event.key.length === 1 ? event.key.toLowerCase() : event.key;
   const expected =
-    shortcut.key.length === 1
-      ? shortcut.key.toLowerCase()
-      : shortcut.key;
+    shortcut.key.length === 1 ? shortcut.key.toLowerCase() : shortcut.key;
   return pressed === expected;
 }
 
@@ -142,9 +133,7 @@ export function formatKeyboardShortcut(shortcut: KeyboardShortcut): string {
     parts.push(isMac ? "⇧" : "Shift");
   }
   const keyLabel =
-    shortcut.key.length === 1
-      ? shortcut.key.toUpperCase()
-      : shortcut.key;
+    shortcut.key.length === 1 ? shortcut.key.toUpperCase() : shortcut.key;
   parts.push(keyLabel);
   return isMac ? parts.join("") : parts.join("+");
 }

@@ -1,6 +1,9 @@
 import clsx from "clsx";
 import type { ReactNode } from "react";
-import { getBodyTextStyle, getHeadingProps } from "../../../brand/typography/typography.js";
+import {
+  getBodyTextStyle,
+  getHeadingProps,
+} from "../../../brand/typography/typography.js";
 
 export type CardTone = "light" | "dark";
 
@@ -75,16 +78,18 @@ export function Card({
         <header
           className={clsx(
             "flex flex-col gap-2 px-4 py-3",
-            (hasBody || hasActions) && `border-b ${headerDividerClassNames[tone]}`,
+            (hasBody || hasActions) &&
+              `border-b ${headerDividerClassNames[tone]}`,
           )}
         >
           {eyebrow ? <div>{eyebrow}</div> : null}
-          {title ? (
-            <h3 {...getHeadingProps("h4")}>{title}</h3>
-          ) : null}
+          {title ? <h3 {...getHeadingProps("h4")}>{title}</h3> : null}
           {subtitle ? (
             <p
-              className={clsx("text-wn-small leading-snug", subtitleClassNames[tone])}
+              className={clsx(
+                "text-wn-small leading-snug",
+                subtitleClassNames[tone],
+              )}
               style={getBodyTextStyle("small")}
             >
               {subtitle}

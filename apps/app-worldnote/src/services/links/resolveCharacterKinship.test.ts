@@ -6,11 +6,7 @@ import {
   resolveCharacterKinshipSocket,
 } from "./resolveCharacterKinship.js";
 
-function character(
-  id: string,
-  name: string,
-  gender?: "male" | "female",
-) {
+function character(id: string, name: string, gender?: "male" | "female") {
   return {
     id,
     name,
@@ -43,26 +39,20 @@ describe("resolveCharacterKinshipSocket", () => {
   it("uses issue on parent when child is dropped on parent card", () => {
     const paul = character(paulId, "Paul Atreides");
     const leto = character(letoId, "Leto Atreides", "male");
-    expect(
-      resolveCharacterKinshipSocket(leto, paul, []),
-    ).toBe("issue");
+    expect(resolveCharacterKinshipSocket(leto, paul, [])).toBe("issue");
   });
 
   it("uses issue on parent when child already has father link to parent", () => {
     const paul = character(paulId, "Paul Atreides");
     const leto = character(letoId, "Leto Atreides", "male");
     const links = [link(paulId, "father", letoId)];
-    expect(
-      resolveCharacterKinshipSocket(leto, paul, links),
-    ).toBe("issue");
+    expect(resolveCharacterKinshipSocket(leto, paul, links)).toBe("issue");
   });
 
   it("does not pick mother before issue for child-on-parent drop", () => {
     const paul = character(paulId, "Paul Atreides");
     const leto = character(letoId, "Leto Atreides", "male");
-    expect(
-      findTargetSocketForPluggedCard(leto, paul, []),
-    ).toBe("issue");
+    expect(findTargetSocketForPluggedCard(leto, paul, [])).toBe("issue");
   });
 });
 

@@ -76,13 +76,12 @@ function ToolbarButton({
   );
 }
 
-function InspectorLoreToolbar({ editor }: { editor: NonNullable<ReturnType<typeof useEditor>> }) {
-  const run = useCallback(
-    (command: () => boolean) => {
-      command();
-    },
-    [],
-  );
+function InspectorLoreToolbar({
+  editor,
+}: { editor: NonNullable<ReturnType<typeof useEditor>> }) {
+  const run = useCallback((command: () => boolean) => {
+    command();
+  }, []);
 
   return (
     <div
@@ -146,13 +145,17 @@ function InspectorLoreToolbar({ editor }: { editor: NonNullable<ReturnType<typeo
         label="Bullet list"
         icon="format_list_bulleted"
         active={editor.isActive("bulletList")}
-        onClick={() => run(() => editor.chain().focus().toggleBulletList().run())}
+        onClick={() =>
+          run(() => editor.chain().focus().toggleBulletList().run())
+        }
       />
       <ToolbarButton
         label="Numbered list"
         icon="format_list_numbered"
         active={editor.isActive("orderedList")}
-        onClick={() => run(() => editor.chain().focus().toggleOrderedList().run())}
+        onClick={() =>
+          run(() => editor.chain().focus().toggleOrderedList().run())
+        }
       />
       <InspectorLoreBlockquoteButton editor={editor} />
     </div>
@@ -164,9 +167,11 @@ function InspectorLoreBlockquoteButton({
 }: {
   editor: NonNullable<ReturnType<typeof useEditor>>;
 }) {
-  const { isVisible, isActive, canToggle, handleToggle, label } = useBlockquote({
-    editor,
-  });
+  const { isVisible, isActive, canToggle, handleToggle, label } = useBlockquote(
+    {
+      editor,
+    },
+  );
 
   const shortcutHint = parseShortcutKeys({
     shortcutKeys: BLOCKQUOTE_SHORTCUT_KEY,

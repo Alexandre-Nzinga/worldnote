@@ -56,6 +56,7 @@ function ImageNodeInner({
     }
   };
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reset layout when image source changes
   useEffect(() => {
     syncedAspectRef.current = false;
     setNaturalSize(null);

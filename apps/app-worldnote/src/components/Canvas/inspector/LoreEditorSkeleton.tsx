@@ -21,7 +21,9 @@ type LoreEditorSkeletonProps = {
 };
 
 /** Paragraph-shaped placeholders while WorldWizard generates lore. */
-export function LoreEditorSkeleton({ className = "" }: LoreEditorSkeletonProps) {
+export function LoreEditorSkeleton({
+  className = "",
+}: LoreEditorSkeletonProps) {
   return (
     <div
       aria-busy="true"

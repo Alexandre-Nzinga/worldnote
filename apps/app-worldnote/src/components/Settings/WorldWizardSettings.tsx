@@ -1,5 +1,13 @@
 import { Input } from "@heroui/react";
-import { Button, fieldStackClassName, MaterialSymbol, wnDescriptionClassName, wnHintClassName, wnLabelClassName, wnTitleClassName } from "@worldnote/ui";
+import {
+  Button,
+  fieldStackClassName,
+  MaterialSymbol,
+  wnDescriptionClassName,
+  wnHintClassName,
+  wnLabelClassName,
+  wnTitleClassName,
+} from "@worldnote/ui";
 import { useCallback, useEffect, useState } from "react";
 import {
   checkOllamaHealth,
@@ -57,39 +65,40 @@ export function WorldWizardSettings({
   const [healthy, setHealthy] = useState<boolean | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const refreshModels = useCallback(async (host: string) => {
-    setIsRefreshing(true);
-    setHealthy(null);
-    try {
-      const ok = await checkOllamaHealth(host);
-      setHealthy(ok);
-      if (ok) {
-        const found = await listOllamaModels(host);
-        setModels(found);
-        if (
-          value.defaultModel &&
-          !found.includes(value.defaultModel) &&
-          found.length > 0
-        ) {
-          // Keep saved model in UI even if missing from Ollama list.
-          setModels((current) =>
-            current.includes(value.defaultModel)
-              ? current
-              : [value.defaultModel, ...found],
-          );
+  const refreshModels = useCallback(
+    async (host: string) => {
+      setIsRefreshing(true);
+      setHealthy(null);
+      try {
+        const ok = await checkOllamaHealth(host);
+        setHealthy(ok);
+        if (ok) {
+          const found = await listOllamaModels(host);
+          setModels(found);
+          if (
+            value.defaultModel &&
+            !found.includes(value.defaultModel) &&
+            found.length > 0
+          ) {
+            // Keep saved model in UI even if missing from Ollama list.
+            setModels((current) =>
+              current.includes(value.defaultModel)
+                ? current
+                : [value.defaultModel, ...found],
+            );
+          }
+        } else {
+          setModels(value.defaultModel ? [value.defaultModel] : []);
         }
-      } else {
-        setModels(
-          value.defaultModel ? [value.defaultModel] : [],
-        );
+      } catch {
+        setHealthy(false);
+        setModels(value.defaultModel ? [value.defaultModel] : []);
+      } finally {
+        setIsRefreshing(false);
       }
-    } catch {
-      setHealthy(false);
-      setModels(value.defaultModel ? [value.defaultModel] : []);
-    } finally {
-      setIsRefreshing(false);
-    }
-  }, [value.defaultModel]);
+    },
+    [value.defaultModel],
+  );
 
   useEffect(() => {
     void refreshModels(value.host);
@@ -107,7 +116,9 @@ export function WorldWizardSettings({
             onPress={() => {
               void refreshModels(value.host);
             }}
-            startContent={<MaterialSymbol name="refresh" className="text-base" />}
+            startContent={
+              <MaterialSymbol name="refresh" className="text-base" />
+            }
           >
             Refresh models
           </Button>
@@ -167,7 +178,9 @@ export function WorldWizardSettings({
                         : "text-wn-text hover:bg-wn-surface-raised"
                     }`}
                   >
-                    <span className="truncate text-sm font-medium">{model}</span>
+                    <span className="truncate text-sm font-medium">
+                      {model}
+                    </span>
                     {isSelected ? (
                       <MaterialSymbol
                         name="check"

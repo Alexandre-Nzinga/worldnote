@@ -24,10 +24,9 @@ export type SyncFamilyCardMembersResult = {
   links: Link[];
 };
 
-function isCharacter(card: WorldCard | undefined): card is Extract<
-  WorldCard,
-  { card_type: "character" }
-> {
+function isCharacter(
+  card: WorldCard | undefined,
+): card is Extract<WorldCard, { card_type: "character" }> {
   return card?.card_type === "character";
 }
 
@@ -94,9 +93,7 @@ export async function syncFamilyCardMembers({
       workingLinks = await listLinks(vault);
     }
 
-    if (
-      !affiliationLinkExists(memberId, familyCard.id, workingLinks)
-    ) {
+    if (!affiliationLinkExists(memberId, familyCard.id, workingLinks)) {
       await createLink({
         vault,
         sourceCard: memberCard,

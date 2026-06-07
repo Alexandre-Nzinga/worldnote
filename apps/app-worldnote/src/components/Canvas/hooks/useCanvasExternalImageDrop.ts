@@ -108,7 +108,10 @@ export function useCanvasExternalImageDrop({
 
         const localPath = localPathFromFile(file);
         if (localPath && isTauriRuntime()) {
-          await onImportRef.current(localPath, offsetForImageIndex(flow, index));
+          await onImportRef.current(
+            localPath,
+            offsetForImageIndex(flow, index),
+          );
           continue;
         }
 

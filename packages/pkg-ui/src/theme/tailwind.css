@@ -13,7 +13,8 @@
  */
 
 @theme inline {
-  --font-sans: "Urbanist Variable", "Urbanist", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Urbanist Variable", "Urbanist", ui-sans-serif, system-ui,
+    sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
   --font-weight-wn-thin: 100;

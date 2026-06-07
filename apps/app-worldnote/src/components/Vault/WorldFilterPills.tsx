@@ -45,8 +45,7 @@ function pillClassName(worldName: string | null, isActive: boolean): string {
     : `${pillBaseClassName} ${colors} opacity-85 hover:opacity-100`;
 }
 
-const activePillButtonClassName =
-  `rounded-full ${primaryAccentRingOnSurfaceClassName}`;
+const activePillButtonClassName = `rounded-full ${primaryAccentRingOnSurfaceClassName}`;
 
 function PillButton({
   label,
@@ -66,7 +65,9 @@ function PillButton({
       ref={buttonRef}
       type="button"
       onClick={onClick}
-      className={isActive ? `shrink-0 ${activePillButtonClassName}` : "shrink-0"}
+      className={
+        isActive ? `shrink-0 ${activePillButtonClassName}` : "shrink-0"
+      }
       aria-pressed={isActive}
     >
       <span className={pillClassName(worldName, isActive)}>{label}</span>
@@ -120,7 +121,11 @@ export function WorldFilterPills({
 
   useEffect(() => {
     const activeEl = pillRefs.current.get(selected);
-    activeEl?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+    activeEl?.scrollIntoView({
+      behavior: "smooth",
+      inline: "center",
+      block: "nearest",
+    });
   }, [selected]);
 
   const scrollByPage = (direction: -1 | 1) => {

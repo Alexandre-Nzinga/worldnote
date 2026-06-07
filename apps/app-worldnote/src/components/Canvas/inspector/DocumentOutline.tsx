@@ -86,7 +86,10 @@ type DocumentOutlineProps = {
   scrollElement: HTMLElement | null;
 };
 
-export function DocumentOutline({ editor, scrollElement }: DocumentOutlineProps) {
+export function DocumentOutline({
+  editor,
+  scrollElement,
+}: DocumentOutlineProps) {
   const navRef = useRef<HTMLElement>(null);
   const scrollElementRef = useRef(scrollElement);
   scrollElementRef.current = scrollElement;
@@ -116,7 +119,7 @@ export function DocumentOutline({ editor, scrollElement }: DocumentOutlineProps)
     return () => {
       editor.off("update", onUpdate);
     };
-  }, [editor, refreshHeadings, scrollElement]);
+  }, [editor, refreshHeadings]);
 
   useEffect(() => {
     if (!scrollElement) {
@@ -179,10 +182,7 @@ export function DocumentOutline({ editor, scrollElement }: DocumentOutlineProps)
               const isActive = heading.index === activeIndex;
               const isH2 = heading.level === 2;
               return (
-                <li
-                  key={heading.id}
-                  className={isH2 ? "pl-3" : undefined}
-                >
+                <li key={heading.id} className={isH2 ? "pl-3" : undefined}>
                   <button
                     type="button"
                     data-outline-index={heading.index}

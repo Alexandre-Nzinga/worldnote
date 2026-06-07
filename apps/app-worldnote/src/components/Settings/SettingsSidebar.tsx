@@ -114,5 +114,8 @@ export function SettingsSidebar({
 }
 
 export function settingsSectionMeta(section: SettingsSection) {
-  return SETTINGS_SECTIONS.find((item) => item.id === section) ?? SETTINGS_SECTIONS[0];
+  return (
+    SETTINGS_SECTIONS.find((item) => item.id === section) ??
+    SETTINGS_SECTIONS[0]
+  );
 }

@@ -7,7 +7,10 @@ type ParentConflictWarningProps = {
   cardsById: Record<string, WorldCard>;
 };
 
-function cardName(cardsById: Record<string, WorldCard>, cardId: string): string {
+function cardName(
+  cardsById: Record<string, WorldCard>,
+  cardId: string,
+): string {
   return cardsById[cardId]?.name ?? "Unknown";
 }
 

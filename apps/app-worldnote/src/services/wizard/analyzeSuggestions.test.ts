@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type { WorldCard } from "@worldnote/shared";
-import { analyzeWizardSuggestions, buildSuggestionLabel } from "./analyzeSuggestions.js";
+import {
+  analyzeWizardSuggestions,
+  buildSuggestionLabel,
+} from "./analyzeSuggestions.js";
 
 const ariaId = "00000000-0000-4000-8000-000000000001";
 const silverholdId = "00000000-0000-4000-8000-000000000002";
@@ -49,7 +52,9 @@ describe("analyzeWizardSuggestions", () => {
     });
 
     expect(suggestions.every((s) => s.targetCardId === ariaId)).toBe(true);
-    expect(suggestions.find((s) => s.targetCardId === silverholdId)).toBeUndefined();
+    expect(
+      suggestions.find((s) => s.targetCardId === silverholdId),
+    ).toBeUndefined();
   });
 
   it("suggests self fill-gaps when selected card has empty lore", () => {

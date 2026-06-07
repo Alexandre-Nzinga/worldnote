@@ -1,5 +1,17 @@
-import { AnimatedPopover, wnLabelClassName, fieldStackClassName, MaterialSymbol } from "@worldnote/ui";
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import {
+  AnimatedPopover,
+  wnLabelClassName,
+  fieldStackClassName,
+  MaterialSymbol,
+} from "@worldnote/ui";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { createPortal } from "react-dom";
 import { primaryAccentRingOnSurfaceClassName } from "../../services/settings/primaryAccentStyles.js";
 import { surfacePanelClassName } from "../shell/pageShellStyles.js";

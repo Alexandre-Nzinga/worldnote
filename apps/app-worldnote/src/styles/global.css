@@ -135,7 +135,9 @@ body.wn-canvas-card-external-drag * {
 }
 
 .inspector-lore-editor--fill .inspector-lore-editor-body .ProseMirror,
-.inspector-lore-editor--fill .inspector-lore-editor-body .inspector-lore-editor-prose {
+.inspector-lore-editor--fill
+  .inspector-lore-editor-body
+  .inspector-lore-editor-prose {
   min-height: 100%;
   max-height: none;
 }

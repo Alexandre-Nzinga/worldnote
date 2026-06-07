@@ -111,7 +111,8 @@ export function resolveBadgeTextSwatchClass(
   cardType: string,
   value: string,
 ): string {
-  const textClass = value || defaultBadgeTextFor(cardType) || "text-wn-mono-950";
+  const textClass =
+    value || defaultBadgeTextFor(cardType) || "text-wn-mono-950";
   return textClassToSwatchClass(textClass);
 }
 
@@ -166,7 +167,10 @@ export function setCardBadgeBackground(
   badgeClassName: string,
 ): CardTypeBadgeOverrides {
   const entry = { ...overrides[cardType] };
-  if (!badgeClassName || badgeClassName === defaultBadgeBackgroundFor(cardType)) {
+  if (
+    !badgeClassName ||
+    badgeClassName === defaultBadgeBackgroundFor(cardType)
+  ) {
     entry.badgeClassName = undefined;
   } else {
     entry.badgeClassName = badgeClassName;

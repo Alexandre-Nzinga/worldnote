@@ -205,7 +205,9 @@ export function WorldSettingsModal({
       onClose();
     } catch (deleteError) {
       toast.error(
-        deleteError instanceof Error ? deleteError.message : String(deleteError),
+        deleteError instanceof Error
+          ? deleteError.message
+          : String(deleteError),
       );
     } finally {
       setIsBusy(false);
@@ -228,8 +230,7 @@ export function WorldSettingsModal({
     ? trimmedDescription !== (world.description ?? "")
     : false;
   const hasUnsavedChanges = nameChanged || descriptionChanged;
-  const canSaveChanges =
-    trimmedName.length > 0 && hasUnsavedChanges && !isBusy;
+  const canSaveChanges = trimmedName.length > 0 && hasUnsavedChanges && !isBusy;
 
   return (
     <AnimatedModal

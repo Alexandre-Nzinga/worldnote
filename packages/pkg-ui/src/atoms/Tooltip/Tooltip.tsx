@@ -213,7 +213,7 @@ export function Tooltip({
       window.removeEventListener("scroll", onLayoutChange, true);
       window.removeEventListener("resize", onLayoutChange);
     };
-  }, [open, reposition, content]);
+  }, [open, reposition]);
 
   const show = () => {
     if (isDisabled) {

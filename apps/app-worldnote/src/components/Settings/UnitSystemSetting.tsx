@@ -1,4 +1,8 @@
-import { MaterialSymbol, wnDescriptionClassName, wnTitleClassName } from "@worldnote/ui";
+import {
+  MaterialSymbol,
+  wnDescriptionClassName,
+  wnTitleClassName,
+} from "@worldnote/ui";
 import { useCallback } from "react";
 import { useSettings } from "../../hooks/useSettings.js";
 import {
@@ -35,7 +39,9 @@ type UnitSystemSettingProps = {
  * Global measurement display preference. Values are always stored in metric
  * (kg, cm, °C); this setting only affects labels and formatted display.
  */
-export function UnitSystemSetting({ disabled = false }: UnitSystemSettingProps) {
+export function UnitSystemSetting({
+  disabled = false,
+}: UnitSystemSettingProps) {
   const settings = useSettings((state) => state.settings);
   const save = useSettings((state) => state.save);
   const current = normalizeUnitSystem(settings?.unitSystem);

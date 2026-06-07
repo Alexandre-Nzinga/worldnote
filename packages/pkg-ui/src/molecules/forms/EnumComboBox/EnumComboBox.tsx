@@ -78,9 +78,9 @@ export function EnumComboBox<V extends string = string>({
   const overflowRestoreRef = useRef<{ el: HTMLElement; value: string } | null>(
     null,
   );
-  const [portalContainer, setPortalContainer] = useState<HTMLElement | undefined>(
-    undefined,
-  );
+  const [portalContainer, setPortalContainer] = useState<
+    HTMLElement | undefined
+  >(undefined);
 
   const emptyOption: EnumComboBoxOption<EnumComboBoxValue<V>> = {
     value: "",
@@ -197,7 +197,9 @@ export function EnumComboBox<V extends string = string>({
         classNames={{
           base: isInline ? "w-auto min-w-0 max-w-40 gap-0" : "w-full gap-0",
           label: "hidden",
-          trigger: isInline ? selectInlineTriggerClassName : selectTriggerClassName,
+          trigger: isInline
+            ? selectInlineTriggerClassName
+            : selectTriggerClassName,
           innerWrapper: "min-w-0 flex-1",
           value: isInline ? selectInlineValueClassName : selectValueClassName,
           selectorIcon: isInline

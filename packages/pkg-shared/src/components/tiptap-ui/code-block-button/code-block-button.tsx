@@ -1,42 +1,43 @@
-import { forwardRef, useCallback } from "react"
+import { forwardRef, useCallback } from "react";
 
 // --- Hooks ---
-import { useTiptapEditor } from "@worldnote/shared/hooks/use-tiptap-editor"
+import { useTiptapEditor } from "@worldnote/shared/hooks/use-tiptap-editor";
 
 // --- Lib ---
-import { parseShortcutKeys } from "@worldnote/shared/lib/tiptap-utils"
+import { parseShortcutKeys } from "@worldnote/shared/lib/tiptap-utils";
 
 // --- Tiptap UI ---
-import type { UseCodeBlockConfig } from "@worldnote/shared/components/tiptap-ui/code-block-button"
+import type { UseCodeBlockConfig } from "@worldnote/shared/components/tiptap-ui/code-block-button";
 import {
   CODE_BLOCK_SHORTCUT_KEY,
   useCodeBlock,
-} from "@worldnote/shared/components/tiptap-ui/code-block-button"
+} from "@worldnote/shared/components/tiptap-ui/code-block-button";
 
 // --- UI Primitives ---
-import type { ButtonProps } from "@worldnote/shared/components/tiptap-ui-primitive/button"
-import { Button } from "@worldnote/shared/components/tiptap-ui-primitive/button"
-import { Badge } from "@worldnote/shared/components/tiptap-ui-primitive/badge"
+import type { ButtonProps } from "@worldnote/shared/components/tiptap-ui-primitive/button";
+import { Button } from "@worldnote/shared/components/tiptap-ui-primitive/button";
+import { Badge } from "@worldnote/shared/components/tiptap-ui-primitive/badge";
 
 export interface CodeBlockButtonProps
-  extends Omit<ButtonProps, "type">, UseCodeBlockConfig {
+  extends Omit<ButtonProps, "type">,
+    UseCodeBlockConfig {
   /**
    * Optional text to display alongside the icon.
    */
-  text?: string
+  text?: string;
   /**
    * Optional show shortcut keys in the button.
    * @default false
    */
-  showShortcut?: boolean
+  showShortcut?: boolean;
 }
 
 export function CodeBlockShortcutBadge({
   shortcutKeys = CODE_BLOCK_SHORTCUT_KEY,
 }: {
-  shortcutKeys?: string
+  shortcutKeys?: string;
 }) {
-  return <Badge>{parseShortcutKeys({ shortcutKeys })}</Badge>
+  return <Badge>{parseShortcutKeys({ shortcutKeys })}</Badge>;
 }
 
 /**
@@ -59,9 +60,9 @@ export const CodeBlockButton = forwardRef<
       children,
       ...buttonProps
     },
-    ref
+    ref,
   ) => {
-    const { editor } = useTiptapEditor(providedEditor)
+    const { editor } = useTiptapEditor(providedEditor);
     const {
       isVisible,
       canToggle,
@@ -74,19 +75,19 @@ export const CodeBlockButton = forwardRef<
       editor,
       hideWhenUnavailable,
       onToggled,
-    })
+    });
 
     const handleClick = useCallback(
       (event: React.MouseEvent<HTMLButtonElement>) => {
-        onClick?.(event)
-        if (event.defaultPrevented) return
-        handleToggle()
+        onClick?.(event);
+        if (event.defaultPrevented) return;
+        handleToggle();
       },
-      [handleToggle, onClick]
-    )
+      [handleToggle, onClick],
+    );
 
     if (!isVisible) {
-      return null
+      return null;
     }
 
     return (
@@ -115,8 +116,8 @@ export const CodeBlockButton = forwardRef<
           </>
         )}
       </Button>
-    )
-  }
-)
+    );
+  },
+);
 
-CodeBlockButton.displayName = "CodeBlockButton"
+CodeBlockButton.displayName = "CodeBlockButton";

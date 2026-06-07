@@ -1,6 +1,9 @@
 import { invoke } from "@tauri-apps/api/core";
 import { open, save } from "@tauri-apps/plugin-dialog";
-import { DESKTOP_ONLY_MESSAGE, isTauriRuntime } from "../desktop/tauriRuntime.js";
+import {
+  DESKTOP_ONLY_MESSAGE,
+  isTauriRuntime,
+} from "../desktop/tauriRuntime.js";
 
 const WORLD_ARCHIVE_EXTENSION = "worldnote.zip";
 

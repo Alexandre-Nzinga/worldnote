@@ -60,7 +60,9 @@ export function LinkEditorPanel({
       onClose();
     } catch (deleteError) {
       setError(
-        deleteError instanceof Error ? deleteError.message : String(deleteError),
+        deleteError instanceof Error
+          ? deleteError.message
+          : String(deleteError),
       );
     } finally {
       setIsDeleting(false);
@@ -83,7 +85,9 @@ export function LinkEditorPanel({
     <AnimatedPanel isOpen={isOpen} className={panelClassName}>
       <header className="flex items-center justify-between gap-3 border-b border-wn-mono-800 px-4 py-3">
         <div>
-          <h2 {...getHeadingProps("h6", { tone: "inverse", weight: "semibold" })}>
+          <h2
+            {...getHeadingProps("h6", { tone: "inverse", weight: "semibold" })}
+          >
             Link
           </h2>
         </div>

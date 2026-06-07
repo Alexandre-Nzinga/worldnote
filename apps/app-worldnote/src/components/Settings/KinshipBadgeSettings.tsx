@@ -67,7 +67,9 @@ export function KinshipBadgeSettings({
               ariaLabel="Kinship label background"
               disabled={disabled}
               value={kinshipBadgeBackgroundSelectValue(value)}
-              onChange={(next) => onChange(setKinshipBadgeBackground(value, next))}
+              onChange={(next) =>
+                onChange(setKinshipBadgeBackground(value, next))
+              }
             />
             <BadgeColorPicker
               kind="text"
@@ -76,7 +78,9 @@ export function KinshipBadgeSettings({
               ariaLabel="Kinship label text color"
               disabled={disabled}
               value={kinshipBadgeTextSelectValue(value)}
-              onChange={(next) => onChange(setKinshipBadgeTextColor(value, next))}
+              onChange={(next) =>
+                onChange(setKinshipBadgeTextColor(value, next))
+              }
             />
           </div>
         </div>

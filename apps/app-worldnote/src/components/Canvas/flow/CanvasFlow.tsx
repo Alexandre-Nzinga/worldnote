@@ -88,13 +88,19 @@ type CanvasFlowProps = {
   onFlipCanvasImageHorizontal: (imageId: string) => void;
   onFlipCanvasImageVertical: (imageId: string) => void;
   onRotateCanvasImageClockwise: (imageId: string) => void;
-  onImageResizeEnd: (nodeId: string, size: { width: number; height: number }) => void;
+  onImageResizeEnd: (
+    nodeId: string,
+    size: { width: number; height: number },
+  ) => void;
   stickyNoteContextMenu: CanvasStickyNoteContextMenuState | null;
   onCloseStickyNoteContextMenu: () => void;
   onDuplicateStickyNote: (noteId: string) => void;
   onCopyStickyNote: (noteId: string) => void;
   onDeleteStickyNote: (noteId: string) => void;
-  onStickyNoteResizeEnd: (nodeId: string, size: { width: number; height: number }) => void;
+  onStickyNoteResizeEnd: (
+    nodeId: string,
+    size: { width: number; height: number },
+  ) => void;
   nodesDraggable?: boolean;
   vaultPath: string | null;
   cardsByIdRef: RefObject<Record<string, WorldCard>>;
@@ -225,102 +231,101 @@ export function CanvasFlow({
     nodes.length >= CANVAS_VIRTUALIZE_NODE_THRESHOLD;
 
   return (
-    <CanvasStickyNoteInteractionProvider value={{ onResizeEnd: onStickyNoteResizeEnd }}>
-    <CanvasImageInteractionProvider value={{ onResizeEnd: onImageResizeEnd }}>
-    <WorldNoteCanvas
-      nodeTypes={nodeTypes}
-      edgeTypes={edgeTypes}
-      nodes={nodes}
-      edges={edges}
-      onNodesChange={onNodesChange}
-      onEdgesChange={onEdgesChange}
-      onSelectionChange={onSelectionChange}
-      onConnect={onConnect}
-      onConnectStart={onConnectStart}
-      onConnectEnd={onConnectEnd}
-      onNodeMouseEnter={onNodeMouseEnter}
-      onNodeMouseLeave={onNodeMouseLeave}
-      isValidConnection={isValidConnection}
-      connectionMode={ConnectionMode.Loose}
-      connectionRadius={40}
-      nodeOrigin={[0.5, 0]}
-      className="h-full w-full rounded-none border-0"
-      backgroundVariant={BackgroundVariant.Dots}
-      backgroundColor="var(--color-wn-mono-700)"
-      backgroundGap={CANVAS_SNAP_GRID_SIZE}
-      colorMode="dark"
-      panOnDrag={[1, 2]}
-      panOnScroll={false}
-      zoomOnScroll
-      zoomOnPinch
-      nodesDraggable={nodesDraggable}
-      nodesConnectable
-      elementsSelectable
-      selectNodesOnDrag={false}
-      selectionOnDrag
-      selectionMode={SelectionMode.Partial}
-      selectionKeyCode="Shift"
-      multiSelectionKeyCode="Shift"
-      panActivationKeyCode="Space"
-      onlyRenderVisibleElements={onlyRenderVisibleElements}
-      minZoom={0.15}
-      maxZoom={4}
-      onNodeDragStart={onNodeDragStart}
-      onNodeDragStop={onNodeDragStop}
-      onNodeDoubleClick={onNodeDoubleClick}
-      onEdgeDoubleClick={onEdgeDoubleClick}
-      onNodeContextMenu={onNodeContextMenu}
-      onSelectionContextMenu={onSelectionContextMenu}
-      onNodeClick={onNodeClick}
-      onPaneClick={onPaneClick}
+    <CanvasStickyNoteInteractionProvider
+      value={{ onResizeEnd: onStickyNoteResizeEnd }}
     >
-      <CanvasFitViewBridge
-        vaultPath={vaultPath}
-        nodeCount={nodes.length}
-      />
-      <CanvasFocusBridge focusCardRef={focusCardRef} />
-      <CanvasExternalImageDropBridge
-        enabled={Boolean(vaultPath)}
-        vaultPath={vaultPath}
-        onImportImage={onImportCanvasImage}
-      />
-    </WorldNoteCanvas>
-    <CanvasImageContextMenu
-      menu={imageContextMenu}
-      onClose={onCloseImageContextMenu}
-      onDuplicate={onDuplicateCanvasImage}
-      onDelete={onDeleteCanvasImage}
-      onFlipHorizontal={onFlipCanvasImageHorizontal}
-      onFlipVertical={onFlipCanvasImageVertical}
-      onRotateClockwise={onRotateCanvasImageClockwise}
-    />
-    <CanvasCardContextMenu
-      menu={cardContextMenu}
-      selectionCount={cardContextMenu ? selectedCardIds.length : 1}
-      currentCardType={
-        cardContextMenu
-          ? cardsByIdRef.current[cardContextMenu.cardId]?.card_type
-          : undefined
-      }
-      onClose={onCloseCardContextMenu}
-      onDuplicate={onCardContextDuplicate}
-      onCopy={onCardContextCopy}
-      onShowChangeType={onCardContextShowChangeType}
-      onBackToActions={onCardContextBackToActions}
-      onChangeType={onCardChangeType}
-      onDelete={onCardContextDelete}
-      onOpenWizard={() => onOpenWizardWithCards(selectedCardIdsForWizard)}
-      onCreateFamilyCard={onCreateFamilyCard}
-      createFamilyCardLabel={createFamilyCardLabel}
-    />
-    <CanvasStickyNoteContextMenu
-      menu={stickyNoteContextMenu}
-      onClose={onCloseStickyNoteContextMenu}
-      onDuplicate={onDuplicateStickyNote}
-      onCopy={onCopyStickyNote}
-      onDelete={onDeleteStickyNote}
-    />
-    </CanvasImageInteractionProvider>
+      <CanvasImageInteractionProvider value={{ onResizeEnd: onImageResizeEnd }}>
+        <WorldNoteCanvas
+          nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onSelectionChange={onSelectionChange}
+          onConnect={onConnect}
+          onConnectStart={onConnectStart}
+          onConnectEnd={onConnectEnd}
+          onNodeMouseEnter={onNodeMouseEnter}
+          onNodeMouseLeave={onNodeMouseLeave}
+          isValidConnection={isValidConnection}
+          connectionMode={ConnectionMode.Loose}
+          connectionRadius={40}
+          nodeOrigin={[0.5, 0]}
+          className="h-full w-full rounded-none border-0"
+          backgroundVariant={BackgroundVariant.Dots}
+          backgroundColor="var(--color-wn-mono-700)"
+          backgroundGap={CANVAS_SNAP_GRID_SIZE}
+          colorMode="dark"
+          panOnDrag={[1, 2]}
+          panOnScroll={false}
+          zoomOnScroll
+          zoomOnPinch
+          nodesDraggable={nodesDraggable}
+          nodesConnectable
+          elementsSelectable
+          selectNodesOnDrag={false}
+          selectionOnDrag
+          selectionMode={SelectionMode.Partial}
+          selectionKeyCode="Shift"
+          multiSelectionKeyCode="Shift"
+          panActivationKeyCode="Space"
+          onlyRenderVisibleElements={onlyRenderVisibleElements}
+          minZoom={0.15}
+          maxZoom={4}
+          onNodeDragStart={onNodeDragStart}
+          onNodeDragStop={onNodeDragStop}
+          onNodeDoubleClick={onNodeDoubleClick}
+          onEdgeDoubleClick={onEdgeDoubleClick}
+          onNodeContextMenu={onNodeContextMenu}
+          onSelectionContextMenu={onSelectionContextMenu}
+          onNodeClick={onNodeClick}
+          onPaneClick={onPaneClick}
+        >
+          <CanvasFitViewBridge vaultPath={vaultPath} nodeCount={nodes.length} />
+          <CanvasFocusBridge focusCardRef={focusCardRef} />
+          <CanvasExternalImageDropBridge
+            enabled={Boolean(vaultPath)}
+            vaultPath={vaultPath}
+            onImportImage={onImportCanvasImage}
+          />
+        </WorldNoteCanvas>
+        <CanvasImageContextMenu
+          menu={imageContextMenu}
+          onClose={onCloseImageContextMenu}
+          onDuplicate={onDuplicateCanvasImage}
+          onDelete={onDeleteCanvasImage}
+          onFlipHorizontal={onFlipCanvasImageHorizontal}
+          onFlipVertical={onFlipCanvasImageVertical}
+          onRotateClockwise={onRotateCanvasImageClockwise}
+        />
+        <CanvasCardContextMenu
+          menu={cardContextMenu}
+          selectionCount={cardContextMenu ? selectedCardIds.length : 1}
+          currentCardType={
+            cardContextMenu
+              ? cardsByIdRef.current[cardContextMenu.cardId]?.card_type
+              : undefined
+          }
+          onClose={onCloseCardContextMenu}
+          onDuplicate={onCardContextDuplicate}
+          onCopy={onCardContextCopy}
+          onShowChangeType={onCardContextShowChangeType}
+          onBackToActions={onCardContextBackToActions}
+          onChangeType={onCardChangeType}
+          onDelete={onCardContextDelete}
+          onOpenWizard={() => onOpenWizardWithCards(selectedCardIdsForWizard)}
+          onCreateFamilyCard={onCreateFamilyCard}
+          createFamilyCardLabel={createFamilyCardLabel}
+        />
+        <CanvasStickyNoteContextMenu
+          menu={stickyNoteContextMenu}
+          onClose={onCloseStickyNoteContextMenu}
+          onDuplicate={onDuplicateStickyNote}
+          onCopy={onCopyStickyNote}
+          onDelete={onDeleteStickyNote}
+        />
+      </CanvasImageInteractionProvider>
     </CanvasStickyNoteInteractionProvider>
   );
 }

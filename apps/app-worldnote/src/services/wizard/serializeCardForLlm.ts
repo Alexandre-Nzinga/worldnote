@@ -102,6 +102,9 @@ export function serializeCardsForLlm(
   context: SerializeCardContext,
 ): string {
   return cards
-    .map((card, index) => `Card ${index + 1}:\n${serializeCardForLlm(card, context)}`)
+    .map(
+      (card, index) =>
+        `Card ${index + 1}:\n${serializeCardForLlm(card, context)}`,
+    )
     .join("\n\n");
 }

@@ -50,9 +50,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       return;
     }
     setUsername(settings.username);
-    setVisibleSockets(
-      normalizeVisibleSocketsSettings(settings.visibleSockets),
-    );
+    setVisibleSockets(normalizeVisibleSocketsSettings(settings.visibleSockets));
     setCardTypeBadgeColors(
       normalizeCardTypeBadgeOverrides(settings.cardTypeBadgeColors),
     );
@@ -125,7 +123,10 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           <header className="flex flex-col gap-1">
             <h2
               id="settings-title"
-              {...getHeadingProps("h5", { tone: "inverse", weight: "semibold" })}
+              {...getHeadingProps("h5", {
+                tone: "inverse",
+                weight: "semibold",
+              })}
             >
               Settings
             </h2>
@@ -136,10 +137,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
           <div className="scrollbar-wn flex flex-1 flex-col gap-4 overflow-y-auto pr-1">
             <div className="flex flex-col gap-1">
-              <label
-                htmlFor="settings-username"
-                className={wnLabelClassName}
-              >
+              <label htmlFor="settings-username" className={wnLabelClassName}>
                 Username <span className="text-wn-red-500">*</span>
               </label>
               <Input

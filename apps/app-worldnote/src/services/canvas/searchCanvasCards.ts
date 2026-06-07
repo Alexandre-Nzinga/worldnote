@@ -20,7 +20,11 @@ export function normalizeCardSearchQuery(query: string): string {
   return normalized.trim();
 }
 
-function matchScore(kind: CardSearchMatchKind, name: string, query: string): number {
+function matchScore(
+  kind: CardSearchMatchKind,
+  name: string,
+  query: string,
+): number {
   const lowerName = name.toLowerCase();
   if (kind === "name") {
     if (lowerName === query) {

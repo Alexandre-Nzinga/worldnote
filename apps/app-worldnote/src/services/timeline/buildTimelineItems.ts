@@ -145,7 +145,13 @@ export function buildTimelineItems({
         group: TIMELINE_GROUP_CHARACTERS,
         className: "wn-timeline-character",
         title: card.name,
-        preview: itemPreview(card.name, "character", startYear, endYear, suffix),
+        preview: itemPreview(
+          card.name,
+          "character",
+          startYear,
+          endYear,
+          suffix,
+        ),
         itemKind: "character",
         sourceId: card.id,
       });

@@ -52,7 +52,10 @@ const FIELD_BASE_LABELS: Record<MeasurementKind, string> = {
 };
 
 function normalizePropertyKey(key: string): string {
-  return key.trim().toLowerCase().replace(/[_\s-]+/g, "");
+  return key
+    .trim()
+    .toLowerCase()
+    .replace(/[_\s-]+/g, "");
 }
 
 function includesToken(normalized: string, token: string): boolean {
@@ -66,10 +69,16 @@ export function detectMeasurementKind(key: string): MeasurementKind | null {
   if (direct) {
     return direct;
   }
-  if (includesToken(normalized, "weight") || includesToken(normalized, "mass")) {
+  if (
+    includesToken(normalized, "weight") ||
+    includesToken(normalized, "mass")
+  ) {
     return "weight";
   }
-  if (includesToken(normalized, "height") || includesToken(normalized, "stature")) {
+  if (
+    includesToken(normalized, "height") ||
+    includesToken(normalized, "stature")
+  ) {
     return "height";
   }
   if (

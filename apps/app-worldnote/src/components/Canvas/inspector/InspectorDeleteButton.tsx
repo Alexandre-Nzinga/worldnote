@@ -13,12 +13,7 @@ export function InspectorDeleteButton({
 }: InspectorDeleteButtonProps) {
   return (
     <div className="flex justify-end">
-      <Button
-        variant="danger"
-        size="sm"
-        isDisabled={isBusy}
-        onPress={onDelete}
-      >
+      <Button variant="danger" size="sm" isDisabled={isBusy} onPress={onDelete}>
         <MaterialSymbol name="delete" className="text-base" />
         {isDeleting ? "Deleting…" : "Delete"}
       </Button>

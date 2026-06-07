@@ -41,13 +41,17 @@ export function OnboardingWelcomeVisual() {
           alt=""
           className="absolute inset-0 h-full w-full object-cover"
           initial={
-            reducedMotion ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 1.04 }
+            reducedMotion
+              ? { opacity: 1, scale: 1 }
+              : { opacity: 0, scale: 1.04 }
           }
           animate={{ opacity: 1, scale: 1 }}
           exit={reducedMotion ? { opacity: 1 } : { opacity: 0 }}
           transition={{
             opacity: {
-              duration: reducedMotion ? 0 : ONBOARDING_WELCOME_CAROUSEL_FADE_MS / 1000,
+              duration: reducedMotion
+                ? 0
+                : ONBOARDING_WELCOME_CAROUSEL_FADE_MS / 1000,
               ease: "easeInOut",
             },
             scale: {

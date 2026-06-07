@@ -108,11 +108,11 @@ function CommandEditor({
                       kind,
                       targetCardType:
                         kind === "generate-card"
-                          ? command.targetCardType ?? "character"
+                          ? (command.targetCardType ?? "character")
                           : undefined,
                       patchMode:
                         kind === "patch-card"
-                          ? command.patchMode ?? "fill-gaps"
+                          ? (command.patchMode ?? "fill-gaps")
                           : undefined,
                     })
                   }
@@ -204,10 +204,7 @@ function CommandEditor({
       </div>
 
       <div className="flex flex-col gap-1.5 sm:max-w-[12rem]">
-        <label
-          className={wnLabelClassName}
-          htmlFor={`${command.id}-min-cards`}
-        >
+        <label className={wnLabelClassName} htmlFor={`${command.id}-min-cards`}>
           Minimum cards required
         </label>
         <Input
@@ -268,7 +265,12 @@ function CommandEditor({
             Delete
           </Button>
         )}
-        <Button variant="secondary" size="sm" isDisabled={disabled} onPress={onDone}>
+        <Button
+          variant="secondary"
+          size="sm"
+          isDisabled={disabled}
+          onPress={onDone}
+        >
           Done
         </Button>
       </div>
@@ -306,8 +308,8 @@ export function WorldWizardQuickCommandsSettings({
         <div className="min-w-0 flex-1 flex flex-col gap-1">
           <span className={wnTitleClassName}>Quick commands</span>
           <p className={wnDescriptionClassName}>
-            Chips shown in WorldWizard when dropped cards match each command&apos;s
-            requirements.
+            Chips shown in WorldWizard when dropped cards match each
+            command&apos;s requirements.
           </p>
         </div>
         <Button
@@ -326,7 +328,10 @@ export function WorldWizardQuickCommandsSettings({
         {value.map((command) => {
           const isEditing = editingId === command.id;
           return (
-            <li key={command.id} className={`${settingsRowClassName} flex flex-col gap-2`}>
+            <li
+              key={command.id}
+              className={`${settingsRowClassName} flex flex-col gap-2`}
+            >
               <div className="flex items-center gap-3">
                 <MaterialSymbol
                   name={command.icon}
@@ -343,9 +348,7 @@ export function WorldWizardQuickCommandsSettings({
                   variant="ghost"
                   size="sm"
                   isDisabled={disabled}
-                  onPress={() =>
-                    setEditingId(isEditing ? null : command.id)
-                  }
+                  onPress={() => setEditingId(isEditing ? null : command.id)}
                 >
                   {isEditing ? "Close" : "Edit"}
                 </Button>
@@ -378,7 +381,9 @@ export function WorldWizardQuickCommandsSettings({
                     command.builtIn
                       ? undefined
                       : () => {
-                          onChange(value.filter((item) => item.id !== command.id));
+                          onChange(
+                            value.filter((item) => item.id !== command.id),
+                          );
                           setEditingId(null);
                         }
                   }

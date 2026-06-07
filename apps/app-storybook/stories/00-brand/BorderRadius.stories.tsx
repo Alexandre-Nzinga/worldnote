@@ -1,5 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { getBodyTextStyle, getHeadingStyle, headingClass, radiusScale } from "@worldnote/ui";
+import {
+  getBodyTextStyle,
+  getHeadingStyle,
+  headingClass,
+  radiusScale,
+} from "@worldnote/ui";
 
 const meta = {
   title: "00-Brand/Border Radius",

@@ -189,7 +189,11 @@ export async function generateCard(
     });
     const parsed = safeParseJson(raw);
     if (!parsed) return null;
-    const merged = mergeIntoTemplate(options.cardType, options.position, parsed);
+    const merged = mergeIntoTemplate(
+      options.cardType,
+      options.position,
+      parsed,
+    );
     const result = WorldCardSchema.safeParse(merged);
     return result.success ? result.data : null;
   };

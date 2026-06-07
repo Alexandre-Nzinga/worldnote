@@ -50,12 +50,7 @@ export function CanvasViewToolbar({
     }
 
     return dockItems;
-  }, [
-    isGraphViewOpen,
-    isTimelineOpen,
-    onToggleGraphView,
-    onToggleTimeline,
-  ]);
+  }, [isGraphViewOpen, isTimelineOpen, onToggleGraphView, onToggleTimeline]);
 
   if (items.length === 0) {
     return null;

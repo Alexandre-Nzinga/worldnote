@@ -15,7 +15,9 @@ export type CardIndexRow = {
 const MAX_CATALOG_LINES = 200;
 
 /** Loads the world's SQLite card index (`.worldnote/index.db`). */
-export async function fetchWorldCardIndex(vault: string): Promise<CardIndexRow[]> {
+export async function fetchWorldCardIndex(
+  vault: string,
+): Promise<CardIndexRow[]> {
   return invoke<CardIndexRow[]>("list_card_index", { vault });
 }
 
@@ -27,8 +29,7 @@ function catalogLine(
   const typeLabel = card
     ? (CARD_TYPE_LABELS[card.card_type] ?? card.card_type)
     : "Card";
-  const tags =
-    (indexRow?.tags?.length ? indexRow.tags : card?.tags) ?? [];
+  const tags = (indexRow?.tags?.length ? indexRow.tags : card?.tags) ?? [];
   const tagPart = tags.length > 0 ? ` | tags: ${tags.join(", ")}` : "";
   const subtitle = card?.subtitle?.trim();
   const desc = card?.description?.trim() ?? card?.lore?.trim().split("\n")[0];
@@ -57,7 +58,9 @@ export type BuildWorldContextInput = {
  * Builds the per-world, per-session context block sent with every wizard request.
  * Merges lore JSON (cardsById) with the SQLite index catalog.
  */
-export function buildWorldContextMessage(input: BuildWorldContextInput): string {
+export function buildWorldContextMessage(
+  input: BuildWorldContextInput,
+): string {
   const {
     worldName,
     vaultPath,

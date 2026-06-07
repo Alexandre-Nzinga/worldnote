@@ -5,7 +5,11 @@ import {
   CARD_CLASS_ORDER,
   CARD_TYPE_LABELS,
 } from "@worldnote/shared";
-import { Eyebrow, wnDescriptionClassName, wnTitleClassName } from "@worldnote/ui";
+import {
+  Eyebrow,
+  wnDescriptionClassName,
+  wnTitleClassName,
+} from "@worldnote/ui";
 import {
   badgeBackgroundSelectValue,
   badgeTextSelectValue,

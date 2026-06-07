@@ -14,7 +14,8 @@ export function useTimelineCommands() {
       listChronology: (vault: string) => listChronology(vault),
       upsertChronology: (vault: string, entry: ChronologyEntry) =>
         upsertChronology(vault, entry),
-      deleteChronology: (vault: string, id: string) => deleteChronology(vault, id),
+      deleteChronology: (vault: string, id: string) =>
+        deleteChronology(vault, id),
       loadCalendarConfig: (vault: string) => loadCalendarConfig(vault),
       saveCalendarConfig: (vault: string, config: CalendarConfig) =>
         saveCalendarConfig(vault, config),

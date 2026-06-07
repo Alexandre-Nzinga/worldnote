@@ -99,11 +99,7 @@ export async function createLink({
     const link = LinkSchema.parse(draft);
     await upsertLinkRecord(vault, link);
 
-    if (
-      mirrorKinship &&
-      isCharacter(sourceCard) &&
-      isCharacter(targetCard)
-    ) {
+    if (mirrorKinship && isCharacter(sourceCard) && isCharacter(targetCard)) {
       const reciprocal = reciprocalKinshipLink(
         sourceCard,
         sourceSocket,

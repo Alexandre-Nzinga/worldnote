@@ -1,9 +1,6 @@
 import type { WorldCard } from "@worldnote/shared";
 import type { NewCardType } from "../crudWorldCard/cardTemplates.js";
-import type {
-  CardPatchMode,
-  WizardActionKind,
-} from "../wizard/prompts.js";
+import type { CardPatchMode, WizardActionKind } from "../wizard/prompts.js";
 
 export type WizardQuickCommandAvailability = {
   minCards?: number;
@@ -121,8 +118,7 @@ export const BUILTIN_WIZARD_QUICK_COMMANDS: WizardQuickCommandConfig[] = [
     builtIn: true,
     enabled: true,
     availability: { requireTypes: { character: 2 } },
-    promptTemplate:
-      `Simulate a realistic, vivid battle between ${NAMES_PLACEHOLDER} based strictly on their traits, combat styles, and gear. Narrate the exchange beat by beat with dialogue and decisive moments. Conclude with a plausible outcome.`,
+    promptTemplate: `Simulate a realistic, vivid battle between ${NAMES_PLACEHOLDER} based strictly on their traits, combat styles, and gear. Narrate the exchange beat by beat with dialogue and decisive moments. Conclude with a plausible outcome.`,
   },
   {
     id: "generate-dialogue",
@@ -132,8 +128,7 @@ export const BUILTIN_WIZARD_QUICK_COMMANDS: WizardQuickCommandConfig[] = [
     builtIn: true,
     enabled: true,
     availability: { requireTypes: { character: 2 } },
-    promptTemplate:
-      `Write a believable conversation between ${NAMES_PLACEHOLDER}. Stay true to each character's personality, background, and relationships. Format it as a back-and-forth script.`,
+    promptTemplate: `Write a believable conversation between ${NAMES_PLACEHOLDER}. Stay true to each character's personality, background, and relationships. Format it as a back-and-forth script.`,
   },
   {
     id: "breed-child",
@@ -144,8 +139,7 @@ export const BUILTIN_WIZARD_QUICK_COMMANDS: WizardQuickCommandConfig[] = [
     builtIn: true,
     enabled: true,
     availability: { requireTypes: { character: 2 } },
-    promptTemplate:
-      `Generate a single child character that could plausibly be the offspring of ${NAMES_PLACEHOLDER}. Blend their appearance, race, and personality traits. Invent a fitting name. Return only the structured character data.`,
+    promptTemplate: `Generate a single child character that could plausibly be the offspring of ${NAMES_PLACEHOLDER}. Blend their appearance, race, and personality traits. Invent a fitting name. Return only the structured character data.`,
   },
   {
     id: "explore-location",
@@ -156,14 +150,9 @@ export const BUILTIN_WIZARD_QUICK_COMMANDS: WizardQuickCommandConfig[] = [
     enabled: true,
     availability: {
       requireTypes: { character: 1 },
-      requireAnyOf: [
-        { location: 1 },
-        { building: 1 },
-        { structure: 1 },
-      ],
+      requireAnyOf: [{ location: 1 }, { building: 1 }, { structure: 1 }],
     },
-    promptTemplate:
-      `Narrate characters exploring this place. Describe what they notice, feel, and do, grounded in the provided details. Focus on ${NAMES_PLACEHOLDER}.`,
+    promptTemplate: `Narrate characters exploring this place. Describe what they notice, feel, and do, grounded in the provided details. Focus on ${NAMES_PLACEHOLDER}.`,
   },
   {
     id: "fill-gaps",
@@ -174,8 +163,7 @@ export const BUILTIN_WIZARD_QUICK_COMMANDS: WizardQuickCommandConfig[] = [
     builtIn: true,
     enabled: true,
     availability: { minCards: 1, maxCards: 1 },
-    promptTemplate:
-      `Fill only the empty creative fields on ${NAMES_PLACEHOLDER}. Do not change fields that already have content.`,
+    promptTemplate: `Fill only the empty creative fields on ${NAMES_PLACEHOLDER}. Do not change fields that already have content.`,
   },
   {
     id: "expand-card",
@@ -186,8 +174,7 @@ export const BUILTIN_WIZARD_QUICK_COMMANDS: WizardQuickCommandConfig[] = [
     builtIn: true,
     enabled: true,
     availability: { minCards: 1, maxCards: 1 },
-    promptTemplate:
-      `Enrich and extend the creative content on ${NAMES_PLACEHOLDER}. Preserve established facts; deepen lore and details.`,
+    promptTemplate: `Enrich and extend the creative content on ${NAMES_PLACEHOLDER}. Preserve established facts; deepen lore and details.`,
   },
 ];
 
@@ -260,8 +247,11 @@ function normalizeCommand(
     icon,
     kind,
     targetCardType:
-      kind === "generate-card" ? raw.targetCardType ?? "character" : undefined,
-    patchMode: kind === "patch-card" ? raw.patchMode ?? "fill-gaps" : undefined,
+      kind === "generate-card"
+        ? (raw.targetCardType ?? "character")
+        : undefined,
+    patchMode:
+      kind === "patch-card" ? (raw.patchMode ?? "fill-gaps") : undefined,
     promptTemplate,
     enabled: raw.enabled !== false,
     builtIn: raw.builtIn === true || builtinById.has(id),
@@ -308,9 +298,7 @@ export function resolveWizardQuickCommands(
     (command) => savedById.get(command.id) ?? { ...command },
   );
 
-  const customs = normalized.filter(
-    (command) => !builtinById.has(command.id),
-  );
+  const customs = normalized.filter((command) => !builtinById.has(command.id));
 
   return [...builtins, ...customs];
 }

@@ -87,7 +87,9 @@ describe("filterGraphData", () => {
     });
 
     expect(filtered.nodes.some((node) => node.id === "img-1")).toBe(true);
-    expect(filtered.nodes.some((node) => node.kind === "attachment")).toBe(true);
+    expect(filtered.nodes.some((node) => node.kind === "attachment")).toBe(
+      true,
+    );
   });
 
   it("hides canvas image-tool uploads when showAttachments is false", () => {
@@ -100,7 +102,9 @@ describe("filterGraphData", () => {
       canvasAttachments,
     });
 
-    expect(filtered.nodes.some((node) => node.kind === "attachment")).toBe(false);
+    expect(filtered.nodes.some((node) => node.kind === "attachment")).toBe(
+      false,
+    );
     expect(filtered.nodes.some((node) => node.id === withCardImage.id)).toBe(
       true,
     );

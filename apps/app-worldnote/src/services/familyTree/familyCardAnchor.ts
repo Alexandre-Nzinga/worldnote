@@ -9,10 +9,7 @@ export function findFamilyCardByAnchor(
   anchorCharacterId: string,
 ): FamilyCard | null {
   for (const card of Object.values(cardsById)) {
-    if (
-      isFamilyCard(card) &&
-      card.anchor_character_id === anchorCharacterId
-    ) {
+    if (isFamilyCard(card) && card.anchor_character_id === anchorCharacterId) {
       return card;
     }
   }

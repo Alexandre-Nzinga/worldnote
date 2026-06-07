@@ -6,16 +6,14 @@ export const primaryAccentFillClassName =
 export const primaryAccentHoverFillClassName =
   "hover:bg-wn-primary-hover data-[hover=true]:bg-wn-primary-hover";
 
-export const primaryAccentInteractiveClassName =
-  `${primaryAccentFillClassName} ${primaryAccentHoverFillClassName}`;
+export const primaryAccentInteractiveClassName = `${primaryAccentFillClassName} ${primaryAccentHoverFillClassName}`;
 
-export const primaryAccentRingClassName = "ring-2 ring-wn-primary ring-offset-2";
+export const primaryAccentRingClassName =
+  "ring-2 ring-wn-primary ring-offset-2";
 
-export const primaryAccentRingOnSurfaceClassName =
-  `${primaryAccentRingClassName} ring-offset-wn-surface`;
+export const primaryAccentRingOnSurfaceClassName = `${primaryAccentRingClassName} ring-offset-wn-surface`;
 
-export const primaryAccentRingOnDarkClassName =
-  `${primaryAccentRingClassName} ring-offset-wn-mono-900`;
+export const primaryAccentRingOnDarkClassName = `${primaryAccentRingClassName} ring-offset-wn-mono-900`;
 
 /** Bordered chips / quick actions that pick up the user accent on hover. */
 export const primaryAccentChipClassName =

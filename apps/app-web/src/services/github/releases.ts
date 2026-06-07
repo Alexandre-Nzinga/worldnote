@@ -94,9 +94,6 @@ export async function fetchLatestRelease(): Promise<GithubRelease | null> {
 }
 
 /** Resolve the best download URL for a platform, falling back to the releases page. */
-export function getDownloadUrl(
-  assetsByOs: OsAssetMap,
-  os: DownloadOs,
-): string {
+export function getDownloadUrl(assetsByOs: OsAssetMap, os: DownloadOs): string {
   return assetsByOs[os] ?? RELEASES_PAGE_URL;
 }

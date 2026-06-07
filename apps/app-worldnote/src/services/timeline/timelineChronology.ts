@@ -52,7 +52,9 @@ export function buildChronologyTree(
   return roots;
 }
 
-export function flattenChronologyTree(nodes: ChronologyNode[]): ChronologyNode[] {
+export function flattenChronologyTree(
+  nodes: ChronologyNode[],
+): ChronologyNode[] {
   const flat: ChronologyNode[] = [];
   const visit = (items: ChronologyNode[]) => {
     for (const item of items) {
@@ -64,7 +66,10 @@ export function flattenChronologyTree(nodes: ChronologyNode[]): ChronologyNode[]
   return flat;
 }
 
-function collectDescendantIds(node: ChronologyNode, excluded: Set<string>): void {
+function collectDescendantIds(
+  node: ChronologyNode,
+  excluded: Set<string>,
+): void {
   excluded.add(node.id);
   for (const child of node.children) {
     collectDescendantIds(child, excluded);
@@ -128,9 +133,7 @@ export function orphanChronologyChildren(
   entries: ChronologyEntry[],
 ): ChronologyEntry[] {
   return entries.map((entry) =>
-    entry.parent_id === deletedId
-      ? { ...entry, parent_id: null }
-      : entry,
+    entry.parent_id === deletedId ? { ...entry, parent_id: null } : entry,
   );
 }
 
@@ -199,7 +202,6 @@ export function sortChronologyEntries(
 ): ChronologyEntry[] {
   return [...entries].sort(
     (left, right) =>
-      left.start_year - right.start_year ||
-      left.name.localeCompare(right.name),
+      left.start_year - right.start_year || left.name.localeCompare(right.name),
   );
 }

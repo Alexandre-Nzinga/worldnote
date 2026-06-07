@@ -48,8 +48,15 @@ import { useCardCommands } from "../../hooks/useCardCommands.js";
 import { useTimelineCommands } from "../../hooks/useTimelineCommands.js";
 import { useSettings } from "../../hooks/useSettings.js";
 import { useVault } from "../../hooks/useVault.js";
-import { WIZARD_CARD_MIME, readVaultCardRefPayload } from "../../services/canvas/cardDragOut.js";
-import { cardImageSrc, cardNodeSaveCallbacks, worldCardToNodeData } from "../../services/canvas/cardNodeData.js";
+import {
+  WIZARD_CARD_MIME,
+  readVaultCardRefPayload,
+} from "../../services/canvas/cardDragOut.js";
+import {
+  cardImageSrc,
+  cardNodeSaveCallbacks,
+  worldCardToNodeData,
+} from "../../services/canvas/cardNodeData.js";
 import { resolveCardBadgeStyle } from "../../services/settings/cardTypeBadgeSettings.js";
 import { resolveKinshipBadgeStyle } from "../../services/settings/kinshipBadgeSettings.js";
 import {
@@ -405,11 +412,7 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
     if (!familyTreeAnchorId) {
       return null;
     }
-    return computeRelationsToAnchor(
-      familyGraph,
-      familyTreeAnchorId,
-      cardsById,
-    );
+    return computeRelationsToAnchor(familyGraph, familyTreeAnchorId, cardsById);
   }, [cardsById, familyGraph, familyTreeAnchorId]);
 
   const familyTreeEnabled = isModuleEnabled(appSettings, "familyTree");
@@ -461,9 +464,7 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
         const currentHidden = node.hidden ?? false;
         const currentDimmed = node.data.dimmed ?? false;
         const currentLabel =
-          "kinshipLabel" in node.data
-            ? node.data.kinshipLabel
-            : undefined;
+          "kinshipLabel" in node.data ? node.data.kinshipLabel : undefined;
         const currentKinshipBg = node.data.kinshipBadgeClassName;
         const currentKinshipText = node.data.kinshipBadgeTextColor;
 
@@ -632,10 +633,7 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
   ]);
 
   const syncSelectionFromNodes = useCallback((nodeList: CanvasFlowNode[]) => {
-    const cardIds = selectedCardIdsFromNodes(
-      nodeList,
-      cardsByIdRef.current,
-    );
+    const cardIds = selectedCardIdsFromNodes(nodeList, cardsByIdRef.current);
     const imageIds = selectedImageIdsFromNodes(nodeList);
     setSelectedCardIds((prev) => {
       if (
@@ -823,7 +821,8 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
         setNodes((prev) =>
           prev.map((node) => ({
             ...node,
-            selected: node.type === "worldnoteCard" && cardIds.includes(node.id),
+            selected:
+              node.type === "worldnoteCard" && cardIds.includes(node.id),
           })),
         );
         return;
@@ -1086,7 +1085,6 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
     [chronology, deleteChronology, upsertChronology, vaultPath],
   );
 
-
   const toggleAllCardViews = useCallback(async () => {
     if (!vaultPath || isBulkTogglingView) {
       return;
@@ -1212,7 +1210,9 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
       return;
     }
 
-    const appSuffix = normalizeTimelineEraSuffix(appSettings?.timelineEraSuffix);
+    const appSuffix = normalizeTimelineEraSuffix(
+      appSettings?.timelineEraSuffix,
+    );
 
     let disposed = false;
     void (async () => {
@@ -1405,12 +1405,7 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
       clearStarterAction();
       void addCard("location", undefined, { preferViewportCenter: true });
     }
-  }, [
-    addCard,
-    clearStarterAction,
-    isVaultDataLoaded,
-    pendingStarterAction,
-  ]);
+  }, [addCard, clearStarterAction, isVaultDataLoaded, pendingStarterAction]);
 
   const addCanvasImage = useCallback(
     async (
@@ -2017,7 +2012,8 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
       event.preventDefault();
       const cardNode = nodes.find(
         (node) =>
-          node.type === "worldnoteCard" && cardsByIdRef.current[node.id] != null,
+          node.type === "worldnoteCard" &&
+          cardsByIdRef.current[node.id] != null,
       );
       if (!cardNode) {
         return;
@@ -2213,8 +2209,7 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
       const position =
         canvasPointerApiRef.current?.resolveSpawnPosition({
           preferViewportCenter: true,
-        }) ??
-        ({ x: 0, y: 0 } satisfies CanvasFlowPointer);
+        }) ?? ({ x: 0, y: 0 } satisfies CanvasFlowPointer);
       const placed = withCardPatch(card, { position });
       try {
         const saved = await updateWorldCard(vaultPath, placed);
@@ -2397,7 +2392,7 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
             data: worldCardToNodeData(newCard, vaultPath, {
               visibleSocketsSettings: visibleSocketsSettingsRef.current,
               cardTypeBadgeColors: cardTypeBadgeColorsRef.current,
-            kinshipLabelColors: kinshipLabelColorsRef.current,
+              kinshipLabelColors: kinshipLabelColorsRef.current,
               links: linksBefore,
               cardsById: nextCardsById,
             }),
@@ -2922,9 +2917,11 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
     const duplicatedImageNodes: ImageFlowNode[] = [];
     const duplicatedNoteNodes: NoteFlowNode[] = [];
     const clipboardCardIds = clipboard.items
-      .filter((item): item is Extract<CanvasClipboardItem, { kind: "card" }> => {
-        return item.kind === "card";
-      })
+      .filter(
+        (item): item is Extract<CanvasClipboardItem, { kind: "card" }> => {
+          return item.kind === "card";
+        },
+      )
       .map((item) => item.cardId)
       .filter((cardId) => Boolean(cardsByIdRef.current[cardId]));
 
@@ -3221,66 +3218,66 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
             y: event.clientY,
           }) ?? ({ x: 0, y: 0 } satisfies CanvasFlowPointer);
 
-          const tempId = crypto.randomUUID();
-          setNodes((prev) => [
-            ...prev,
-            {
-              id: tempId,
-              type: "worldnoteCard",
-              position,
-              data: {
-                title: "Copying…",
-                subtitle: "Vault",
-                cardType: "item",
-                enterAnimation: true,
-              },
-            },
-          ]);
-
-          void copyCardToWorld({
-            sourceWorldPath: parsed.sourceWorldPath,
-            targetWorldPath: vaultPath,
-            cardId: parsed.cardId,
+        const tempId = crypto.randomUUID();
+        setNodes((prev) => [
+          ...prev,
+          {
+            id: tempId,
+            type: "worldnoteCard",
             position,
+            data: {
+              title: "Copying…",
+              subtitle: "Vault",
+              cardType: "item",
+              enterAnimation: true,
+            },
+          },
+        ]);
+
+        void copyCardToWorld({
+          sourceWorldPath: parsed.sourceWorldPath,
+          targetWorldPath: vaultPath,
+          cardId: parsed.cardId,
+          position,
+        })
+          .then(async (created) => {
+            const cards = await listCards(vaultPath);
+            const card = cards.find((entry) => entry.id === created.cardId);
+            if (!card) {
+              throw new Error("Copied card was not found after creation");
+            }
+            setCardsById((prev) => ({ ...prev, [card.id]: card }));
+            const links = await listLinks(vaultPath);
+            setLinksById(linksRecord(links));
+            setNodes((prev) =>
+              prev.map((node) =>
+                node.id === tempId
+                  ? {
+                      id: card.id,
+                      type: "worldnoteCard",
+                      position: card.position,
+                      data: worldCardToNodeData(card, vaultPath, {
+                        visibleSocketsSettings,
+                        cardTypeBadgeColors,
+                        kinshipLabelColors,
+                        links,
+                        cardsById: {
+                          ...cardsByIdRef.current,
+                          [card.id]: card,
+                        },
+                      }),
+                    }
+                  : node,
+              ),
+            );
+            setSelectedCardIds([card.id]);
+            setSelectedLinkId(null);
+            setInspectorMode("edit");
           })
-            .then(async (created) => {
-              const cards = await listCards(vaultPath);
-              const card = cards.find((entry) => entry.id === created.cardId);
-              if (!card) {
-                throw new Error("Copied card was not found after creation");
-              }
-              setCardsById((prev) => ({ ...prev, [card.id]: card }));
-              const links = await listLinks(vaultPath);
-              setLinksById(linksRecord(links));
-              setNodes((prev) =>
-                prev.map((node) =>
-                  node.id === tempId
-                    ? {
-                        id: card.id,
-                        type: "worldnoteCard",
-                        position: card.position,
-                        data: worldCardToNodeData(card, vaultPath, {
-                          visibleSocketsSettings,
-                          cardTypeBadgeColors,
-                          kinshipLabelColors,
-                          links,
-                          cardsById: {
-                            ...cardsByIdRef.current,
-                            [card.id]: card,
-                          },
-                        }),
-                      }
-                    : node,
-                ),
-              );
-              setSelectedCardIds([card.id]);
-              setSelectedLinkId(null);
-              setInspectorMode("edit");
-            })
-            .catch((error) => {
-              console.error("Failed to copy card:", error);
-              setNodes((prev) => prev.filter((node) => node.id !== tempId));
-            });
+          .catch((error) => {
+            console.error("Failed to copy card:", error);
+            setNodes((prev) => prev.filter((node) => node.id !== tempId));
+          });
         return;
       }
 
@@ -3437,8 +3434,7 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
 
   useCanvasEditShortcuts({
     enabled:
-      !linkPanelOpen &&
-      (!inspectorPanelOpen || inspectorMode === "read"),
+      !linkPanelOpen && (!inspectorPanelOpen || inspectorMode === "read"),
     shortcuts: canvasShortcuts,
     onCopy: handleCopySelection,
     onCut: handleCutSelection,
@@ -3483,7 +3479,11 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
       />
 
       <ReactFlowProvider>
-        <div className="relative h-full w-full" onDrop={onDrop} onDragOver={onDragOver}>
+        <div
+          className="relative h-full w-full"
+          onDrop={onDrop}
+          onDragOver={onDragOver}
+        >
           {showCanvasEmptyState ? (
             <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center px-6 pb-24">
               <CanvasEmptyState
@@ -3716,82 +3716,82 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
           />
         </div>
 
-      <CanvasToolbar
-        activeTool={activeTool}
-        noteToolbar={
-          selectedStickyNote && selectedStickyNoteCallbacks ? (
-            <StickyNoteToolbar
-              heading={selectedStickyNote.data.heading}
-              color={selectedStickyNote.data.color}
-              onChangeHeading={selectedStickyNoteCallbacks.onChangeHeading}
-              onChangeColor={selectedStickyNoteCallbacks.onChangeColor}
-              onDelete={selectedStickyNoteCallbacks.onDelete}
-            />
-          ) : null
-        }
-        imageToolbar={
-          selectedCanvasImage ? (
-            <CanvasImageToolbar
-              position={
-                selectedCanvasImage.data.imagePosition ??
-                defaultCanvasImageNodePosition()
-              }
-              onPositionChange={(imagePosition) => {
-                handleCanvasImagePositionChange(
-                  selectedCanvasImage.id,
-                  imagePosition,
-                );
-              }}
-            />
-          ) : null
-        }
-        selectionToolbar={selectionToolbar}
-        onCreate={(type) => {
-          void addCard(type, undefined, { preferViewportCenter: true });
-        }}
-        onImageTool={() => {
-          void handleImageTool();
-        }}
-        onTextTool={() => {
-          void handleTextTool();
-        }}
-        textToolDisabled={!vaultPath}
-        imageToolDisabled={!vaultPath || !isTauriRuntime()}
-        onOpenVault={onOpenVault}
-        onToggleAllCardViews={() => {
-          void toggleAllCardViews();
-        }}
-        onToggleWizard={() => {
-          setIsWizardOpen((open) => {
-            if (open) {
-              setWizardSeedCardIds(null);
-              return false;
-            }
-            setWizardSeedCardIds(null);
-            return true;
-          });
-        }}
-        isWizardOpen={isWizardOpen}
-        familyTreeBanner={
-          familyTreeAnchorId ? (
-            <div className="flex items-center gap-2 rounded-full border border-wn-border bg-wn-surface/90 px-3 py-1.5 text-xs text-wn-text-muted shadow-sm">
-              <span>
-                Family Tree · relations to{" "}
-                {cardsById[familyTreeAnchorId]?.name ?? "character"}
-              </span>
-              <button
-                type="button"
-                className="rounded-full border border-wn-border bg-wn-surface px-2.5 py-1 font-semibold text-wn-text transition-colors hover:border-wn-mono-50 hover:text-wn-text"
-                onClick={() => {
-                  void handleCreateFamilyFromSelection();
+        <CanvasToolbar
+          activeTool={activeTool}
+          noteToolbar={
+            selectedStickyNote && selectedStickyNoteCallbacks ? (
+              <StickyNoteToolbar
+                heading={selectedStickyNote.data.heading}
+                color={selectedStickyNote.data.color}
+                onChangeHeading={selectedStickyNoteCallbacks.onChangeHeading}
+                onChangeColor={selectedStickyNoteCallbacks.onChangeColor}
+                onDelete={selectedStickyNoteCallbacks.onDelete}
+              />
+            ) : null
+          }
+          imageToolbar={
+            selectedCanvasImage ? (
+              <CanvasImageToolbar
+                position={
+                  selectedCanvasImage.data.imagePosition ??
+                  defaultCanvasImageNodePosition()
+                }
+                onPositionChange={(imagePosition) => {
+                  handleCanvasImagePositionChange(
+                    selectedCanvasImage.id,
+                    imagePosition,
+                  );
                 }}
-              >
-                {createFamilyCardLabel}
-              </button>
-            </div>
-          ) : null
-        }
-      />
+              />
+            ) : null
+          }
+          selectionToolbar={selectionToolbar}
+          onCreate={(type) => {
+            void addCard(type, undefined, { preferViewportCenter: true });
+          }}
+          onImageTool={() => {
+            void handleImageTool();
+          }}
+          onTextTool={() => {
+            void handleTextTool();
+          }}
+          textToolDisabled={!vaultPath}
+          imageToolDisabled={!vaultPath || !isTauriRuntime()}
+          onOpenVault={onOpenVault}
+          onToggleAllCardViews={() => {
+            void toggleAllCardViews();
+          }}
+          onToggleWizard={() => {
+            setIsWizardOpen((open) => {
+              if (open) {
+                setWizardSeedCardIds(null);
+                return false;
+              }
+              setWizardSeedCardIds(null);
+              return true;
+            });
+          }}
+          isWizardOpen={isWizardOpen}
+          familyTreeBanner={
+            familyTreeAnchorId ? (
+              <div className="flex items-center gap-2 rounded-full border border-wn-border bg-wn-surface/90 px-3 py-1.5 text-xs text-wn-text-muted shadow-sm">
+                <span>
+                  Family Tree · relations to{" "}
+                  {cardsById[familyTreeAnchorId]?.name ?? "character"}
+                </span>
+                <button
+                  type="button"
+                  className="rounded-full border border-wn-border bg-wn-surface px-2.5 py-1 font-semibold text-wn-text transition-colors hover:border-wn-mono-50 hover:text-wn-text"
+                  onClick={() => {
+                    void handleCreateFamilyFromSelection();
+                  }}
+                >
+                  {createFamilyCardLabel}
+                </button>
+              </div>
+            ) : null
+          }
+        />
       </ReactFlowProvider>
 
       <Inspector

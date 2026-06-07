@@ -25,11 +25,8 @@
   border-width: 1px;
   font-family: "Inter", var(--font-sans), ui-sans-serif, system-ui, sans-serif;
   font-size: 12px;
-  transition:
-    box-shadow 120ms ease,
-    transform 120ms ease,
-    border-color 120ms ease,
-    background-color 120ms ease;
+  transition: box-shadow 120ms ease, transform 120ms ease, border-color 120ms
+    ease, background-color 120ms ease;
 }
 
 .wn-timeline-root .vis-item.wn-timeline-character:hover,
@@ -65,7 +62,8 @@
 
 .wn-timeline-root .vis-item.wn-chronology-bg {
   background: color-mix(in srgb, var(--color-wn-mono-800) 35%, transparent);
-  border: 1px solid color-mix(in srgb, var(--color-wn-mono-700) 40%, transparent);
+  border: 1px solid
+    color-mix(in srgb, var(--color-wn-mono-700) 40%, transparent);
   color: var(--color-wn-text-muted);
   font-size: 11px;
   min-height: 1.25rem;
@@ -108,5 +106,6 @@
 
 .wn-timeline-root .vis-item.vis-selected {
   border-color: var(--color-wn-primary);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-wn-primary) 45%, transparent);
+  box-shadow: 0 0 0 1px
+    color-mix(in srgb, var(--color-wn-primary) 45%, transparent);
 }

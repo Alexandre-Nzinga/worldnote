@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type { WorldCard } from "@worldnote/shared";
-import { cardsInGroup, isGroupMemberHiddenOnCanvas } from "./groupMemberCards.js";
+import {
+  cardsInGroup,
+  isGroupMemberHiddenOnCanvas,
+} from "./groupMemberCards.js";
 
 function stubCard(id: string, parent_id: string | null): WorldCard {
   return {
@@ -25,10 +28,11 @@ describe("cardsInGroup", () => {
       [b.id]: b,
       [other.id]: other,
     };
-    expect(cardsInGroup("g1", byId).map((c) => c.id).sort()).toEqual([
-      "a",
-      "b",
-    ]);
+    expect(
+      cardsInGroup("g1", byId)
+        .map((c) => c.id)
+        .sort(),
+    ).toEqual(["a", "b"]);
   });
 });
 

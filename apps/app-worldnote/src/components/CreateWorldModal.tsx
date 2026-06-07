@@ -141,10 +141,7 @@ export function CreateWorldModal({
 
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-1">
-          <label
-            htmlFor="create-world-name"
-            className={wnLabelClassName}
-          >
+          <label htmlFor="create-world-name" className={wnLabelClassName}>
             Name <span className="text-wn-red-500">*</span>
           </label>
           <Input

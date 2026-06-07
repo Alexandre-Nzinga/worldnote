@@ -129,12 +129,7 @@ export function CanvasCardContextMenu({
       return;
     }
     const rect = menuRef.current.getBoundingClientRect();
-    const clamped = clampMenuPosition(
-      menu.x,
-      menu.y,
-      rect.width,
-      rect.height,
-    );
+    const clamped = clampMenuPosition(menu.x, menu.y, rect.width, rect.height);
     if (
       clamped.x !== positionRef.current.x ||
       clamped.y !== positionRef.current.y

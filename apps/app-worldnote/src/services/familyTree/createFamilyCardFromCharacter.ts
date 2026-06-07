@@ -67,7 +67,8 @@ export async function createFamilyCardFromCharacter({
     };
   }
 
-  const spawnPosition = position ?? familySpawnPosition(anchorCharacter.position);
+  const spawnPosition =
+    position ?? familySpawnPosition(anchorCharacter.position);
   const draft = await createWorldCard({
     vault,
     cardType: "family",

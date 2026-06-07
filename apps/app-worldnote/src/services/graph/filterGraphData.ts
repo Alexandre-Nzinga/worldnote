@@ -70,7 +70,11 @@ export function filterGraphData(
         return false;
       }
     }
-    if (node.kind === "card" && options.canvasCardsOnly && !options.canvasCardIds.has(node.id)) {
+    if (
+      node.kind === "card" &&
+      options.canvasCardsOnly &&
+      !options.canvasCardIds.has(node.id)
+    ) {
       return false;
     }
     if (

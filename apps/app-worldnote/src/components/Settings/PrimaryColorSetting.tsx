@@ -1,4 +1,8 @@
-import { Button, wnDescriptionClassName, wnTitleClassName } from "@worldnote/ui";
+import {
+  Button,
+  wnDescriptionClassName,
+  wnTitleClassName,
+} from "@worldnote/ui";
 import { useCallback } from "react";
 import { useSettings } from "../../hooks/useSettings.js";
 import {
@@ -28,7 +32,9 @@ type PrimaryColorSettingProps = {
 };
 
 /** Accent color for primary CTAs (Save, Create, etc.). Applies immediately on select. */
-export function PrimaryColorSetting({ disabled = false }: PrimaryColorSettingProps) {
+export function PrimaryColorSetting({
+  disabled = false,
+}: PrimaryColorSettingProps) {
   const settings = useSettings((state) => state.settings);
   const save = useSettings((state) => state.save);
   const current = normalizePrimaryColor(settings?.primaryColor);

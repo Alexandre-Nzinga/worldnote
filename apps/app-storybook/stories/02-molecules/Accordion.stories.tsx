@@ -38,8 +38,7 @@ const faqItems = [
     id: "support",
     index: 3,
     title: "Do you offer ongoing support after a project ends?",
-    content:
-      "Proin sit amet turpis posuere, vehicula est non, aliquet mauris.",
+    content: "Proin sit amet turpis posuere, vehicula est non, aliquet mauris.",
   },
 ];
 

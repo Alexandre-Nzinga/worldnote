@@ -42,7 +42,10 @@ export function StarterPackCard({
   const coverSrc = starterPackCoverSrc(pack.coverFile);
 
   return (
-    <div className={cardClassName} style={{ borderRadius: "var(--radius-wn-card)" }}>
+    <div
+      className={cardClassName}
+      style={{ borderRadius: "var(--radius-wn-card)" }}
+    >
       <MotionPressable
         disabled={disabled}
         enableHover
@@ -95,7 +98,11 @@ export function StarterPackCard({
           >
             {pack.description}
           </p>
-          <Pill size="sm" className={pillClassName} textClassName="text-wn-mono-50">
+          <Pill
+            size="sm"
+            className={pillClassName}
+            textClassName="text-wn-mono-50"
+          >
             {pack.cards.length} cards · {pack.links.length} links
           </Pill>
         </div>

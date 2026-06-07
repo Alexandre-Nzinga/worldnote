@@ -149,18 +149,6 @@ export function WizardChatInput({
   const dropRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const syncTextareaHeight = useCallback(() => {
-    const textarea = textareaRef.current;
-    if (!textarea) {
-      return;
-    }
-    textarea.style.height = "auto";
-    const nextHeight = Math.min(textarea.scrollHeight, TEXTAREA_MAX_HEIGHT_PX);
-    textarea.style.height = `${nextHeight}px`;
-    textarea.style.overflowY =
-      textarea.scrollHeight > TEXTAREA_MAX_HEIGHT_PX ? "auto" : "hidden";
-  }, []);
-
   const droppedCardIds = useMemo(
     () => new Set(cards.map((card) => card.id)),
     [cards],
@@ -172,6 +160,18 @@ export function WizardChatInput({
     }
     return cardsById[previewCardId] ?? null;
   }, [cardsById, droppedCardIds, previewCardId]);
+
+  const syncTextareaHeight = useCallback(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) {
+      return;
+    }
+    textarea.style.height = "auto";
+    const nextHeight = Math.min(textarea.scrollHeight, TEXTAREA_MAX_HEIGHT_PX);
+    textarea.style.height = `${nextHeight}px`;
+    textarea.style.overflowY =
+      textarea.scrollHeight > TEXTAREA_MAX_HEIGHT_PX ? "auto" : "hidden";
+  }, []);
 
   const clearPreview = useCallback(() => {
     setPreviewCardId(null);
@@ -299,6 +299,7 @@ export function WizardChatInput({
     [models],
   );
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: recalc textarea height when content or chips change
   useLayoutEffect(() => {
     syncTextareaHeight();
   }, [value, cards.length, previewCard, syncTextareaHeight]);

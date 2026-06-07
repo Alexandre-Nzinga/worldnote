@@ -1,7 +1,4 @@
-import {
-  listSocketsForCardType,
-  SOCKET_REGISTRY,
-} from "@worldnote/shared";
+import { listSocketsForCardType, SOCKET_REGISTRY } from "@worldnote/shared";
 import type { VisibleSocketsByCardType } from "./settings.js";
 import { objectKeys } from "../objectKeys.js";
 

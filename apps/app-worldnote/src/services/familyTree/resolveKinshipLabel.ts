@@ -114,11 +114,7 @@ function siblingIds(graph: FamilyGraph, personId: string): Set<string> {
   return siblings;
 }
 
-function sharedParentCount(
-  graph: FamilyGraph,
-  a: string,
-  b: string,
-): number {
+function sharedParentCount(graph: FamilyGraph, a: string, b: string): number {
   const parentsA = new Set(parentIds(graph, a));
   let count = 0;
   for (const parentId of parentIds(graph, b)) {

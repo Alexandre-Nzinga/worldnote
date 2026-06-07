@@ -1,4 +1,8 @@
-import { Button, wnDescriptionClassName, wnTitleClassName } from "@worldnote/ui";
+import {
+  Button,
+  wnDescriptionClassName,
+  wnTitleClassName,
+} from "@worldnote/ui";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   DEFAULT_CANVAS_KEYBOARD_SHORTCUTS,
@@ -103,8 +107,8 @@ export function KeyboardShortcutsSettings({
         <div>
           <span className={wnTitleClassName}>Canvas shortcuts</span>
           <p className={`mt-1.5 ${wnDescriptionClassName}`}>
-            Keyboard shortcuts for editing on the world canvas. Click a field and
-            press the key combination you want to use.
+            Keyboard shortcuts for editing on the world canvas. Click a field
+            and press the key combination you want to use.
           </p>
         </div>
       ) : null}

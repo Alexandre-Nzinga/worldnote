@@ -58,8 +58,7 @@ export const wnHintClassName =
   "text-wn-hint font-wn-regular text-wn-text-subtle";
 
 /** `wn-label` — input/picker label (14px, medium). */
-export const wnLabelClassName =
-  "text-wn-label font-wn-medium text-wn-text";
+export const wnLabelClassName = "text-wn-label font-wn-medium text-wn-text";
 
 /** `wn-label-subtle` — compact inspector labels below section titles. */
 export const wnLabelSubtleClassName =
@@ -127,8 +126,7 @@ export const overlayChipLabelClassName =
 export const fieldStackClassName = "flex w-full flex-col gap-1";
 
 /** Label row with optional trailing clear action. */
-export const fieldLabelRowClassName =
-  "flex items-center justify-between gap-2";
+export const fieldLabelRowClassName = "flex items-center justify-between gap-2";
 
 /** Clear affordance for searchable / reference pickers. */
 export const fieldClearButtonClassName =

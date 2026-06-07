@@ -20,7 +20,9 @@ export const worldCoverPalette200 = [
 export type WorldCoverPaletteKey = (typeof worldCoverPalette200)[number];
 
 export function worldCoverPaletteKey(name: string): WorldCoverPaletteKey {
-  return worldCoverPalette200[hashWorldName(name) % worldCoverPalette200.length];
+  return worldCoverPalette200[
+    hashWorldName(name) % worldCoverPalette200.length
+  ];
 }
 
 export function worldCoverImageSrc(

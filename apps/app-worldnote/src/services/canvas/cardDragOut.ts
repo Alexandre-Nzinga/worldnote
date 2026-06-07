@@ -18,7 +18,9 @@ export type VaultCardRefPayload = {
   cardId: string;
 };
 
-export function readVaultCardRefPayload(raw: string): VaultCardRefPayload | null {
+export function readVaultCardRefPayload(
+  raw: string,
+): VaultCardRefPayload | null {
   try {
     const parsed: unknown = JSON.parse(raw);
     if (

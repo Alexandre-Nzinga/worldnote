@@ -92,11 +92,9 @@ export async function streamWizardChat(
         fail("Wizard request aborted");
         return;
       }
-      signal.addEventListener(
-        "abort",
-        () => fail("Wizard request aborted"),
-        { once: true },
-      );
+      signal.addEventListener("abort", () => fail("Wizard request aborted"), {
+        once: true,
+      });
     }
 
     invoke<void>("ollama_chat", {

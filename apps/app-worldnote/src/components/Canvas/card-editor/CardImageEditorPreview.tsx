@@ -15,7 +15,10 @@ function clampPercent(value: number): number {
   return Math.min(100, Math.max(0, value));
 }
 
-function adjustZoom(position: CardImagePosition, delta: number): CardImagePosition {
+function adjustZoom(
+  position: CardImagePosition,
+  delta: number,
+): CardImagePosition {
   return {
     ...position,
     zoom: normalizeCardImageZoom((position.zoom ?? 100) + delta),

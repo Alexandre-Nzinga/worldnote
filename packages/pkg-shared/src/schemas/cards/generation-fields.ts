@@ -23,8 +23,14 @@ const CHARACTER_GEN_FIELDS: Record<string, JsonSchemaProperty> = {
   gender: { type: "string", enum: ["male", "female", "x"] },
   appearance: { type: "string" },
   personality: { type: "string" },
-  start_year: { type: "integer", description: "Birth year (integer timeline axis)." },
-  end_year: { type: "integer", description: "Death year (integer timeline axis)." },
+  start_year: {
+    type: "integer",
+    description: "Birth year (integer timeline axis).",
+  },
+  end_year: {
+    type: "integer",
+    description: "Death year (integer timeline axis).",
+  },
 };
 
 const ITEM_GEN_FIELDS: Record<string, JsonSchemaProperty> = {
@@ -40,7 +46,7 @@ const VEHICLE_GEN_FIELDS: Record<string, JsonSchemaProperty> = {
   max_speed: {
     type: "string",
     description:
-      "Top speed as a number in km/h when numeric (e.g. \"900\"). Use prose for fantastical speeds.",
+      'Top speed as a number in km/h when numeric (e.g. "900"). Use prose for fantastical speeds.',
   },
 };
 
@@ -77,8 +83,14 @@ const POLITY_GEN_FIELDS: Record<string, JsonSchemaProperty> = {
 };
 
 const EVENT_GEN_FIELDS: Record<string, JsonSchemaProperty> = {
-  start_year: { type: "integer", description: "Event year (integer timeline axis)." },
-  end_year: { type: "integer", description: "Event end year for ranged events." },
+  start_year: {
+    type: "integer",
+    description: "Event year (integer timeline axis).",
+  },
+  end_year: {
+    type: "integer",
+    description: "Event end year for ranged events.",
+  },
 };
 
 const FAMILY_GEN_FIELDS: Record<string, JsonSchemaProperty> = {

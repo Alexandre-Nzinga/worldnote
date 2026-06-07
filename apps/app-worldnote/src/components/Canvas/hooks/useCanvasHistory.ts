@@ -2,7 +2,10 @@ import type { CanvasFlowNode } from "@worldnote/canvas";
 import type { Edge } from "@xyflow/react";
 import { useCallback, useEffect, useRef } from "react";
 import { imagePlacementToFlowNode } from "../../../services/canvas/canvasImageNode.js";
-import { cardNodeSaveCallbacks, worldCardToNodeData } from "../../../services/canvas/cardNodeData.js";
+import {
+  cardNodeSaveCallbacks,
+  worldCardToNodeData,
+} from "../../../services/canvas/cardNodeData.js";
 import {
   captureCanvasHistorySnapshot,
   restoreCanvasHistorySnapshot,
@@ -24,7 +27,9 @@ type UseCanvasHistoryOptions = {
   nodesRef: React.RefObject<CanvasFlowNode[]>;
   cardsByIdRef: React.RefObject<Record<string, WorldCard>>;
   linksByIdRef: React.RefObject<Record<string, Link>>;
-  visibleSocketsSettingsRef: React.RefObject<VisibleSocketsByCardType | undefined>;
+  visibleSocketsSettingsRef: React.RefObject<
+    VisibleSocketsByCardType | undefined
+  >;
   cardTypeBadgeColorsRef: React.RefObject<CardTypeBadgeOverrides | undefined>;
   kinshipLabelColorsRef: React.RefObject<KinshipBadgeOverride | undefined>;
   handleSaveCardRef: React.RefObject<
@@ -64,17 +69,18 @@ export function useCanvasHistory({
   const skipHistoryPushRef = useRef(false);
   const dragHistoryPushedRef = useRef(false);
 
-  const captureHistorySnapshot = useCallback((): CanvasHistorySnapshot | null => {
-    if (!vaultPath) {
-      return null;
-    }
-    return captureCanvasHistorySnapshot(
-      vaultPath,
-      nodesRef.current,
-      cardsByIdRef.current,
-      linksByIdRef.current,
-    );
-  }, [cardsByIdRef, linksByIdRef, nodesRef, vaultPath]);
+  const captureHistorySnapshot =
+    useCallback((): CanvasHistorySnapshot | null => {
+      if (!vaultPath) {
+        return null;
+      }
+      return captureCanvasHistorySnapshot(
+        vaultPath,
+        nodesRef.current,
+        cardsByIdRef.current,
+        linksByIdRef.current,
+      );
+    }, [cardsByIdRef, linksByIdRef, nodesRef, vaultPath]);
 
   const pushCanvasHistory = useCallback(() => {
     if (
@@ -141,10 +147,12 @@ export function useCanvasHistory({
             },
           ];
         });
-        const imageNodes: CanvasFlowNode[] = snapshot.images.flatMap((image) => {
-          const node = imagePlacementToFlowNode(image, vaultPath);
-          return node ? [node] : [];
-        });
+        const imageNodes: CanvasFlowNode[] = snapshot.images.flatMap(
+          (image) => {
+            const node = imagePlacementToFlowNode(image, vaultPath);
+            return node ? [node] : [];
+          },
+        );
         setNodes([...cardNodes, ...imageNodes]);
         setSelectedCardIds([]);
         setSelectedImageIds([]);

@@ -27,7 +27,10 @@ import { RichEmptyState } from "../ui/RichEmptyState.js";
 import { toast } from "../../services/notifications/toast.js";
 import { VaultCardChip } from "./VaultCardChip.js";
 import { VaultFilterButton } from "./VaultFilterButton.js";
-import { VaultLoadingSkeleton, VaultPageSkeleton } from "./VaultLoadingSkeleton.js";
+import {
+  VaultLoadingSkeleton,
+  VaultPageSkeleton,
+} from "./VaultLoadingSkeleton.js";
 import {
   ALL_WORLDS_PATH,
   WorldFilterPills,
@@ -69,7 +72,9 @@ export function Vault({
   const [isLoading, setIsLoading] = useState(true);
 
   const [query, setQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<LibraryCard[] | null>(null);
+  const [searchResults, setSearchResults] = useState<LibraryCard[] | null>(
+    null,
+  );
   const [isSearching, setIsSearching] = useState(false);
   const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set());
   const [selectedWorldPath, setSelectedWorldPath] = useState(ALL_WORLDS_PATH);
@@ -167,8 +172,7 @@ export function Vault({
       .map((world) => ({ path: world.path, name: world.name }));
   }, [worlds]);
 
-  const hasActiveFilters =
-    query.trim().length > 0 || selectedTypes.size > 0;
+  const hasActiveFilters = query.trim().length > 0 || selectedTypes.size > 0;
 
   const selectedWorld = useMemo(
     () => worldList.find((world) => world.path === selectedWorldPath),
@@ -227,8 +231,7 @@ export function Vault({
     }));
   }, [filtered, worldList]);
 
-  const showGlobalEmpty =
-    !isLoading && items.length === 0 && !hasActiveFilters;
+  const showGlobalEmpty = !isLoading && items.length === 0 && !hasActiveFilters;
 
   const vaultEmptyActions = useMemo(() => {
     if (worldList.length === 0) {
@@ -384,7 +387,10 @@ export function Vault({
             ) : showGroupedByWorld ? (
               <div className={surfacePanelStackClassName}>
                 {grouped.map((group) => (
-                  <section key={group.worldPath} className={surfacePanelClassName}>
+                  <section
+                    key={group.worldPath}
+                    className={surfacePanelClassName}
+                  >
                     <div className="mb-4 flex items-baseline justify-between gap-3">
                       <h2 {...getHeadingProps("h5", { tone: "inverse" })}>
                         {group.worldName}
@@ -408,7 +414,8 @@ export function Vault({
                           title="No cards yet"
                           description="Open this world on the canvas to add cards."
                           actions={
-                            onAddCharacter && group.worldPath === currentWorldPath
+                            onAddCharacter &&
+                            group.worldPath === currentWorldPath
                               ? [
                                   {
                                     label: "Add Character",

@@ -76,7 +76,9 @@ export function resetCardImagePosition(): CardImagePosition {
   return { ...DEFAULT_CARD_IMAGE_POSITION };
 }
 
-export function isDefaultCardImagePosition(position: CardImagePosition): boolean {
+export function isDefaultCardImagePosition(
+  position: CardImagePosition,
+): boolean {
   const normalized = normalizeCardImageDisplay(undefined, position).position;
   return (
     normalized.x === DEFAULT_CARD_IMAGE_POSITION.x &&
@@ -105,7 +107,9 @@ export function normalizeCardImageDisplay(
   };
 }
 
-function buildCardImageTransform(position: CardImagePosition): string | undefined {
+function buildCardImageTransform(
+  position: CardImagePosition,
+): string | undefined {
   const parts: string[] = [];
   const zoomScale =
     normalizeCardImageZoom(position.zoom) / DEFAULT_CARD_IMAGE_ZOOM;

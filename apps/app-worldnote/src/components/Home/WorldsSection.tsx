@@ -60,7 +60,9 @@ export function WorldsSection({
             size="sm"
             isDisabled={isBusy}
             onPress={onOpenVault}
-            startContent={<MaterialSymbol name="layers" className="text-base" />}
+            startContent={
+              <MaterialSymbol name="layers" className="text-base" />
+            }
           >
             Vault
           </Button>
@@ -138,10 +140,7 @@ export function WorldsSection({
           />
         )}
 
-        <StarterPacksSection
-          isBusy={isBusy}
-          onStartPack={onStartStarterPack}
-        />
+        <StarterPacksSection isBusy={isBusy} onStartPack={onStartStarterPack} />
 
         <HomeFooter />
       </div>

@@ -63,10 +63,7 @@ export function GroupMembersSection({
 
   return (
     <section className={`${inspectorSectionClassName} shrink-0`}>
-      <Eyebrow
-        as="h3"
-        className={inspectorSectionEyebrowClassName}
-      >
+      <Eyebrow as="h3" className={inspectorSectionEyebrowClassName}>
         Cards in group
       </Eyebrow>
       <ul className="flex flex-col gap-3">

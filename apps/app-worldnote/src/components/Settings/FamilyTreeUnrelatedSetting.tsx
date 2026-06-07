@@ -1,4 +1,8 @@
-import { MaterialSymbol, wnDescriptionClassName, wnSubtitleClassName } from "@worldnote/ui";
+import {
+  MaterialSymbol,
+  wnDescriptionClassName,
+  wnSubtitleClassName,
+} from "@worldnote/ui";
 import {
   familyTreeUnrelatedModeLabel,
   normalizeFamilyTreeUnrelatedMode,

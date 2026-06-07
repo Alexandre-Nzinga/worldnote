@@ -5,6 +5,8 @@ type WorldDefaultsSettingsProps = {
 };
 
 /** App-wide conventions that apply regardless of optional modules. */
-export function WorldDefaultsSettings({ disabled = false }: WorldDefaultsSettingsProps) {
+export function WorldDefaultsSettings({
+  disabled = false,
+}: WorldDefaultsSettingsProps) {
   return <UnitSystemSetting disabled={disabled} />;
 }

@@ -38,14 +38,11 @@ describe("collectKinshipMembers", () => {
       kinshipLink(child.id, "father", parent.id),
       kinshipLink(parent.id, "spouse", spouse.id),
     ];
-    const graph = buildFamilyGraph(
-      [parent, child, spouse, stranger],
-      links,
-    );
+    const graph = buildFamilyGraph([parent, child, spouse, stranger], links);
 
-    expect(
-      collectKinshipMembers(graph, [child.id]).sort(),
-    ).toEqual([child.id, parent.id, spouse.id].sort());
+    expect(collectKinshipMembers(graph, [child.id]).sort()).toEqual(
+      [child.id, parent.id, spouse.id].sort(),
+    );
   });
 
   it("unions components from multiple anchors", () => {

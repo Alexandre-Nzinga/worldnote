@@ -34,13 +34,13 @@ export function Eyebrow<T extends ElementType = "span">({
   const Component: ElementType = as ?? "span";
 
   return (
-    <Component
-      className={clsx(eyebrowClassName, className)}
-      {...props}
-    >
+    <Component className={clsx(eyebrowClassName, className)} {...props}>
       {showDot ? (
         <span
-          className={clsx("h-1.5 w-1.5 shrink-0 rounded-full", dotToneClassNames[tone])}
+          className={clsx(
+            "h-1.5 w-1.5 shrink-0 rounded-full",
+            dotToneClassNames[tone],
+          )}
           aria-hidden
         />
       ) : null}

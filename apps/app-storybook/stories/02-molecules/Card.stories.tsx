@@ -1,11 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import {
-  Button,
-  Card,
-  Eyebrow,
-  Tag,
-  TagGroup,
-} from "@worldnote/ui";
+import { Button, Card, Eyebrow, Tag, TagGroup } from "@worldnote/ui";
 
 const meta = {
   title: "02-Molecules/Card",
@@ -58,7 +52,6 @@ export const WithHeading: Story = {
   },
 };
 
-
 export const ConstrainedWidth: Story = {
   args: {
     title: "Card title",
@@ -93,9 +86,7 @@ export const AltureContentCard: Story = {
         Learn more
       </Button>
     ),
-    media: (
-      <div className="aspect-video w-full bg-wn-mono-800" aria-hidden />
-    ),
+    media: <div className="aspect-video w-full bg-wn-mono-800" aria-hidden />,
   },
   decorators: [
     (Story) => (

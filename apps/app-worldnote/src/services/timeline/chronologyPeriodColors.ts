@@ -21,7 +21,9 @@ export const CHRONOLOGY_PERIOD_COLOR_OPTIONS: ChronologyPeriodColorOption[] = [
 
 const HEX_COLOR_PATTERN = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
 
-export function normalizeChronologyColor(value: string | undefined): string | undefined {
+export function normalizeChronologyColor(
+  value: string | undefined,
+): string | undefined {
   const trimmed = value?.trim();
   if (!trimmed) {
     return undefined;
@@ -73,7 +75,9 @@ export function pickDefaultChronologyColor(
   return first?.value ?? "#6366f1";
 }
 
-export function chronologyTimelineStyle(color: string | undefined): string | undefined {
+export function chronologyTimelineStyle(
+  color: string | undefined,
+): string | undefined {
   const normalized = normalizeChronologyColor(color);
   if (!normalized) {
     return undefined;
@@ -93,7 +97,8 @@ export function resolveChronologyColorLabel(value: string | undefined): string {
   }
 
   return (
-    CHRONOLOGY_PERIOD_COLOR_OPTIONS.find((option) => option.value === normalized)
-      ?.label ?? normalized
+    CHRONOLOGY_PERIOD_COLOR_OPTIONS.find(
+      (option) => option.value === normalized,
+    )?.label ?? normalized
   );
 }

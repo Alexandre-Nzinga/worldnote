@@ -16,9 +16,7 @@ function isMultilineEditableTarget(target: EventTarget | null): boolean {
     return false;
   }
   return Boolean(
-    target.closest(
-      'textarea, [contenteditable="true"], [contenteditable=""]',
-    ),
+    target.closest('textarea, [contenteditable="true"], [contenteditable=""]'),
   );
 }
 

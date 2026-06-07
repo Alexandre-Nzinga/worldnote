@@ -43,5 +43,3 @@ export type CanvasManifest = {
   stickyNotes?: StickyNotePlacement[];
   images?: CanvasImagePlacement[];
 };
-
-

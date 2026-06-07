@@ -122,7 +122,9 @@ export function TimelineChronologyEditorModal({
       onClose();
     } catch (saveError) {
       setError(
-        saveError instanceof Error ? saveError.message : "Could not save entry.",
+        saveError instanceof Error
+          ? saveError.message
+          : "Could not save entry.",
       );
     } finally {
       setIsSaving(false);
@@ -142,7 +144,10 @@ export function TimelineChronologyEditorModal({
           <header className="flex flex-col gap-1">
             <h2
               id="timeline-chronology-editor-title"
-              {...getHeadingProps("h5", { tone: "inverse", weight: "semibold" })}
+              {...getHeadingProps("h5", {
+                tone: "inverse",
+                weight: "semibold",
+              })}
             >
               {isNew ? "New period" : "Edit period"}
             </h2>

@@ -14,7 +14,9 @@ export function selectedCardIdsFromNodes(
   return nodeList
     .filter(
       (node) =>
-        node.type === "worldnoteCard" && node.selected && cards[node.id] != null,
+        node.type === "worldnoteCard" &&
+        node.selected &&
+        cards[node.id] != null,
     )
     .map((node) => node.id);
 }
