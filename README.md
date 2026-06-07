@@ -42,6 +42,35 @@ pnpm run dev:storybook   # Component docs (port 6006)
 pnpm run dev:all         # All apps under apps/
 ```
 
+### Releases
+
+Desktop installers are built in CI when a `v*` tag is pushed (see `.github/workflows/release.yml`).
+
+```bash
+# Bump version, commit, tag, and push (triggers Windows / macOS / Linux builds)
+pnpm release patch --push
+
+# Or set an explicit version
+pnpm release 0.1.3 --push
+
+# Local only (commit + tag, no push)
+pnpm release patch --no-push
+```
+
+Version is synced in `apps/app-worldnote/src-tauri/tauri.conf.json`, `package.json`, `Cargo.toml`, and `Cargo.lock`.
+
+Manual equivalent:
+
+```bash
+# 1. Edit version in the four files above (or run pnpm release 0.1.3 --no-push)
+# 2. Commit and tag
+git add apps/app-worldnote/package.json apps/app-worldnote/src-tauri/Cargo.toml apps/app-worldnote/src-tauri/tauri.conf.json Cargo.lock
+git commit -m "Release v0.1.3"
+git tag -a v0.1.3 -m "WorldNote v0.1.3"
+# 3. Push branch + tag to trigger CI
+git push && git push origin v0.1.3
+```
+
 ## Layout
 
 | Path | Package | Role |
