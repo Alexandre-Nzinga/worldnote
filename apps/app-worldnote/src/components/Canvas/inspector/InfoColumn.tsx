@@ -34,6 +34,7 @@ type InfoColumnProps = {
   onViewJson: () => void;
   wizardSection?: ReactNode;
   isLoreGenerating?: boolean;
+  isSubtitleGenerating?: boolean;
   onStartWriting?: () => void;
 };
 
@@ -53,6 +54,7 @@ export function InfoColumn({
   onViewJson,
   wizardSection,
   isLoreGenerating = false,
+  isSubtitleGenerating = false,
   onStartWriting,
 }: InfoColumnProps) {
   const cardTypeBadgeColors = useSettings(
@@ -106,7 +108,12 @@ export function InfoColumn({
                 onViewJson={onViewJson}
               />
             </div>
-            {readOnly ? (
+            {isSubtitleGenerating ? (
+              <div
+                className="h-5 w-2/3 max-w-xs animate-pulse rounded bg-wn-mono-800"
+                aria-hidden
+              />
+            ) : readOnly ? (
               subtitle.trim() ? (
                 <p className="m-0 text-base font-medium leading-snug text-wn-mono-300">
                   {subtitle}

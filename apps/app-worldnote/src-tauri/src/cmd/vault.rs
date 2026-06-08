@@ -65,9 +65,13 @@ pub fn create_world(root: String, name: String, description: String) -> Result<S
     let world_root = parent.join(trimmed_name);
 
     if world_root.exists() {
-        return Err(format!(
-            "A folder named \"{trimmed_name}\" already exists at this location"
-        ));
+        let (worldnote_dir, _, _, _) = world_paths(&world_root);
+        if worldnote_dir.join("world.json").is_file() {
+            return Err(format!(
+                "A folder named \"{trimmed_name}\" already exists at this location"
+            ));
+        }
+        fs::remove_dir_all(&world_root).map_err(|error| error.to_string())?;
     }
 
     let (worldnote_dir, lore_dir, manifest_path, sqlite_path) = world_paths(&world_root);
@@ -376,12 +380,6 @@ pub fn delete_world(world_path: String) -> Result<(), String> {
     let world_root = PathBuf::from(&world_path);
     if !world_root.is_dir() {
         return Err("World folder does not exist".to_string());
-    }
-
-    let (worldnote_dir, _, _, _) = world_paths(&world_root);
-    let metadata_path = worldnote_dir.join("world.json");
-    if !metadata_path.exists() {
-        return Err("Selected folder is not an initialized WorldNote world".to_string());
     }
 
     fs::remove_dir_all(&world_root).map_err(|error| error.to_string())

@@ -43,7 +43,6 @@ export type TypeSpecificEditorState = {
   startYear: string;
   endYear: string;
   gender: CharacterCard["gender"] | "";
-  coordinates: string;
   itemWeight: string;
   itemRarity: ItemCard["rarity"] | "";
   vehicleSubType: VehicleCard["sub_type"] | "";
@@ -72,7 +71,6 @@ export function defaultTypeFields(
     startYear: "",
     endYear: "",
     gender: "",
-    coordinates: "",
     itemWeight: "",
     itemRarity: "",
     vehicleSubType: "",
@@ -106,7 +104,7 @@ export function typeFieldsFromCard(card: WorldCard): TypeSpecificEditorState {
         gender: card.gender ?? "",
       };
     case "location":
-      return { ...defaults, coordinates: card.coordinates ?? "" };
+      return defaults;
     case "item":
       return {
         ...defaults,
@@ -175,7 +173,6 @@ export function buildWorldCard(
       return {
         ...base,
         card_type: "location",
-        coordinates: typeFields.coordinates.trim() || undefined,
       } satisfies LocationCard;
     case "item": {
       const weight = typeFields.itemWeight.trim();

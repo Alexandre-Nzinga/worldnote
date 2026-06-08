@@ -52,6 +52,12 @@ export function describeInspectorExpandAction(cardName: string): string {
   return `Enrich and extend creative content on ${cardName}. Preserves established facts.`;
 }
 
+export function describeInspectorGeneratePropertiesAction(
+  cardName: string,
+): string {
+  return `Fill empty type-specific properties on ${cardName}. Existing values stay unchanged.`;
+}
+
 const NAMES_PLACEHOLDER = "{{names}}";
 
 function countOf(cardTypes: string[], type: string): number {

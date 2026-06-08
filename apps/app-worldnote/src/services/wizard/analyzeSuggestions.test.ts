@@ -37,7 +37,7 @@ function location(id: string, name: string, lore?: string): WorldCard {
 describe("buildSuggestionLabel", () => {
   it("uses Generate for lore-like fields and Fill for type fields", () => {
     expect(buildSuggestionLabel("lore")).toBe("Generate lore");
-    expect(buildSuggestionLabel("description")).toBe("Generate description");
+    expect(buildSuggestionLabel("subtitle")).toBe("Generate subtitle");
     expect(buildSuggestionLabel("race")).toBe("Fill race");
   });
 });
@@ -67,6 +67,7 @@ describe("analyzeWizardSuggestions", () => {
     expect(suggestions).toHaveLength(1);
     expect(suggestions[0]?.targetCardId).toBe(ariaId);
     expect(suggestions[0]?.label).toBe("Generate lore");
+    expect(suggestions[0]?.fieldKey).toBe("lore");
     expect(suggestions[0]?.message).toContain("Aria");
     expect(suggestions[0]?.message).toContain("lore");
   });
@@ -102,5 +103,19 @@ describe("analyzeWizardSuggestions", () => {
 
     expect(suggestions).toHaveLength(1);
     expect(suggestions[0]?.targetCardId).toBe(ariaId);
+  });
+
+  it("does not suggest description when lore exists but description is empty", () => {
+    const arrakis = {
+      ...character(ariaId, "Arrakis"),
+      lore: "A harsh desert world and the only source of spice.",
+    };
+
+    const suggestions = analyzeWizardSuggestions({
+      selectedCard: arrakis,
+    });
+
+    expect(suggestions.find((s) => s.fieldKey === "description")).toBeUndefined();
+    expect(suggestions.every((s) => s.fieldKey !== "description")).toBe(true);
   });
 });

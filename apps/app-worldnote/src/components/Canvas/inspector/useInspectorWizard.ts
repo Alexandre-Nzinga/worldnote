@@ -1,7 +1,8 @@
 import {
-  isFieldEmpty,
-  listEmptyGeneratableFields,
-  listGeneratableFields,
+  hasEmptyTypeProperties,
+  listEmptyTypePropertyFields,
+  listEmptyWizardGeneratableFields,
+  listWizardGeneratableFields,
   type Link,
   type WorldCard,
 } from "@worldnote/shared";
@@ -40,11 +41,12 @@ export function useInspectorWizard({
   const [status, setStatus] = useState<InspectorWizardStatus>("idle");
   const [healthy, setHealthy] = useState<boolean | null>(null);
   const [activeAction, setActiveAction] = useState<
-    "expand" | "fill-gaps" | "suggestion" | null
+    "expand" | "fill-gaps" | "generate-properties" | "suggestion" | null
   >(null);
   const [activeSuggestionId, setActiveSuggestionId] = useState<string | null>(
     null,
   );
+  const [activeFieldKeys, setActiveFieldKeys] = useState<string[]>([]);
 
   const hostRef = useRef(DEFAULT_OLLAMA_HOST);
   const modelRef = useRef("");
@@ -57,25 +59,18 @@ export function useInspectorWizard({
     });
   }, [selectedCard]);
 
-  const isGeneratingLore = useMemo(() => {
-    if (status !== "generating" || !selectedCard) return false;
+  const isGeneratingField = useCallback(
+    (fieldKey: string) =>
+      status === "generating" && activeFieldKeys.includes(fieldKey),
+    [activeFieldKeys, status],
+  );
 
-    if (activeAction === "suggestion") {
-      const suggestion = suggestions.find(
-        (item) => item.id === activeSuggestionId,
-      );
-      return (
-        suggestion?.targetCardId === selectedCard.id &&
-        suggestion.gapLabel === "lore"
-      );
-    }
+  const isGeneratingLore = isGeneratingField("lore");
 
-    if (activeAction === "fill-gaps" || activeAction === "expand") {
-      return isFieldEmpty(selectedCard, "lore");
-    }
-
-    return false;
-  }, [activeAction, activeSuggestionId, selectedCard, status, suggestions]);
+  const canGenerateProperties = useMemo(
+    () => (selectedCard ? hasEmptyTypeProperties(selectedCard) : false),
+    [selectedCard],
+  );
 
   useEffect(() => {
     if (!enabled || !vaultPath) return;
@@ -97,10 +92,18 @@ export function useInspectorWizard({
     };
   }, [enabled, vaultPath]);
 
+  const finishGeneration = useCallback(() => {
+    setStatus("idle");
+    setActiveAction(null);
+    setActiveSuggestionId(null);
+    setActiveFieldKeys([]);
+  }, []);
+
   const runPatch = useCallback(
     async (
       targetCard: WorldCard,
       mode: "expand" | "fill-gaps",
+      fieldKeys?: string[],
     ): Promise<WorldCard> => {
       const model = modelRef.current;
       if (!model) {
@@ -111,9 +114,11 @@ export function useInspectorWizard({
       }
 
       const fields =
-        mode === "fill-gaps"
-          ? listEmptyGeneratableFields(targetCard)
-          : listGeneratableFields(targetCard.card_type);
+        fieldKeys && fieldKeys.length > 0
+          ? fieldKeys
+          : mode === "fill-gaps"
+            ? listEmptyWizardGeneratableFields(targetCard)
+            : listWizardGeneratableFields(targetCard.card_type);
 
       if (fields.length === 0) {
         throw new Error("No fields to generate on this card.");
@@ -141,30 +146,53 @@ export function useInspectorWizard({
 
   const runExpand = useCallback(
     async (card: WorldCard): Promise<WorldCard> => {
+      const fields = listWizardGeneratableFields(card.card_type);
       setActiveAction("expand");
+      setActiveFieldKeys(fields);
       setStatus("generating");
       try {
-        return await runPatch(card, "expand");
-      } finally {
-        setActiveAction(null);
-        setStatus("idle");
+        return await runPatch(card, "expand", fields);
+      } catch (error) {
+        finishGeneration();
+        throw error;
       }
     },
-    [runPatch],
+    [finishGeneration, runPatch],
   );
 
   const runFillGaps = useCallback(
     async (card: WorldCard): Promise<WorldCard> => {
+      const fields = listEmptyWizardGeneratableFields(card);
       setActiveAction("fill-gaps");
+      setActiveFieldKeys(fields);
       setStatus("generating");
       try {
-        return await runPatch(card, "fill-gaps");
-      } finally {
-        setActiveAction(null);
-        setStatus("idle");
+        return await runPatch(card, "fill-gaps", fields);
+      } catch (error) {
+        finishGeneration();
+        throw error;
       }
     },
-    [runPatch],
+    [finishGeneration, runPatch],
+  );
+
+  const runGenerateProperties = useCallback(
+    async (card: WorldCard): Promise<WorldCard> => {
+      const fields = listEmptyTypePropertyFields(card);
+      if (fields.length === 0) {
+        throw new Error("No empty properties to generate on this card.");
+      }
+      setActiveAction("generate-properties");
+      setActiveFieldKeys(fields);
+      setStatus("generating");
+      try {
+        return await runPatch(card, "fill-gaps", fields);
+      } catch (error) {
+        finishGeneration();
+        throw error;
+      }
+    },
+    [finishGeneration, runPatch],
   );
 
   const runSuggestion = useCallback(
@@ -178,16 +206,18 @@ export function useInspectorWizard({
 
       setActiveAction("suggestion");
       setActiveSuggestionId(suggestion.id);
+      setActiveFieldKeys([suggestion.fieldKey]);
       setStatus("generating");
       try {
-        return await runPatch(selectedCard, suggestion.action);
-      } finally {
-        setActiveSuggestionId(null);
-        setActiveAction(null);
-        setStatus("idle");
+        return await runPatch(selectedCard, suggestion.action, [
+          suggestion.fieldKey,
+        ]);
+      } catch (error) {
+        finishGeneration();
+        throw error;
       }
     },
-    [runPatch, selectedCard],
+    [finishGeneration, runPatch, selectedCard],
   );
 
   const handleError = useCallback((err: unknown) => {
@@ -203,8 +233,12 @@ export function useInspectorWizard({
     activeSuggestionId,
     suggestions,
     isGeneratingLore,
+    isGeneratingField,
+    canGenerateProperties,
+    finishGeneration,
     runExpand,
     runFillGaps,
+    runGenerateProperties,
     runSuggestion,
     handleError,
   };

@@ -1,6 +1,12 @@
 import {
   CARD_TYPE_LABELS,
-  listGeneratableFields,
+  CANONICAL_UNITS,
+  detectMeasurementKind,
+  isTimelineYearField,
+  listWizardGeneratableFields,
+  MEASUREMENT_GENERATION_HINT,
+  SUBTITLE_GENERATION_HINT,
+  TIMELINE_YEAR_GENERATION_HINT,
   type Link,
   type WorldCard,
 } from "@worldnote/shared";
@@ -19,7 +25,7 @@ function existingContentBlock(card: WorldCard): string {
   const typeLabel = CARD_TYPE_LABELS[card.card_type] ?? card.card_type;
   lines.push(`Type: ${typeLabel}`);
 
-  for (const key of listGeneratableFields(card.card_type)) {
+  for (const key of listWizardGeneratableFields(card.card_type)) {
     const value = card[key as keyof WorldCard];
     if (value === null || value === undefined) continue;
     if (typeof value === "string" && value.trim().length === 0) continue;
@@ -40,6 +46,29 @@ function linkedContextBlock(context?: LinkedContext): string {
   return `The author is viewing ${context.sourceCardName}, which links to this card via ${context.socketLabel}. Generate content for this card informed by that relationship.\n\n`;
 }
 
+function fieldGuidanceBlock(fields: string[]): string {
+  const lines: string[] = [];
+  if (fields.includes("subtitle")) {
+    lines.push(`- subtitle: ${SUBTITLE_GENERATION_HINT}`);
+  }
+  for (const field of fields) {
+    if (isTimelineYearField(field)) {
+      lines.push(`- ${field}: ${TIMELINE_YEAR_GENERATION_HINT}`);
+      continue;
+    }
+    const measurementKind = detectMeasurementKind(field);
+    if (measurementKind) {
+      lines.push(
+        `- ${field}: ${MEASUREMENT_GENERATION_HINT} Use ${CANONICAL_UNITS[measurementKind]}.`,
+      );
+    }
+  }
+  if (lines.length === 0) {
+    return "";
+  }
+  return `\nField guidance:\n${lines.join("\n")}\n`;
+}
+
 /** Prompt for fill-gaps mode: only empty schema fields. */
 export function buildFillGapsPrompt(
   card: WorldCard,
@@ -53,7 +82,7 @@ Rules:
 - Do not change fields that already have content.
 - Stay consistent with linked cards and relationships in the world context.
 - Invent plausible details that fit the established lore.
-
+${fieldGuidanceBlock(fields)}
 ${existingContentBlock(card)}`;
 }
 
@@ -66,7 +95,8 @@ export function buildExpandPrompt(
 
 Rules:
 - Preserve all established facts from the existing content below.
-- Deepen lore, description, subtitle, and type-specific details.
+- Deepen lore, description, and type-specific details.
+- When enriching subtitle, ${SUBTITLE_GENERATION_HINT}
 - Do not contradict provided data; extrapolate plausibly from it.
 - Return all generatable fields with enriched content.
 

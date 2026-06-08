@@ -113,9 +113,8 @@ fn subtitle_for_card(card: &serde_json::Value, card_type: &str) -> String {
         "character" => format_year_field(card, "start_year")
             .or_else(|| extract_string_field(card, "description").filter(|value| !value.trim().is_empty()))
             .unwrap_or_else(|| type_label("Character")),
-        "location" => extract_string_field(card, "coordinates")
+        "location" => extract_string_field(card, "description")
             .filter(|value| !value.trim().is_empty())
-            .or_else(|| extract_string_field(card, "description").filter(|value| !value.trim().is_empty()))
             .unwrap_or_else(|| type_label("Location")),
         "item" => extract_string_field(card, "rarity")
             .map(|value| capitalize_first(value.trim()))

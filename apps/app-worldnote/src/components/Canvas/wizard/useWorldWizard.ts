@@ -1,6 +1,6 @@
 import {
-  listEmptyGeneratableFields,
-  listGeneratableFields,
+  listEmptyWizardGeneratableFields,
+  listWizardGeneratableFields,
   type Link,
   type WorldCard,
 } from "@worldnote/shared";
@@ -495,8 +495,8 @@ export function useWorldWizard({
       const mode = preset.patchMode;
       const fields =
         mode === "fill-gaps"
-          ? listEmptyGeneratableFields(targetCard)
-          : listGeneratableFields(targetCard.card_type);
+          ? listEmptyWizardGeneratableFields(targetCard)
+          : listWizardGeneratableFields(targetCard.card_type);
 
       if (fields.length === 0) {
         updateMessage(assistantId, {

@@ -14,6 +14,7 @@ import {
   writeStickyNoteMarkdown,
 } from "../canvas/stickyNoteMarkdown.js";
 import { saveCanvasImageBytes } from "../desktop/saveCanvasImage.js";
+import { deleteWorld } from "../worlds/deleteWorld.js";
 import { listWorlds } from "../worlds/listWorlds.js";
 import type {
   BuildStarterPackOptions,
@@ -97,14 +98,23 @@ export async function buildStarterPackWorld(
   const existing = worlds.find((world) => world.name === pack.name);
 
   if (existing && !forceNew) {
-    return {
-      path: existing.path,
-      name: existing.name,
-      created: false,
-      cardAnchorMap: {},
-      stickyNoteAnchorMap: {},
-      canvasImageAnchorMap: {},
-    };
+    try {
+      await invoke<string>("open_world", { root: existing.path });
+      return {
+        path: existing.path,
+        name: existing.name,
+        created: false,
+        cardAnchorMap: {},
+        stickyNoteAnchorMap: {},
+        canvasImageAnchorMap: {},
+      };
+    } catch (error) {
+      console.warn(
+        `Starter pack "${pack.id}" world was invalid, recreating:`,
+        error,
+      );
+      await deleteWorld(existing.path);
+    }
   }
 
   const worldName = resolvePackWorldName(pack.name, existingNames, forceNew);

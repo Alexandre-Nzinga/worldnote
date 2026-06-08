@@ -9,9 +9,13 @@ import {
   wnTitleClassName,
 } from "@worldnote/ui";
 import { useCallback, useEffect, useState } from "react";
+import { openExternalUrl } from "../../services/desktop/openExternalUrl.js";
 import {
   checkOllamaHealth,
   listOllamaModels,
+  OLLAMA_MODEL_LIBRARY_URL,
+  SUGGESTED_WIZARD_MODEL,
+  SUGGESTED_WIZARD_MODEL_URL,
 } from "../../services/wizard/ollamaClient.js";
 import { defaultWizardSystemPrompt } from "../../services/wizard/prompts.js";
 import { primaryAccentRingOnSurfaceClassName } from "../../services/settings/primaryAccentStyles.js";
@@ -143,14 +147,23 @@ export function WorldWizardSettings({
         </div>
       </section>
 
-      <section className={settingsPanelClassName}>
-        <div className="mb-4 flex items-center justify-between gap-3">
+      <section className={`${settingsPanelClassName} flex flex-col gap-4`}>
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <span className={wnTitleClassName}>Available models</span>
-          {value.defaultModel ? (
-            <span className="text-xs text-wn-text-muted">
-              Default: {value.defaultModel}
-            </span>
-          ) : null}
+          <Button
+            variant="secondary"
+            size="sm"
+            isDisabled={disabled}
+            aria-label="Browse models on Ollama"
+            onPress={() => {
+              void openExternalUrl(OLLAMA_MODEL_LIBRARY_URL);
+            }}
+            startContent={
+              <MaterialSymbol name="open_in_new" className="text-base" />
+            }
+          >
+            Browse models
+          </Button>
         </div>
 
         {isRefreshing ? (
@@ -159,7 +172,7 @@ export function WorldWizardSettings({
           <p className={wnDescriptionClassName}>
             {healthy === false
               ? "Start Ollama, then refresh to list installed models."
-              : "No models found. Pull a model in Ollama, then refresh."}
+              : "No models found. Browse models on Ollama to download one, then refresh."}
           </p>
         ) : (
           <ul className={settingsRowListClassName}>
@@ -193,6 +206,22 @@ export function WorldWizardSettings({
             })}
           </ul>
         )}
+
+        <p className={wnHintClassName}>
+          Not sure which to download? Try{" "}
+          <button
+            type="button"
+            disabled={disabled}
+            className="font-medium text-wn-text underline underline-offset-2 transition-colors hover:text-wn-mono-200 disabled:cursor-not-allowed disabled:opacity-50"
+            onClick={() => {
+              void openExternalUrl(SUGGESTED_WIZARD_MODEL_URL);
+            }}
+          >
+            {SUGGESTED_WIZARD_MODEL}
+          </button>{" "}
+          is a solid starting point for creative writing and structured card
+          generation.
+        </p>
       </section>
 
       <section className={`${settingsPanelClassName} flex flex-col gap-3`}>

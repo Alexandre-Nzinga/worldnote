@@ -1,3 +1,5 @@
+import { normalizeTimelineYear } from "@worldnote/shared";
+
 const SIGNED_INTEGER_PATTERN = /-?\d+/;
 
 /** Extract the first signed integer from a free-form date string (e.g. "Year 10191 AG"). */
@@ -92,12 +94,7 @@ export function formatTimelineDateLabel(
 
 /** Parse a year input string; returns undefined when empty or invalid. */
 export function parseYearInput(value: string): number | undefined {
-  const trimmed = value.trim();
-  if (!trimmed) {
-    return undefined;
-  }
-  const parsed = Number.parseInt(trimmed, 10);
-  return Number.isFinite(parsed) ? parsed : undefined;
+  return normalizeTimelineYear(value);
 }
 
 /** Format a year for numeric input fields. */

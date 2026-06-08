@@ -1,7 +1,6 @@
 import {
-  hasCreativeGaps,
+  hasWizardCreativeGaps,
   isFieldEmpty,
-  listEmptyGeneratableFields,
   type WorldCard,
 } from "@worldnote/shared";
 
@@ -15,6 +14,8 @@ export type WizardSuggestion = {
   message: string;
   /** Primary empty field driving this suggestion. */
   gapLabel: string;
+  /** Schema field key to generate (e.g. `lore`, `max_speed`). */
+  fieldKey: string;
   targetCardId: string;
   action: WizardSuggestionAction;
   priority: number;
@@ -35,20 +36,19 @@ function suggestionKey(
   return `${targetCardId}:${action}`;
 }
 
-function primaryGapLabel(card: WorldCard): string | null {
-  if (isFieldEmpty(card, "lore")) return "lore";
-  if (isFieldEmpty(card, "description")) return "description";
-  if (isFieldEmpty(card, "subtitle")) return "subtitle";
-  const emptyTypeFields = listEmptyGeneratableFields(card).filter(
-    (key) => !["lore", "description", "subtitle", "tags"].includes(key),
-  );
-  if (emptyTypeFields.length > 0) {
-    return emptyTypeFields[0]?.replace(/_/g, " ") ?? null;
+function primaryGap(
+  card: WorldCard,
+): { fieldKey: string; gapLabel: string } | null {
+  if (isFieldEmpty(card, "lore")) {
+    return { fieldKey: "lore", gapLabel: "lore" };
+  }
+  if (isFieldEmpty(card, "subtitle")) {
+    return { fieldKey: "subtitle", gapLabel: "subtitle" };
   }
   return null;
 }
 
-const GENERATE_FIELDS = new Set(["lore", "description", "subtitle"]);
+const GENERATE_FIELDS = new Set(["lore", "subtitle"]);
 
 /** Compact inspector chip label, e.g. "Generate lore" or "Fill race". */
 export function buildSuggestionLabel(gapLabel: string): string {
@@ -71,12 +71,12 @@ export function analyzeWizardSuggestions(
   const suggestions: WizardSuggestion[] = [];
   const seen = new Set<string>();
 
-  if (!hasCreativeGaps(selectedCard)) {
+  if (!hasWizardCreativeGaps(selectedCard)) {
     return suggestions;
   }
 
-  const gapLabel = primaryGapLabel(selectedCard);
-  if (!gapLabel) {
+  const gap = primaryGap(selectedCard);
+  if (!gap) {
     return suggestions;
   }
 
@@ -88,9 +88,10 @@ export function analyzeWizardSuggestions(
 
   suggestions.push({
     id: crypto.randomUUID(),
-    label: buildSuggestionLabel(gapLabel),
-    message: selfGapMessage(selectedCard.name, gapLabel),
-    gapLabel,
+    label: buildSuggestionLabel(gap.gapLabel),
+    message: selfGapMessage(selectedCard.name, gap.gapLabel),
+    gapLabel: gap.gapLabel,
+    fieldKey: gap.fieldKey,
     targetCardId: selectedCard.id,
     action: "fill-gaps",
     priority: SELF_GAP_PRIORITY,

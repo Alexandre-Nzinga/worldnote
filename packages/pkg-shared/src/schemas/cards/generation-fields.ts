@@ -1,3 +1,9 @@
+import {
+  MAX_TIMELINE_YEAR,
+  MIN_TIMELINE_YEAR,
+  TIMELINE_YEAR_GENERATION_HINT,
+} from "../timeline/timeline-year.js";
+import { MEASUREMENT_GENERATION_HINT } from "../../units/measurements.js";
 import { FaunaDietSchema } from "./atoms/fauna.js";
 import { FloraToxicitySchema } from "./atoms/flora.js";
 import { ItemRaritySchema } from "./atoms/item.js";
@@ -7,36 +13,49 @@ import type { WorldCard } from "./world-card.js";
 
 export type JsonSchemaProperty = Record<string, unknown>;
 
+/** Guidance for LLM subtitle generation (schema + prompts). */
+export const SUBTITLE_GENERATION_HINT =
+  'Very short label or epithet (about 1-5 words). Not a sentence or description. Examples: "Desert planet", "Evocation", "Spice trader".';
+
 /** Creative base fields every card type may generate (excludes structural keys). */
 export const BASE_GEN_FIELDS: Record<string, JsonSchemaProperty> = {
-  subtitle: { type: "string" },
+  subtitle: { type: "string", description: SUBTITLE_GENERATION_HINT },
   description: { type: "string" },
   lore: { type: "string" },
-  tags: { type: "array", items: { type: "string" } },
+  tags: {
+    type: "array",
+    items: { type: "string" },
+    description:
+      "Short topical labels using spaces between words (e.g. \"spice melange\"), never underscores.",
+  },
 };
 
 /** Name is required only when creating a new card from scratch. */
 export const NAME_GEN_FIELD: JsonSchemaProperty = { type: "string" };
+
+function timelineYearField(label: string): JsonSchemaProperty {
+  return {
+    type: "integer",
+    minimum: MIN_TIMELINE_YEAR,
+    maximum: MAX_TIMELINE_YEAR,
+    description: `${label}. ${TIMELINE_YEAR_GENERATION_HINT}`,
+  };
+}
 
 const CHARACTER_GEN_FIELDS: Record<string, JsonSchemaProperty> = {
   race: { type: "string" },
   gender: { type: "string", enum: ["male", "female", "x"] },
   appearance: { type: "string" },
   personality: { type: "string" },
-  start_year: {
-    type: "integer",
-    description: "Birth year (integer timeline axis).",
-  },
-  end_year: {
-    type: "integer",
-    description: "Death year (integer timeline axis).",
-  },
+  start_year: timelineYearField("Birth year on the world timeline"),
+  end_year: timelineYearField("Death year on the world timeline"),
 };
 
 const ITEM_GEN_FIELDS: Record<string, JsonSchemaProperty> = {
   weight: {
     type: "number",
-    description: "Mass in kilograms (kg). Use decimals for sub-kilogram items.",
+    minimum: 0,
+    description: `Mass in kilograms (kg). ${MEASUREMENT_GENERATION_HINT}`,
   },
   rarity: { type: "string", enum: ItemRaritySchema.options },
 };
@@ -44,9 +63,9 @@ const ITEM_GEN_FIELDS: Record<string, JsonSchemaProperty> = {
 const VEHICLE_GEN_FIELDS: Record<string, JsonSchemaProperty> = {
   sub_type: { type: "string", enum: [...VEHICLE_SUB_TYPE_VALUES] },
   max_speed: {
-    type: "string",
-    description:
-      'Top speed as a number in km/h when numeric (e.g. "900"). Use prose for fantastical speeds.',
+    type: "number",
+    minimum: 0,
+    description: `Top speed in km/h. ${MEASUREMENT_GENERATION_HINT}`,
   },
 };
 
@@ -62,9 +81,7 @@ const STRUCTURE_GEN_FIELDS: Record<string, JsonSchemaProperty> = {
   condition: { type: "string", enum: StructureConditionSchema.options },
 };
 
-const LOCATION_GEN_FIELDS: Record<string, JsonSchemaProperty> = {
-  coordinates: { type: "string" },
-};
+const LOCATION_GEN_FIELDS: Record<string, JsonSchemaProperty> = {};
 
 const SPECIES_GEN_FIELDS: Record<string, JsonSchemaProperty> = {
   average_lifespan: { type: "string" },
@@ -83,14 +100,8 @@ const POLITY_GEN_FIELDS: Record<string, JsonSchemaProperty> = {
 };
 
 const EVENT_GEN_FIELDS: Record<string, JsonSchemaProperty> = {
-  start_year: {
-    type: "integer",
-    description: "Event year (integer timeline axis).",
-  },
-  end_year: {
-    type: "integer",
-    description: "Event end year for ranged events.",
-  },
+  start_year: timelineYearField("Event start year on the world timeline"),
+  end_year: timelineYearField("Event end year for ranged events"),
 };
 
 const FAMILY_GEN_FIELDS: Record<string, JsonSchemaProperty> = {
@@ -163,6 +174,13 @@ const STRUCTURAL_KEYS = new Set([
   "crest_path",
 ]);
 
+/** Type-specific property field keys for a card type (Properties tab). */
+export function listTypePropertyFields(
+  cardType: WorldCard["card_type"],
+): string[] {
+  return Object.keys(TYPE_GEN_FIELDS[cardType]);
+}
+
 /** All generatable field keys for a card type (base + type-specific). */
 export function listGeneratableFields(
   cardType: WorldCard["card_type"],
@@ -171,7 +189,7 @@ export function listGeneratableFields(
   const fields = [
     ...(options?.includeName ? ["name"] : []),
     ...Object.keys(BASE_GEN_FIELDS),
-    ...Object.keys(TYPE_GEN_FIELDS[cardType]),
+    ...listTypePropertyFields(cardType),
   ];
   return fields;
 }
@@ -199,6 +217,22 @@ export function isFieldEmpty(card: WorldCard, fieldKey: string): boolean {
   return false;
 }
 
+/**
+ * Fields the wizard generates directly. `description` is excluded — it is
+ * derived from lore when the card is saved.
+ */
+export const WIZARD_EXCLUDED_GEN_FIELDS = new Set(["description"]);
+
+/** Generatable fields the wizard may fill or expand. */
+export function listWizardGeneratableFields(
+  cardType: WorldCard["card_type"],
+  options?: { includeName?: boolean },
+): string[] {
+  return listGeneratableFields(cardType, options).filter(
+    (key) => !WIZARD_EXCLUDED_GEN_FIELDS.has(key),
+  );
+}
+
 /** Returns empty generatable fields on a card. */
 export function listEmptyGeneratableFields(card: WorldCard): string[] {
   return listGeneratableFields(card.card_type).filter((key) =>
@@ -206,7 +240,31 @@ export function listEmptyGeneratableFields(card: WorldCard): string[] {
   );
 }
 
+/** Returns empty wizard-generatable fields on a card. */
+export function listEmptyWizardGeneratableFields(card: WorldCard): string[] {
+  return listWizardGeneratableFields(card.card_type).filter((key) =>
+    isFieldEmpty(card, key),
+  );
+}
+
+/** Returns empty type-specific property fields on a card. */
+export function listEmptyTypePropertyFields(card: WorldCard): string[] {
+  return listTypePropertyFields(card.card_type).filter((key) =>
+    isFieldEmpty(card, key),
+  );
+}
+
+/** Whether a card has empty type-specific property fields to generate. */
+export function hasEmptyTypeProperties(card: WorldCard): boolean {
+  return listEmptyTypePropertyFields(card).length > 0;
+}
+
 /** Whether a card has meaningful creative content gaps. */
 export function hasCreativeGaps(card: WorldCard): boolean {
   return listEmptyGeneratableFields(card).length > 0;
+}
+
+/** Whether a card has gaps the inspector wizard should suggest filling. */
+export function hasWizardCreativeGaps(card: WorldCard): boolean {
+  return listEmptyWizardGeneratableFields(card).length > 0;
 }

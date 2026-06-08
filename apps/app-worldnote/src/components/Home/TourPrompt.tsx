@@ -1,11 +1,12 @@
 import {
   AnimatedModal,
   Button,
+  CloseIconButton,
   getBodyTextStyle,
   getHeadingProps,
-  MaterialSymbol,
 } from "@worldnote/ui";
 import { useTutorial } from "../../hooks/useTutorial.js";
+import { modalPrimaryButtonClassName } from "../Onboarding/fieldClassNames.js";
 
 type TourPromptProps = {
   isOpen: boolean;
@@ -24,40 +25,49 @@ export function TourPrompt({
     <AnimatedModal
       isOpen={isOpen}
       onClose={onDismiss}
-      panelClassName="w-full max-w-md rounded-2xl border border-wn-mono-700 bg-wn-mono-900 p-6 text-wn-mono-100 shadow-2xl"
+      closeDisabled={isBusy}
+      labelledBy="tour-prompt-title"
+      backdropDismissGuardMs={300}
     >
-      <div className="mb-4 flex items-center gap-3">
-        <span className="flex size-10 items-center justify-center rounded-xl bg-wn-mono-800">
-          <MaterialSymbol name="school" className="text-xl text-wn-mono-50" />
-        </span>
-        <h2 {...getHeadingProps("h4", { tone: "inverse" })}>
-          Take a quick tour?
-        </h2>
-      </div>
-      <p className="mb-6 text-wn-mono-300" style={getBodyTextStyle("small")}>
-        Learn how to navigate WorldNote, work with cards, links, notes, and
-        tools using a sample world built for the tutorial.
-      </p>
-      <div className="flex flex-col gap-2 sm:flex-row">
-        <Button
-          variant="white"
-          size="base"
-          className="flex-1"
+      <header className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 flex-col gap-1">
+          <h2
+            id="tour-prompt-title"
+            {...getHeadingProps("h5", { tone: "inverse", weight: "semibold" })}
+          >
+            Take a quick tour?
+          </h2>
+          <p style={getBodyTextStyle("small")}>
+            Walk through the canvas, cards, links, and tools using a sample
+            world built for the tutorial.
+          </p>
+        </div>
+        <CloseIconButton
+          aria-label="Close tour prompt"
           isDisabled={isBusy}
-          onPress={() => start("home")}
-        >
-          Take the tour
-        </Button>
+          onPress={onDismiss}
+        />
+      </header>
+
+      <footer className="flex shrink-0 flex-wrap items-center justify-end gap-3">
         <Button
-          variant="tertiary"
+          variant="secondary"
           size="base"
-          className="flex-1"
           isDisabled={isBusy}
           onPress={onDismiss}
         >
           Maybe later
         </Button>
-      </div>
+        <Button
+          variant="white"
+          size="base"
+          className={modalPrimaryButtonClassName}
+          isDisabled={isBusy}
+          onPress={() => start("home")}
+        >
+          Take the tour
+        </Button>
+      </footer>
     </AnimatedModal>
   );
 }

@@ -4,6 +4,7 @@ import type { WizardSuggestion } from "../../../services/wizard/analyzeSuggestio
 import {
   describeInspectorExpandAction,
   describeInspectorFillGapsAction,
+  describeInspectorGeneratePropertiesAction,
 } from "../../../services/settings/wizardQuickCommands.js";
 import {
   WizardActionChip,
@@ -14,13 +15,20 @@ import type { InspectorWizardStatus } from "./useInspectorWizard.js";
 type InspectorWizardSectionProps = {
   status: InspectorWizardStatus;
   healthy: boolean | null;
-  activeAction: "expand" | "fill-gaps" | "suggestion" | null;
+  activeAction:
+    | "expand"
+    | "fill-gaps"
+    | "generate-properties"
+    | "suggestion"
+    | null;
   activeSuggestionId: string | null;
   suggestions: WizardSuggestion[];
+  canGenerateProperties: boolean;
   isBusy: boolean;
   selectedCard: WorldCard;
   onExpand: () => void;
   onFillGaps: () => void;
+  onGenerateProperties: () => void;
   onRunSuggestion: (suggestion: WizardSuggestion) => void;
   onOpenWizard?: () => void;
 };
@@ -31,10 +39,12 @@ export function InspectorWizardSection({
   activeAction,
   activeSuggestionId,
   suggestions,
+  canGenerateProperties,
   isBusy,
   selectedCard,
   onExpand,
   onFillGaps,
+  onGenerateProperties,
   onRunSuggestion,
   onOpenWizard,
 }: InspectorWizardSectionProps) {
@@ -43,6 +53,8 @@ export function InspectorWizardSection({
   const isGenerating = status === "generating";
   const isFillingGaps = isGenerating && activeAction === "fill-gaps";
   const isExpanding = isGenerating && activeAction === "expand";
+  const isGeneratingProperties =
+    isGenerating && activeAction === "generate-properties";
 
   return (
     <section
@@ -73,6 +85,20 @@ export function InspectorWizardSection({
             busy={isExpanding}
             onClick={onExpand}
           />
+          {canGenerateProperties ? (
+            <WizardActionChip
+              icon="checklist"
+              label={
+                isGeneratingProperties ? "Generating…" : "Generate properties"
+              }
+              tooltip={describeInspectorGeneratePropertiesAction(
+                selectedCard.name,
+              )}
+              disabled={wizardDisabled}
+              busy={isGeneratingProperties}
+              onClick={onGenerateProperties}
+            />
+          ) : null}
           {suggestions.map((suggestion) => {
             const isThisSuggestionGenerating =
               isGenerating &&

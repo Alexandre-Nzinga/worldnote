@@ -1,6 +1,11 @@
 import {
   BASE_GEN_FIELDS,
+  detectMeasurementKind,
+  isTimelineYearField,
   NAME_GEN_FIELD,
+  normalizeCanonicalMeasurement,
+  normalizeTimelineYear,
+  storesMeasurementAsString,
   TYPE_GEN_FIELDS,
   WorldCardSchema,
   type WorldCard,
@@ -104,6 +109,25 @@ const STRUCTURAL_KEYS = new Set([
   "crest_path",
 ]);
 
+/** LLMs often emit snake_case tags; WorldNote displays human-readable labels. */
+export function normalizeGeneratedTags(tags: string[]): string[] {
+  return tags
+    .map((tag) => tag.replace(/_/g, " ").replace(/\s+/g, " ").trim())
+    .filter((tag) => tag.length > 0);
+}
+
+const MAX_SUBTITLE_WORDS = 5;
+
+/** Trims model output so subtitles stay short epithets, not sentences. */
+export function normalizeGeneratedSubtitle(value: string): string {
+  const trimmed = value.trim().replace(/[.!?…]+$/, "").trim();
+  const words = trimmed.split(/\s+/).filter((word) => word.length > 0);
+  if (words.length <= MAX_SUBTITLE_WORDS) {
+    return words.join(" ");
+  }
+  return words.slice(0, MAX_SUBTITLE_WORDS).join(" ");
+}
+
 function mergeParsedIntoCard(
   card: WorldCard,
   data: Record<string, unknown>,
@@ -116,8 +140,31 @@ function mergeParsedIntoCard(
     }
     if (key === "tags") {
       patch.tags = Array.isArray(value)
-        ? value.filter((tag): tag is string => typeof tag === "string")
+        ? normalizeGeneratedTags(
+            value.filter((tag): tag is string => typeof tag === "string"),
+          )
         : [];
+      continue;
+    }
+    if (key === "subtitle" && typeof value === "string") {
+      patch.subtitle = normalizeGeneratedSubtitle(value);
+      continue;
+    }
+    if (isTimelineYearField(key)) {
+      const year = normalizeTimelineYear(value);
+      if (year !== undefined) {
+        patch[key] = year;
+      }
+      continue;
+    }
+    if (detectMeasurementKind(key)) {
+      const canonical = normalizeCanonicalMeasurement(value);
+      if (canonical === undefined) {
+        continue;
+      }
+      patch[key] = storesMeasurementAsString(key)
+        ? String(canonical)
+        : canonical;
       continue;
     }
     patch[key] = value;
@@ -141,8 +188,31 @@ function mergeIntoTemplate(
     }
     if (key === "tags") {
       merged.tags = Array.isArray(value)
-        ? value.filter((tag): tag is string => typeof tag === "string")
+        ? normalizeGeneratedTags(
+            value.filter((tag): tag is string => typeof tag === "string"),
+          )
         : [];
+      continue;
+    }
+    if (key === "subtitle" && typeof value === "string") {
+      merged.subtitle = normalizeGeneratedSubtitle(value);
+      continue;
+    }
+    if (isTimelineYearField(key)) {
+      const year = normalizeTimelineYear(value);
+      if (year !== undefined) {
+        merged[key] = year;
+      }
+      continue;
+    }
+    if (detectMeasurementKind(key)) {
+      const canonical = normalizeCanonicalMeasurement(value);
+      if (canonical === undefined) {
+        continue;
+      }
+      merged[key] = storesMeasurementAsString(key)
+        ? String(canonical)
+        : canonical;
       continue;
     }
     merged[key] = value;

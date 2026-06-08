@@ -173,27 +173,9 @@ export function CardTypeFields({
         </>
       );
     case "location":
-      if (readOnly) {
-        return <ReadOnlyField label="Coordinates" value={fields.coordinates} />;
-      }
-      return (
-        <div className="flex flex-col gap-1">
-          <label
-            htmlFor="card-coordinates"
-            className={inspectorFieldLabelClassName}
-          >
-            Coordinates
-          </label>
-          <Input
-            id="card-coordinates"
-            placeholder="12.4, -3.1"
-            value={fields.coordinates}
-            isDisabled={disabled}
-            onValueChange={(coordinates) => patch({ coordinates })}
-            classNames={inspectorInlineInputClassNames}
-          />
-        </div>
-      );
+      return readOnly ? (
+        <p className="text-sm text-wn-mono-500">No type-specific fields.</p>
+      ) : null;
     case "item": {
       const canonicalWeight = fields.itemWeight
         ? Number(fields.itemWeight)

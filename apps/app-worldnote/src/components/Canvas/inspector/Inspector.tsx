@@ -428,45 +428,50 @@ export function Inspector({
     [activeCard?.id, onModeChange, onNavigateToCard, onSave],
   );
 
-  const handleWizardExpand = useCallback(() => {
-    if (!activeCard) return;
-    void (async () => {
+  const applyGeneratedWizardResult = useCallback(
+    async (generate: () => Promise<WorldCard>) => {
       try {
-        const generated = await inspectorWizard.runExpand(activeCard);
+        const generated = await generate();
         applyGeneratedCard(generated);
-        await persistGeneratedCard(generated);
+        inspectorWizard.finishGeneration();
+        void persistGeneratedCard(generated).catch((err: unknown) => {
+          inspectorWizard.handleError(err);
+        });
       } catch (err) {
         inspectorWizard.handleError(err);
       }
-    })();
-  }, [activeCard, applyGeneratedCard, inspectorWizard, persistGeneratedCard]);
+    },
+    [applyGeneratedCard, inspectorWizard, persistGeneratedCard],
+  );
+
+  const handleWizardExpand = useCallback(() => {
+    if (!activeCard) return;
+    void applyGeneratedWizardResult(() =>
+      inspectorWizard.runExpand(activeCard),
+    );
+  }, [activeCard, applyGeneratedWizardResult, inspectorWizard]);
 
   const handleWizardFillGaps = useCallback(() => {
     if (!activeCard) return;
-    void (async () => {
-      try {
-        const generated = await inspectorWizard.runFillGaps(activeCard);
-        applyGeneratedCard(generated);
-        await persistGeneratedCard(generated);
-      } catch (err) {
-        inspectorWizard.handleError(err);
-      }
-    })();
-  }, [activeCard, applyGeneratedCard, inspectorWizard, persistGeneratedCard]);
+    void applyGeneratedWizardResult(() =>
+      inspectorWizard.runFillGaps(activeCard),
+    );
+  }, [activeCard, applyGeneratedWizardResult, inspectorWizard]);
+
+  const handleWizardGenerateProperties = useCallback(() => {
+    if (!activeCard) return;
+    void applyGeneratedWizardResult(() =>
+      inspectorWizard.runGenerateProperties(activeCard),
+    );
+  }, [activeCard, applyGeneratedWizardResult, inspectorWizard]);
 
   const handleWizardSuggestion = useCallback(
     (suggestion: WizardSuggestion) => {
-      void (async () => {
-        try {
-          const generated = await inspectorWizard.runSuggestion(suggestion);
-          applyGeneratedCard(generated);
-          await persistGeneratedCard(generated);
-        } catch (err) {
-          inspectorWizard.handleError(err);
-        }
-      })();
+      void applyGeneratedWizardResult(() =>
+        inspectorWizard.runSuggestion(suggestion),
+      );
     },
-    [applyGeneratedCard, inspectorWizard, persistGeneratedCard],
+    [applyGeneratedWizardResult, inspectorWizard],
   );
 
   const buildCard = useCallback((): WorldCard => {
@@ -642,10 +647,12 @@ export function Inspector({
       activeAction={inspectorWizard.activeAction}
       activeSuggestionId={inspectorWizard.activeSuggestionId}
       suggestions={inspectorWizard.suggestions}
+      canGenerateProperties={inspectorWizard.canGenerateProperties}
       isBusy={isBusy || inspectorWizard.status === "generating"}
       selectedCard={activeCard}
       onExpand={handleWizardExpand}
       onFillGaps={handleWizardFillGaps}
+      onGenerateProperties={handleWizardGenerateProperties}
       onRunSuggestion={handleWizardSuggestion}
       onOpenWizard={
         onOpenWizard ? () => onOpenWizard(activeCard.id) : undefined
@@ -775,6 +782,7 @@ export function Inspector({
             }}
             wizardSection={wizardSection}
             isLoreGenerating={inspectorWizard.isGeneratingLore}
+            isSubtitleGenerating={inspectorWizard.isGeneratingField("subtitle")}
             onStartWriting={handleStartWritingLore}
           />
         </div>
@@ -933,7 +941,12 @@ export function Inspector({
               />
             </div>
           </div>
-          {readOnly ? (
+          {inspectorWizard.isGeneratingField("subtitle") ? (
+            <div
+              className="h-5 w-2/3 max-w-xs animate-pulse rounded bg-wn-mono-800"
+              aria-hidden
+            />
+          ) : readOnly ? (
             subtitle.trim() ? (
               <p className="m-0 text-base font-medium leading-snug text-wn-mono-300">
                 {subtitle}

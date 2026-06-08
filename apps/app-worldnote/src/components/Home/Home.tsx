@@ -67,6 +67,7 @@ export function Home({
   const [isBusy, setIsBusy] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [manageWorld, setManageWorld] = useState<WorldSummary | null>(null);
+  const [tourPromptSuppressed, setTourPromptSuppressed] = useState(false);
 
   const pinnedPaths = useMemo(() => getPinnedWorldPaths(settings), [settings]);
 
@@ -282,9 +283,13 @@ export function Home({
   const username = settings?.username ?? "there";
   const greeting = getTimeOfDayGreeting();
   const showTourPrompt =
-    shouldShowTutorialPrompt(settings) && !tutorialActive && !isTutorialOpening;
+    shouldShowTutorialPrompt(settings) &&
+    !tutorialActive &&
+    !isTutorialOpening &&
+    !tourPromptSuppressed;
 
   const handleDismissTourPrompt = useCallback(async () => {
+    setTourPromptSuppressed(true);
     if (!settings) {
       return;
     }

@@ -4,7 +4,9 @@ import {
   detectMeasurementKind,
   formatMeasurementPropertyValue,
   formatMeasurementValue,
+  normalizeCanonicalMeasurement,
   parseMeasurementInput,
+  storesMeasurementAsString,
   toCanonicalValue,
 } from "./measurements.js";
 
@@ -50,6 +52,39 @@ describe("parseMeasurementInput", () => {
     const canonical = parseMeasurementInput("2.2", "weight", "imperial");
     expect(canonical).toBeCloseTo(1, 2);
     expect(toCanonicalValue(2.2, "weight", "imperial")).toBeCloseTo(1, 2);
+  });
+});
+
+describe("normalizeCanonicalMeasurement", () => {
+  it("accepts non-negative numbers", () => {
+    expect(normalizeCanonicalMeasurement(120)).toBe(120);
+    expect(normalizeCanonicalMeasurement(0)).toBe(0);
+    expect(normalizeCanonicalMeasurement("900")).toBe(900);
+    expect(normalizeCanonicalMeasurement(" 42.5 ")).toBe(42.5);
+  });
+
+  it("rejects negative values", () => {
+    expect(normalizeCanonicalMeasurement(-5)).toBeUndefined();
+    expect(normalizeCanonicalMeasurement("-10")).toBeUndefined();
+  });
+
+  it("salvages the first positive number from prose", () => {
+    expect(
+      normalizeCanonicalMeasurement(
+        "../../../../../../5000 km/h or more (depending on the size)",
+      ),
+    ).toBe(5000);
+  });
+
+  it("rejects non-numeric text without digits", () => {
+    expect(normalizeCanonicalMeasurement("hyperspace transit")).toBeUndefined();
+  });
+});
+
+describe("storesMeasurementAsString", () => {
+  it("identifies string-backed measurement fields", () => {
+    expect(storesMeasurementAsString("max_speed")).toBe(true);
+    expect(storesMeasurementAsString("weight")).toBe(false);
   });
 });
 

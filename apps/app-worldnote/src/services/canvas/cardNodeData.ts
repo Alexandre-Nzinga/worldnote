@@ -56,8 +56,6 @@ function scalarsFromCard(card: WorldCard): CardNodeScalars {
         appearance: card.appearance,
         personality: card.personality,
       };
-    case "location":
-      return { coordinates: card.coordinates };
     default:
       return {};
   }
@@ -74,8 +72,6 @@ function subtitleForCard(card: WorldCard): string | undefined {
       return card.start_year !== undefined
         ? formatYear(card.start_year)
         : undefined;
-    case "location":
-      return card.coordinates?.trim() || undefined;
     case "item":
       return card.rarity
         ? `${card.rarity.charAt(0).toUpperCase()}${card.rarity.slice(1)}`

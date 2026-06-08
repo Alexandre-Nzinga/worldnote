@@ -70,7 +70,6 @@ export type CardNodeScalars = {
   race?: string;
   appearance?: string;
   personality?: string;
-  coordinates?: string;
 };
 
 export type CardNodeSelectModifiers = {

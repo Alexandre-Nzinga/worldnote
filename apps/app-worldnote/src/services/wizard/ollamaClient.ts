@@ -2,6 +2,16 @@ import { Channel, invoke } from "@tauri-apps/api/core";
 
 export const DEFAULT_OLLAMA_HOST = "http://localhost:11434";
 
+/** Ollama model library — users pick and pull any model that fits their machine. */
+export const OLLAMA_MODEL_LIBRARY_URL = "https://ollama.com/library";
+
+/** Starting-point model when users are unsure what to pull from Ollama. */
+export const SUGGESTED_WIZARD_MODEL = "qwen2.5:7b";
+
+/** Ollama library page for {@link SUGGESTED_WIZARD_MODEL}. */
+export const SUGGESTED_WIZARD_MODEL_URL =
+  "https://ollama.com/library/qwen2.5";
+
 export type WizardChatRole = "system" | "user" | "assistant";
 
 export type WizardChatMessage = {

@@ -14,6 +14,17 @@ const FT_PER_MILE = 5280;
 const M_PER_KM = 1000;
 const KMH_PER_MPH = 1.609_344;
 
+/** Guidance for LLM measurement fields (schema + prompts). */
+export const MEASUREMENT_GENERATION_HINT =
+  "Positive number in canonical metric units only. No text, units, ranges, or qualifiers.";
+
+/** Card schema fields that store measurements as numeric strings. */
+const MEASUREMENT_STRING_FIELD_KEYS = new Set(["max_speed"]);
+
+export function storesMeasurementAsString(fieldKey: string): boolean {
+  return MEASUREMENT_STRING_FIELD_KEYS.has(fieldKey);
+}
+
 /** Canonical storage units: kg, cm, °C, m, km/h. */
 export const CANONICAL_UNITS: Record<MeasurementKind, string> = {
   weight: "kg",
@@ -128,6 +139,35 @@ function tryParseCanonicalNumber(value: string): number | undefined {
   }
   const parsed = Number(trimmed);
   return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+/**
+ * Coerces wizard output into a non-negative canonical measurement.
+ * Rejects negative values; salvages the first positive number from prose.
+ */
+export function normalizeCanonicalMeasurement(
+  value: unknown,
+): number | undefined {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value >= 0 ? value : undefined;
+  }
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return undefined;
+    }
+    const direct = tryParseCanonicalNumber(trimmed);
+    if (direct !== undefined) {
+      return direct >= 0 ? direct : undefined;
+    }
+    const match = trimmed.match(/(\d+(?:\.\d+)?)/);
+    if (!match) {
+      return undefined;
+    }
+    const salvaged = Number(match[1]);
+    return Number.isFinite(salvaged) && salvaged >= 0 ? salvaged : undefined;
+  }
+  return undefined;
 }
 
 export function toDisplayValue(
