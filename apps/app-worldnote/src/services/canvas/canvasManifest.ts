@@ -33,6 +33,16 @@ export async function updateCanvasManifestNode(
   );
 }
 
+export async function removeCanvasManifestNode(
+  vault: string,
+  cardId: string,
+): Promise<void> {
+  return trackPersist(
+    () => invoke<void>("remove_canvas_manifest_node", { vault, cardId }),
+    { notify: false },
+  );
+}
+
 export async function updateCanvasManifestImage(
   vault: string,
   placement: CanvasImagePlacement,

@@ -2,6 +2,10 @@ import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { CreateWorldModal } from "../CreateWorldModal.js";
 import { useSettings } from "../../hooks/useSettings.js";
+import {
+  shouldShowTutorialPrompt,
+  useTutorial,
+} from "../../hooks/useTutorial.js";
 import { useVault } from "../../hooks/useVault.js";
 import { useVaultCommands } from "../../hooks/useVaultCommands.js";
 import {
@@ -35,16 +39,24 @@ import { HomeHero } from "./HomeHero.js";
 import { getTimeOfDayGreeting } from "./worldCover.js";
 import { WorldSettingsModal } from "./WorldSettingsModal.js";
 import { WorldsSection } from "./WorldsSection.js";
+import { TourPrompt } from "./TourPrompt.js";
 
 type HomeProps = {
   onWorldReady: () => void;
   onOpenSettings?: () => void;
   onOpenVault?: () => void;
+  isTutorialOpening?: boolean;
 };
 
-export function Home({ onWorldReady, onOpenSettings, onOpenVault }: HomeProps) {
+export function Home({
+  onWorldReady,
+  onOpenSettings,
+  onOpenVault,
+  isTutorialOpening = false,
+}: HomeProps) {
   const settings = useSettings((state) => state.settings);
   const saveSettings = useSettings((state) => state.save);
+  const tutorialActive = useTutorial((state) => state.isActive);
   const { openWorld } = useVaultCommands();
   const setCurrentVault = useVault((state) => state.setCurrentVault);
   const pendingStarterAction = useVault((state) => state.pendingStarterAction);
@@ -269,6 +281,18 @@ export function Home({ onWorldReady, onOpenSettings, onOpenVault }: HomeProps) {
 
   const username = settings?.username ?? "there";
   const greeting = getTimeOfDayGreeting();
+  const showTourPrompt =
+    shouldShowTutorialPrompt(settings) && !tutorialActive && !isTutorialOpening;
+
+  const handleDismissTourPrompt = useCallback(async () => {
+    if (!settings) {
+      return;
+    }
+    await saveSettings({
+      ...settings,
+      tutorialPromptDismissedAt: Date.now(),
+    });
+  }, [saveSettings, settings]);
 
   return (
     <div className={pageShellClassName}>
@@ -333,6 +357,14 @@ export function Home({ onWorldReady, onOpenSettings, onOpenVault }: HomeProps) {
         }}
         onWorldsChanged={() => {
           void refreshWorlds();
+        }}
+      />
+
+      <TourPrompt
+        isOpen={showTourPrompt}
+        isBusy={isBusy || isTutorialOpening}
+        onDismiss={() => {
+          void handleDismissTourPrompt();
         }}
       />
     </div>

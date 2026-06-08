@@ -65,6 +65,10 @@ export type AppSettings = {
   familyTreeUnrelatedMode?: FamilyTreeUnrelatedMode;
   /** Timeline: suffix appended to year labels (e.g. "AG" → "10191 AG"). */
   timelineEraSuffix?: string;
+  /** Unix ms when the interactive canvas tutorial was completed or skipped. */
+  tutorialCompletedAt?: number;
+  /** Unix ms when the user dismissed the Home tour prompt without starting. */
+  tutorialPromptDismissedAt?: number;
 };
 
 export async function getSettings(): Promise<AppSettings | null> {

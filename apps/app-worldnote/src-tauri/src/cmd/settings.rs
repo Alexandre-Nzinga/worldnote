@@ -149,6 +149,12 @@ pub struct AppSettings {
     /// Timeline: suffix appended to year labels (e.g. "AG" → "10191 AG").
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub timeline_era_suffix: Option<String>,
+    /// Unix ms when the interactive canvas tutorial was completed or skipped.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tutorial_completed_at: Option<u64>,
+    /// Unix ms when the user dismissed the Home tour prompt without starting.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tutorial_prompt_dismissed_at: Option<u64>,
 }
 
 fn settings_path(app: &tauri::AppHandle) -> Result<PathBuf, String> {

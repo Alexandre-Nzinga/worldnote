@@ -98,11 +98,12 @@ const createSearchFieldClassName = "relative flex w-full items-center";
 const createSearchInputClassName =
   "w-full rounded-xl border-0 bg-wn-surface-raised py-2.5 pl-10 pr-10 text-sm text-wn-text shadow-none outline-none transition-colors placeholder:text-wn-text-subtle hover:bg-wn-mono-800 focus:bg-wn-mono-800 focus:ring-2 focus:ring-wn-mono-600";
 
-const createColumnPanelClassName =
-  "min-w-0 rounded-xl bg-wn-surface-sunken px-3 py-3";
+const createSectionClassName = "flex flex-col gap-2 py-4 first:pt-0 last:pb-0";
+
+const createSectionGridClassName = "grid grid-cols-2 gap-0.5 sm:grid-cols-3";
 
 const createOptionClassName =
-  "flex w-full items-center gap-2.5 rounded-xl px-2 py-2 text-left transition-colors hover:bg-wn-surface-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wn-mono-600";
+  "flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left transition-colors hover:bg-wn-surface-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wn-mono-600";
 
 function matchesCreateQuery(
   type: CreateOption,
@@ -277,6 +278,7 @@ export function CanvasToolbar({
       {
         id: "wizard",
         name: "WorldWizard",
+        dataTutorialId: "canvas-toolbar-wizard",
         iconNode: (
           <WorldNoteLogo
             variant="icon"
@@ -313,6 +315,7 @@ export function CanvasToolbar({
         id: "create",
         name: "Create card",
         icon: "add",
+        dataTutorialId: "canvas-toolbar-create",
         colorClassName: createMenuOpen
           ? primaryAccentFillClassName
           : dockInactiveClassName,
@@ -368,6 +371,7 @@ export function CanvasToolbar({
       <div
         ref={createMenuRef}
         className="pointer-events-auto relative flex justify-center"
+        data-tutorial-id="canvas-toolbar-dock"
       >
         <DockTabs items={dockItems} />
 
@@ -408,9 +412,9 @@ export function CanvasToolbar({
             </div>
 
             {hasCreateResults ? (
-              <div className="grid grid-cols-3 gap-3">
+              <div className="flex flex-col divide-y divide-wn-border">
                 {groupedCreateOptions.map(({ cardClass, types }) => (
-                  <CreateCardClassColumn
+                  <CreateCardClassSection
                     key={cardClass}
                     cardClass={cardClass}
                     types={types}
@@ -430,23 +434,23 @@ export function CanvasToolbar({
   );
 }
 
-type CreateCardClassColumnProps = {
+type CreateCardClassSectionProps = {
   cardClass: CardClass;
   types: CreateOption[];
   onSelect: (type: CreateOption) => void;
 };
 
-function CreateCardClassColumn({
+function CreateCardClassSection({
   cardClass,
   types,
   onSelect,
-}: CreateCardClassColumnProps) {
+}: CreateCardClassSectionProps) {
   return (
-    <div className={createColumnPanelClassName}>
-      <span className={`${wnLabelClassName} mb-2 block`}>
+    <section className={createSectionClassName}>
+      <span className={`${wnLabelClassName} text-wn-text-subtle`}>
         {CARD_CLASS_LABELS[cardClass]}
       </span>
-      <div className="flex flex-col gap-0.5">
+      <div className={createSectionGridClassName}>
         {types.map((type) => (
           <MotionPressable
             key={type}
@@ -465,6 +469,6 @@ function CreateCardClassColumn({
           </MotionPressable>
         ))}
       </div>
-    </div>
+    </section>
   );
 }

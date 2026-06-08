@@ -1,15 +1,32 @@
 import { invoke } from "@tauri-apps/api/core";
 import { WorldCardSchema, type WorldCard } from "@worldnote/shared";
 import { createLink } from "../links/createLink.js";
+import {
+  removeCanvasManifestNode,
+  updateCanvasManifestImage,
+  updateCanvasManifestStickyNote,
+} from "../canvas/canvasManifest.js";
 import { createWorldCard } from "../crudWorldCard/createWorldCard.js";
 import { updateWorldCard } from "../crudWorldCard/updateWorldCard.js";
-import { descriptionSummaryFromMarkdown } from "../canvas/stickyNoteMarkdown.js";
+import {
+  descriptionSummaryFromMarkdown,
+  serializeStickyNoteMarkdown,
+  writeStickyNoteMarkdown,
+} from "../canvas/stickyNoteMarkdown.js";
+import { saveCanvasImageBytes } from "../desktop/saveCanvasImage.js";
 import { listWorlds } from "../worlds/listWorlds.js";
 import type {
   BuildStarterPackOptions,
   StarterPack,
   StarterPackBuildResult,
 } from "./types.js";
+
+function readTutorialAnchor(
+  customProperties: Record<string, string | number | boolean> | undefined,
+): string | undefined {
+  const value = customProperties?.tutorial_anchor;
+  return typeof value === "string" && value.trim() ? value.trim() : undefined;
+}
 
 function enrichCard(
   created: WorldCard,
@@ -55,6 +72,19 @@ function resolvePackWorldName(
   return candidate;
 }
 
+function buildCardAnchorMap(
+  cards: Iterable<WorldCard>,
+): Record<string, string> {
+  const map: Record<string, string> = {};
+  for (const card of cards) {
+    const anchor = readTutorialAnchor(card.custom_properties);
+    if (anchor) {
+      map[anchor] = card.id;
+    }
+  }
+  return map;
+}
+
 /** Opens an existing pack world or creates one with starter cards and links. */
 export async function buildStarterPackWorld(
   root: string,
@@ -67,7 +97,14 @@ export async function buildStarterPackWorld(
   const existing = worlds.find((world) => world.name === pack.name);
 
   if (existing && !forceNew) {
-    return { path: existing.path, name: existing.name, created: false };
+    return {
+      path: existing.path,
+      name: existing.name,
+      created: false,
+      cardAnchorMap: {},
+      stickyNoteAnchorMap: {},
+      canvasImageAnchorMap: {},
+    };
   }
 
   const worldName = resolvePackWorldName(pack.name, existingNames, forceNew);
@@ -93,6 +130,26 @@ export async function buildStarterPackWorld(
     cardByKey.set(def.key, saved);
   }
 
+  for (const def of pack.cards) {
+    if (!def.groupKey) {
+      continue;
+    }
+    const member = cardByKey.get(def.key);
+    const group = cardByKey.get(def.groupKey);
+    if (!member || !group) {
+      throw new Error(
+        `Starter pack "${pack.id}" group member references unknown key: ${def.groupKey}`,
+      );
+    }
+    const nested = WorldCardSchema.parse({
+      ...member,
+      parent_id: group.id,
+    });
+    await updateWorldCard(worldPath, nested, { notify: false });
+    await removeCanvasManifestNode(worldPath, member.id);
+    cardByKey.set(def.key, nested);
+  }
+
   for (const link of pack.links) {
     const sourceCard = cardByKey.get(link.source);
     const targetCard = cardByKey.get(link.target);
@@ -112,5 +169,64 @@ export async function buildStarterPackWorld(
     });
   }
 
-  return { path: worldPath, name: worldName, created: true };
+  const stickyNoteAnchorMap: Record<string, string> = {};
+  for (const note of pack.stickyNotes ?? []) {
+    const noteId = crypto.randomUUID();
+    await writeStickyNoteMarkdown(
+      worldPath,
+      noteId,
+      serializeStickyNoteMarkdown(note.heading, note.content),
+    );
+    await updateCanvasManifestStickyNote(worldPath, {
+      id: noteId,
+      x: note.x,
+      y: note.y,
+      heading: note.heading,
+      color: note.color,
+      width: note.width ?? 220,
+      height: note.height ?? 180,
+    });
+    if (note.tutorialAnchor) {
+      stickyNoteAnchorMap[note.tutorialAnchor] = noteId;
+    }
+  }
+
+  const canvasImageAnchorMap: Record<string, string> = {};
+  for (const image of pack.canvasImages ?? []) {
+    const imageId = crypto.randomUUID();
+    const response = await fetch(image.publicAssetPath);
+    if (!response.ok) {
+      throw new Error(
+        `Starter pack "${pack.id}" could not load image asset: ${image.publicAssetPath}`,
+      );
+    }
+    const bytes = await response.arrayBuffer();
+    const fileName = image.publicAssetPath.split("/").pop() ?? "image.png";
+    const imagePath = await saveCanvasImageBytes(
+      worldPath,
+      imageId,
+      fileName,
+      bytes,
+    );
+    await updateCanvasManifestImage(worldPath, {
+      id: imageId,
+      x: image.x,
+      y: image.y,
+      imagePath,
+      width: image.width ?? 240,
+      height: image.height ?? 160,
+    });
+    canvasImageAnchorMap[image.key] = imageId;
+  }
+
+  const allCards = [...cardByKey.values()];
+
+  return {
+    path: worldPath,
+    name: worldName,
+    created: true,
+    cardAnchorMap: buildCardAnchorMap(allCards),
+    stickyNoteAnchorMap,
+    canvasImageAnchorMap,
+  };
 }

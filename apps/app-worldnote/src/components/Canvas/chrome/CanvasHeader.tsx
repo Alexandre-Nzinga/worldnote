@@ -4,6 +4,8 @@ import {
   MaterialSymbol,
   getHeadingProps,
 } from "@worldnote/ui";
+import { WORLDNOTE_DOCS_URL } from "../../../constants/urls.js";
+import { openExternalUrl } from "../../../services/desktop/openExternalUrl.js";
 
 type CanvasHeaderProps = {
   worldName: string;
@@ -42,11 +44,16 @@ export function CanvasHeader({
           },
         ]
       : []),
+    {
+      id: "documentation",
+      label: "Documentation",
+      icon: <MaterialSymbol name="question_mark" className="text-[20px]" />,
+    },
   ];
 
   return (
     <header className="pointer-events-auto absolute left-4 top-4 z-30 flex items-center gap-3">
-      <div className="shrink-0">
+      <div className="shrink-0" data-tutorial-id="canvas-header-menu">
         <ActionMenu
           ariaLabel="World menu"
           placement="bottom-start"
@@ -61,6 +68,10 @@ export function CanvasHeader({
             }
             if (key === "settings") {
               onOpenSettings?.();
+              return;
+            }
+            if (key === "documentation") {
+              void openExternalUrl(WORLDNOTE_DOCS_URL);
             }
           }}
           items={menuItems}

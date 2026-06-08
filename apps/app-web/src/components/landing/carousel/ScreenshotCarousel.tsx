@@ -12,10 +12,29 @@ import {
   SectionShell,
 } from "@/components/landing/shared/Reveal";
 
+type ScreenshotCarouselSlide =
+  | {
+      id: string;
+      caption: string;
+      src: string;
+      alt: string;
+    }
+  | {
+      id: string;
+      caption: string;
+      icon: string;
+    };
+
+function isScreenshotSlide(
+  slide: ScreenshotCarouselSlide,
+): slide is Extract<ScreenshotCarouselSlide, { src: string }> {
+  return "src" in slide;
+}
+
 /** Edge-to-edge screenshot slider with drag gestures and placeholder wireframes. */
 export function ScreenshotCarousel() {
   const { carousel } = landingCopy;
-  const slides = carousel.slides;
+  const slides: readonly ScreenshotCarouselSlide[] = carousel.slides;
   const slideCount = slides.length;
   const [index, setIndex] = useState(0);
   const reducedMotion = usePrefersReducedMotion();
@@ -66,7 +85,7 @@ export function ScreenshotCarousel() {
                 className="shrink-0 px-6 md:px-10 lg:px-16"
                 style={{ width: `${100 / slideCount}%` }}
               >
-                {"src" in slide && slide.src ? (
+                {isScreenshotSlide(slide) ? (
                   <ScreenshotFigure
                     caption={slide.caption}
                     src={slide.src}

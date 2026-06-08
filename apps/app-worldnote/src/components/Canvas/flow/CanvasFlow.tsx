@@ -44,6 +44,7 @@ import type {
 import { CanvasExternalImageDropBridge } from "./bridges/CanvasExternalImageDropBridge.js";
 import { CanvasFitViewBridge } from "./bridges/CanvasFitViewBridge.js";
 import { CanvasFocusBridge } from "./bridges/CanvasFocusBridge.js";
+import { TutorialCanvasBridge } from "./bridges/TutorialCanvasBridge.js";
 import type {
   CanvasImageDropPosition,
   CanvasImageImportOptions,
@@ -284,6 +285,7 @@ export function CanvasFlow({
         >
           <CanvasFitViewBridge vaultPath={vaultPath} nodeCount={nodes.length} />
           <CanvasFocusBridge focusCardRef={focusCardRef} />
+          <TutorialCanvasBridge />
           <CanvasExternalImageDropBridge
             enabled={Boolean(vaultPath)}
             vaultPath={vaultPath}

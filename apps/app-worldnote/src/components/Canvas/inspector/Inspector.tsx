@@ -1057,7 +1057,12 @@ export function Inspector({
 
   return (
     <AnimatedPanel isOpen={isOpen} className={inspectorSidebarClassName}>
-      {sidebarInspectorBody}
+      <div
+        data-tutorial-id="canvas-inspector"
+        className="flex h-full min-h-0 flex-col"
+      >
+        {sidebarInspectorBody}
+      </div>
     </AnimatedPanel>
   );
 }

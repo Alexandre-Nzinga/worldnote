@@ -59,6 +59,7 @@ export function CanvasViewToolbar({
   return (
     <aside
       className={`pointer-events-none absolute left-4 top-1/2 z-20 -translate-y-1/2 ${className ?? ""}`}
+      data-tutorial-id="canvas-view-toolbar"
     >
       <div className="pointer-events-auto">
         <DockTabs items={items} orientation="vertical" />

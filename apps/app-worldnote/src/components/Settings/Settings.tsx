@@ -77,6 +77,7 @@ import {
 
 type SettingsProps = {
   onBack: () => void;
+  onStartTutorial?: () => void;
   /** When opened from the canvas, edit that world's calendar suffix. */
   currentWorldPath?: string;
 };
@@ -93,7 +94,11 @@ const settingsSectionTransition = {
   ease: [0.22, 1, 0.36, 1] as const,
 };
 
-export function Settings({ onBack, currentWorldPath }: SettingsProps) {
+export function Settings({
+  onBack,
+  onStartTutorial,
+  currentWorldPath,
+}: SettingsProps) {
   const settings = useSettings((state) => state.settings);
   const save = useSettings((state) => state.save);
   const reducedMotion = usePrefersReducedMotion();
@@ -182,6 +187,29 @@ export function Settings({ onBack, currentWorldPath }: SettingsProps) {
               onChange={setAvatarColor}
               disabled={isSaving}
             />
+            {onStartTutorial ? (
+              <section
+                className={`${settingsPanelClassName} flex flex-col gap-3`}
+              >
+                <div className="flex flex-col gap-1">
+                  <h3 {...getHeadingProps("h5", { tone: "inverse" })}>
+                    Interactive tutorial
+                  </h3>
+                  <p className={wnDescriptionClassName}>
+                    Replay the guided tour of the canvas, cards, and tools.
+                  </p>
+                </div>
+                <Button
+                  variant="secondary"
+                  size="base"
+                  className={modalPrimaryButtonClassName}
+                  isDisabled={isSaving}
+                  onPress={onStartTutorial}
+                >
+                  Replay tutorial
+                </Button>
+              </section>
+            ) : null}
           </div>
         );
       case "worldDefaults":
@@ -255,6 +283,7 @@ export function Settings({ onBack, currentWorldPath }: SettingsProps) {
     familyTreeUnrelatedMode,
     isSaving,
     modulesSettings,
+    onStartTutorial,
     settings,
     timelineEraSuffix,
     timelineWorldName,

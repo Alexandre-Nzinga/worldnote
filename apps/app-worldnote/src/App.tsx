@@ -2,14 +2,19 @@ import { AnimatePresence, motion, type Variants } from "framer-motion";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { Canvas } from "./components/Canvas/index.js";
 import { Home } from "./components/Home/index.js";
+import { HelpButton } from "./components/shell/HelpButton.js";
 import { LoadingScreen } from "./components/LoadingScreen.js";
 import { Onboarding } from "./components/Onboarding/index.js";
 import { Settings } from "./components/Settings/Settings.js";
 import { Vault } from "./components/Vault/index.js";
+import { TutorialOverlay } from "./components/Tutorial/index.js";
 import { isOnboardingComplete, useSettings } from "./hooks/useSettings.js";
+import { useTutorial } from "./hooks/useTutorial.js";
 import { useVaultCommands } from "./hooks/useVaultCommands.js";
 import { useVault } from "./hooks/useVault.js";
 import { openSampleWorld } from "./services/starterPacks/index.js";
+import { openTutorialWorld } from "./services/tutorialWorld/openTutorialWorld.js";
+import { toast } from "./services/notifications/toast.js";
 
 type AppView = "home" | "canvas" | "settings" | "vault";
 type VaultReturnView = "home" | "canvas";
@@ -63,19 +68,89 @@ export default function App() {
   const status = useSettings((state) => state.status);
   const settings = useSettings((state) => state.settings);
   const load = useSettings((state) => state.load);
+  const saveSettings = useSettings((state) => state.save);
   const [view, setView] = useState<AppView>("home");
   const [canvasEverOpened, setCanvasEverOpened] = useState(false);
   const [vaultReturnTo, setVaultReturnTo] = useState<VaultReturnView>("home");
   const [settingsReturnTo, setSettingsReturnTo] =
     useState<SettingsReturnView>("home");
+  const [isOpeningTutorial, setIsOpeningTutorial] = useState(false);
   const currentVaultPath = useVault((state) => state.currentVaultPath);
   const setCurrentVault = useVault((state) => state.setCurrentVault);
   const requestStarterAction = useVault((state) => state.requestStarterAction);
   const { openWorld } = useVaultCommands();
+  const tutorialActive = useTutorial((state) => state.isActive);
+  const tutorialNeedsWorld = useTutorial((state) => state.needsWorldOpen);
+  const activateTutorial = useTutorial((state) => state.activate);
+  const startTutorial = useTutorial((state) => state.start);
+  const completeTutorial = useTutorial((state) => state.complete);
 
   useEffect(() => {
     void load();
   }, [load]);
+
+  const persistTutorialFinished = useCallback(async () => {
+    if (!settings) {
+      completeTutorial();
+      return;
+    }
+    await saveSettings({
+      ...settings,
+      tutorialCompletedAt: Date.now(),
+    });
+    completeTutorial();
+  }, [completeTutorial, saveSettings, settings]);
+
+  useEffect(() => {
+    if (!tutorialActive || !tutorialNeedsWorld || !settings?.worldnoteRoot) {
+      return;
+    }
+
+    let cancelled = false;
+    setIsOpeningTutorial(true);
+
+    void (async () => {
+      try {
+        const tutorialWorld = await openTutorialWorld(settings.worldnoteRoot);
+        if (cancelled) {
+          return;
+        }
+        await openWorld(tutorialWorld.path);
+        setCurrentVault(tutorialWorld.path, tutorialWorld.name);
+        activateTutorial({
+          cardAnchorMap: tutorialWorld.cardAnchorMap,
+          stickyNoteAnchorMap: tutorialWorld.stickyNoteAnchorMap,
+          canvasImageAnchorMap: tutorialWorld.canvasImageAnchorMap,
+        });
+        setCanvasEverOpened(true);
+        setView("canvas");
+      } catch (error) {
+        console.error("Failed to open tutorial world:", error);
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Could not start the tutorial.",
+        );
+        completeTutorial();
+      } finally {
+        if (!cancelled) {
+          setIsOpeningTutorial(false);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    activateTutorial,
+    completeTutorial,
+    openWorld,
+    setCurrentVault,
+    settings?.worldnoteRoot,
+    tutorialActive,
+    tutorialNeedsWorld,
+  ]);
 
   const onWorldReady = useCallback(() => {
     setCanvasEverOpened(true);
@@ -96,6 +171,11 @@ export default function App() {
   const onBackFromVault = useCallback(() => {
     setView(vaultReturnTo);
   }, [vaultReturnTo]);
+
+  const handleStartTutorialFromSettings = useCallback(() => {
+    setView("home");
+    startTutorial("settings");
+  }, [startTutorial]);
 
   const handleTrySampleWorld = useCallback(async () => {
     const root = settings?.worldnoteRoot;
@@ -139,6 +219,8 @@ export default function App() {
 
   const isHomeActive = view === "home";
   const isCanvasActive = view === "canvas";
+  const showHelpButton =
+    (view === "home" || view === "settings") && !tutorialActive;
 
   return (
     <div className="relative h-screen overflow-hidden bg-wn-bg">
@@ -147,6 +229,7 @@ export default function App() {
           onWorldReady={onWorldReady}
           onOpenSettings={() => onOpenSettings("home")}
           onOpenVault={() => onOpenVault("home")}
+          isTutorialOpening={isOpeningTutorial}
         />
       </BaseLayer>
 
@@ -172,6 +255,7 @@ export default function App() {
           >
             <Settings
               onBack={onBackFromSettings}
+              onStartTutorial={handleStartTutorialFromSettings}
               currentWorldPath={
                 settingsReturnTo === "canvas"
                   ? (currentVaultPath ?? undefined)
@@ -210,6 +294,14 @@ export default function App() {
           </motion.div>
         ) : null}
       </AnimatePresence>
+
+      <TutorialOverlay
+        onFinished={() => {
+          void persistTutorialFinished();
+        }}
+      />
+
+      {showHelpButton ? <HelpButton /> : null}
     </div>
   );
 }

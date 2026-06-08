@@ -19,6 +19,7 @@ export type DockTabItem = {
   isActive?: boolean;
   disabled?: boolean;
   onPress?: () => void;
+  dataTutorialId?: string;
 };
 
 type DockOrientation = "horizontal" | "vertical";
@@ -106,6 +107,7 @@ function DockIcon({
         aria-label={item.name}
         aria-pressed={item.isActive}
         disabled={item.disabled}
+        data-tutorial-id={item.dataTutorialId}
         onClick={item.onPress}
         className={`relative flex h-full w-full items-center justify-center overflow-hidden rounded-2xl shadow-lg disabled:cursor-not-allowed disabled:opacity-40 ${item.colorClassName} ${
           item.isActive ? primaryAccentRingOnDarkClassName : ""

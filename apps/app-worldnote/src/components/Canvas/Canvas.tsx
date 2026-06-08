@@ -47,6 +47,7 @@ import type { DragEvent, MouseEvent } from "react";
 import { useCardCommands } from "../../hooks/useCardCommands.js";
 import { useTimelineCommands } from "../../hooks/useTimelineCommands.js";
 import { useSettings } from "../../hooks/useSettings.js";
+import { useTutorial } from "../../hooks/useTutorial.js";
 import { useVault } from "../../hooks/useVault.js";
 import {
   WIZARD_CARD_MIME,
@@ -159,6 +160,7 @@ import {
 } from "../../services/canvas/canvasClipboard.js";
 import { useCanvasHistory } from "./hooks/useCanvasHistory.js";
 import { useCanvasVaultLoader } from "./hooks/useCanvasVaultLoader.js";
+import { useTutorialCanvasEffects } from "./hooks/useTutorialCanvasEffects.js";
 import {
   CANVAS_PASTE_OFFSET_PX,
   isSelectableCanvasNode,
@@ -310,6 +312,16 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
   const focusCardRef = useRef<((cardId: string) => void) | undefined>(
     undefined,
   );
+  const notifyTutorialEvent = useTutorial((state) => state.notifyEvent);
+
+  useTutorialCanvasEffects({
+    focusCardRef,
+    setSelectedCardIds,
+    setSelectedLinkId,
+    setInspectorMode,
+    setNodes,
+  });
+
   const lastCanvasPointerRef = useRef<CanvasFlowPointer | null>(null);
   const canvasPointerApiRef = useRef<CanvasPointerApi | null>(null);
 
@@ -1046,8 +1058,9 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
         : card;
       const saved = await updateWorldCard(vaultPath, cardWithPosition, options);
       setCardsById((prev) => ({ ...prev, [saved.id]: saved }));
+      notifyTutorialEvent("card-edited");
     },
-    [vaultPath],
+    [notifyTutorialEvent, vaultPath],
   );
 
   const handleSaveChronology = useCallback(
@@ -1372,6 +1385,7 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
           setSelectedCardIds([card.id]);
           setSelectedLinkId(null);
           setInspectorMode("edit");
+          notifyTutorialEvent("card-created");
           if (spawnOptions?.preferViewportCenter) {
             queueMicrotask(() => focusCardRef.current?.(card.id));
           }
@@ -1386,6 +1400,7 @@ export function Canvas({ onBack, onOpenVault, onOpenSettings }: CanvasProps) {
       cardsById,
       kinshipLabelColors,
       linksById,
+      notifyTutorialEvent,
       setNodes,
       vaultPath,
       visibleSocketsSettings,
