@@ -41,6 +41,14 @@ describe("detectCardGenerationIntent", () => {
       detectCardGenerationIntent("What is the capital of this kingdom?"),
     ).toBeNull();
   });
+
+  it("ignores dialogue generation prompts that mention characters", () => {
+    expect(
+      detectCardGenerationIntent(
+        "Write a believable conversation between Tyrion Lannister and Tywin Lannister. Stay true to each character's personality, background, and relationships. Format it as a back-and-forth script.",
+      ),
+    ).toBeNull();
+  });
 });
 
 describe("detectCardGenerationFollowUp", () => {

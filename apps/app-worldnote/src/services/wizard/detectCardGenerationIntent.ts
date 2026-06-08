@@ -20,6 +20,10 @@ const CHARACTER_ARCHETYPE_PATTERN =
 
 const CARD_WORD_PATTERN = /\bcard\b/i;
 
+/** Prose/simulation requests that should stream chat, not spawn a lore card. */
+const CHAT_OUTPUT_PATTERN =
+  /\b(?:conversation|dialogue|back-and-forth|(?:format(?:ted)?(?:\s+as)?\s+(?:a\s+)?script)|simulate(?:\s+a)?\s+(?:realistic|vivid|a)?\s*(?:battle|fight|combat)|narrate(?:\s+characters)?\s+explor|beat by beat)\b/i;
+
 const TYPE_LOOKUP: Array<{ type: NewCardType; pattern: RegExp }> =
   CREATABLE_CARD_TYPES.map((type) => {
     const label = CARD_TYPE_LABELS[type];
@@ -127,6 +131,10 @@ export function detectCardGenerationIntent(
 ): CardGenerationIntent | null {
   const trimmed = normalizeWhitespace(text);
   if (!trimmed || !wantsCardCreation(trimmed)) {
+    return null;
+  }
+
+  if (CHAT_OUTPUT_PATTERN.test(trimmed)) {
     return null;
   }
 

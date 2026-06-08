@@ -253,7 +253,7 @@ export function CanvasToolbar({
       },
       {
         id: "text",
-        name: "Text",
+        name: "Notes",
         icon: "title",
         colorClassName:
           activeTool === "text"

@@ -397,14 +397,18 @@ export function useWorldWizard({
   );
 
   const sendChat = useCallback(
-    async (promptText: string) => {
+    async (
+      promptText: string,
+      options?: { skipCardIntentDetection?: boolean },
+    ) => {
       const trimmed = promptText.trim();
       if (!trimmed || !model || status === "generating") return;
 
       const priorMessages = messages;
-      const cardIntent =
-        detectCardGenerationIntent(trimmed) ??
-        detectCardGenerationFollowUp(trimmed, priorMessages);
+      const cardIntent = options?.skipCardIntentDetection
+        ? null
+        : (detectCardGenerationIntent(trimmed) ??
+          detectCardGenerationFollowUp(trimmed, priorMessages));
       if (cardIntent) {
         await runGenerateCardFromPrompt(
           cardIntent.cardType,
@@ -573,7 +577,9 @@ export function useWorldWizard({
       } else if (preset.kind === "patch-card") {
         void runPatchCard(preset);
       } else {
-        void sendChat(preset.buildPrompt(droppedCards));
+        void sendChat(preset.buildPrompt(droppedCards), {
+          skipCardIntentDetection: true,
+        });
       }
     },
     [runGenerateCard, runPatchCard, sendChat, droppedCards],
