@@ -9,8 +9,7 @@ export const OLLAMA_MODEL_LIBRARY_URL = "https://ollama.com/library";
 export const SUGGESTED_WIZARD_MODEL = "qwen2.5:7b";
 
 /** Ollama library page for {@link SUGGESTED_WIZARD_MODEL}. */
-export const SUGGESTED_WIZARD_MODEL_URL =
-  "https://ollama.com/library/qwen2.5";
+export const SUGGESTED_WIZARD_MODEL_URL = "https://ollama.com/library/qwen2.5";
 
 export type WizardChatRole = "system" | "user" | "assistant";
 

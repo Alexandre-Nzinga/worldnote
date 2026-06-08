@@ -41,7 +41,10 @@ export const SOCKET_REGISTRY = {
     issue: { accepts: ["character"], cardinality: "many" },
     species: { accepts: ["species"], cardinality: "single" },
     religion: { accepts: ["religion"], cardinality: "single" },
-    homeworld: { accepts: ["planet", "moon", "satellite", "asteroid", "star"], cardinality: "single" },
+    homeworld: {
+      accepts: ["planet", "moon", "satellite", "asteroid", "star"],
+      cardinality: "single",
+    },
     culture: { accepts: ["culture"], cardinality: "single" },
     languages: { accepts: ["language"], cardinality: "many" },
     spells: { accepts: ["spell"], cardinality: "many" },

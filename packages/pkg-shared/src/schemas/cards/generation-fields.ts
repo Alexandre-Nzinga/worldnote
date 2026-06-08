@@ -26,7 +26,7 @@ export const BASE_GEN_FIELDS: Record<string, JsonSchemaProperty> = {
     type: "array",
     items: { type: "string" },
     description:
-      "Short topical labels using spaces between words (e.g. \"spice melange\"), never underscores.",
+      'Short topical labels using spaces between words (e.g. "spice melange"), never underscores.',
   },
 };
 

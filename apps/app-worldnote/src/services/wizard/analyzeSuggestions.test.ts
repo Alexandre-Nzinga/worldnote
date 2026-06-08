@@ -115,7 +115,9 @@ describe("analyzeWizardSuggestions", () => {
       selectedCard: arrakis,
     });
 
-    expect(suggestions.find((s) => s.fieldKey === "description")).toBeUndefined();
+    expect(
+      suggestions.find((s) => s.fieldKey === "description"),
+    ).toBeUndefined();
     expect(suggestions.every((s) => s.fieldKey !== "description")).toBe(true);
   });
 });

@@ -120,7 +120,10 @@ const MAX_SUBTITLE_WORDS = 5;
 
 /** Trims model output so subtitles stay short epithets, not sentences. */
 export function normalizeGeneratedSubtitle(value: string): string {
-  const trimmed = value.trim().replace(/[.!?…]+$/, "").trim();
+  const trimmed = value
+    .trim()
+    .replace(/[.!?…]+$/, "")
+    .trim();
   const words = trimmed.split(/\s+/).filter((word) => word.length > 0);
   if (words.length <= MAX_SUBTITLE_WORDS) {
     return words.join(" ");
